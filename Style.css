@@ -233,13 +233,10 @@ body {
 }
 
 .logout {
-    position: absolute;
-    left: 0;
-    bottom: 25px;
     box-sizing: border-box;
-    width: 80%;
-    margin: 0 10%;
+    width: 100%;
     padding: 15px 0;
+    margin-top: 30px;
     background: #7B1113;
     border: none;
     color: white;
@@ -332,5 +329,39 @@ body {
     padding: 5px 15px;
     box-sizing: border-box;
     background: #FFFFFF;
+    border-radius: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.card-date {
+    margin: 20px 0 15px 10px;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.card-time {
+    margin: 0 10px;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.card-agenda {
+    margin: 40px 0 15px 10px;
+    font-weight: 400;
+}
+
+.card-faculty-staff {
+    margin: 0 0 20px 10px;
+    color: #7B1113;
+    font-weight: 700;
+}
+
+.appointment-calendar {
+    width: 100%;
+    margin: 30px 0;
+    padding: 20px;
+    box-sizing: border-box;
+    background-color: #FFFFFF;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     border-radius: 20px;
 }
