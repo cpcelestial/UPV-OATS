@@ -351,9 +351,20 @@ body {
 }
 
 .card-faculty-staff {
-    margin: 0 0 20px 10px;
+    margin: 0 0 0 10px;
     color: #7B1113;
     font-weight: 700;
+}
+
+.card-user {
+    float: right;
+    background: #014421;
+    padding: 10px 15px;
+    margin: 20px 10px 20px 0;
+    text-align: right;
+    color: #FFFFFF;
+    font-weight: 700;
+    border-radius: 10px;
 }
 
 .appointment-calendar {
