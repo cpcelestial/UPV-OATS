@@ -9,7 +9,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="argon-dashboard.css">
 </head>
 <body>
     <div class="background"></div>
@@ -30,7 +29,7 @@
                 <a href=""><i class="material-icons">settings</i>Settings</a>
             </li>
         </ul>
-        <button class="logout" type="button">Logout</button>
+        <button class="logout" type="button" onclick="document.location='Login.html'">Logout</button>
     </aside>
     <div class="nav-bar">
         <div class="nav-page">Pages / <span>Dashboard</span></div>
@@ -39,55 +38,24 @@
             <input class="search-field" type="text" placeholder="Search here..." name="search">
         </div>
     </div>
-  <!-- Main Content -->
-  <!-- <div class="main-content flex-grow-1">
-    <div class="container-fluid">
-      <div class="row">
-        <div class="col-md-3">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Card 1</h5>
-              <p class="card-text">Some quick example text to build on the card title.</p>
+    <!-- Main Content -->
+    <div class="dashboard">
+        <h1>Hello User! Here are your appointments:</h1>
+        <div class="upcoming-appointments">
+            <div class="appointment-card">
+                <h5 class="card-title">Card 1</h5>
+                <p class="card-text">Some quick example text to build on the card title.</p>
             </div>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Card 2</h5>
-              <p class="card-text">Some quick example text to build on the card title.</p>
+            <div class="appointment-card">
+                <h5 class="card-title">Card 2</h5>
+                <p class="card-text">Some quick example text to build on the card title.</p>
             </div>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Card 3</h5>
-              <p class="card-text">Some quick example text to build on the card title.</p>
+            <div class="appointment-card">
+                <h5 class="card-title">Card 3</h5>
+                <p class="card-text">Some quick example text to build on the card title.</p>
             </div>
-          </div>
         </div>
-        <div class="col-md-3">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Card 4</h5>
-              <p class="card-text">Some quick example text to build on the card title.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-12">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Chart</h5>
-              <canvas id="myChart"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
-  </div>
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -107,7 +75,7 @@
     },
     options: {}
   });
-</script> -->
+</script>
 
 </body>
 </html>

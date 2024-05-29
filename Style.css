@@ -164,6 +164,7 @@ body {
     text-align: center;
     color: #7B1113;
     font-size: 32px;
+    font-weight: 800;
 }
 
 .side-nav hr {
@@ -277,4 +278,34 @@ body {
     font-size: 12px;
     font-family: "Inter", sans-serif;
     font-weight: 500;
+}
+
+.dashboard {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 1180px;
+    position: absolute;
+    top: 70px;
+    left: 320px;
+}
+
+.dashboard h1 {
+    color: #FFFFFF;
+    font-size: 36px;
+}
+
+.upcoming-appointments {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.appointment-card {
+    width: 350px;
+    padding: 5px 15px;
+    box-sizing: border-box;
+    background: #FFFFFF;
+    border-radius: 20px;
 }
