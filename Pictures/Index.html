@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Additional inline styles for presentation */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+        
+        #sidebar {
+            width: 250px;
+            background-color: #333;
+            color: #fff;
+            padding: 20px;
+            height: 100vh;
+            position: fixed;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #sidebar h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+        
+        #sidebar ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        #sidebar ul li {
+            margin: 15px 0;
+            display: flex;
+        }
+        
+        #sidebar ul li a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 18px;
+            padding: 10px;
+            transition: background-color 0.3s;
+        }
+        
+        #sidebar ul li a:hover {
+            background-color: #555;
+        }
+        
+        #content {
+            margin-left: 250px; /* Adjust based on sidebar width */
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        #main-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <h2>UP Visayas Admin</h2>
+        <ul>
+            <li><a href="#" onclick="loadSection('dashboard')">Dashboard</a></li>
+            <li><a href="#" onclick="loadSection('students')">Students</a></li>
+            <li><a href="#" onclick="loadSection('faculty')">Faculty</a></li>
+            <li><a href="#" onclick="loadSection('courses')">Courses</a></li>
+            <li><a href="#" onclick="loadSection('events')">Events</a></li>
+        </ul>
+    </div>
+    <div id="content">
+        <h1>Welcome to the <span style="color: #3498db;">Admin Dashboard</span></h1>
+        <div id="main-content"></div>
+    </div>
+    <script src="scripts.js"></script>
+</body>
+</html>
