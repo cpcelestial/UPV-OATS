@@ -146,14 +146,15 @@ body {
 }
 
 .side-nav {
-    background: #FFFFFF;
+    display: flex;
+    flex-direction: column;
     position: fixed;
-    justify-content: space-between;
     box-sizing: border-box;
     width: 250px;
     padding: 10px 5px;
     height: 95%;
     margin: 5% 25px;
+    background: #FFFFFF;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     border-radius: 20px;
 }
@@ -200,8 +201,31 @@ body {
 
 .side-nav a:hover {
     color: #FFFFFF;
-    background: #014421;
+    background: #7B1113;
     font-weight: 500;
+    transition: 0.5s;
+}
+
+.logout {
+    position: absolute;
+    left: 0;
+    bottom: 25px;
+    box-sizing: border-box;
+    width: 80%;
+    margin: 0 10%;
+    padding: 15px 0;
+    background: #7B1113;
+    border: none;
+    color: white;
+    border-radius: 15px;
+    cursor: pointer;
+    font-size: 16px;
+    font-family: "Inter", sans-serif;
+    font-weight: 500;
+}
+
+.logout:hover {
+    background: #014421;
     transition: 0.5s;
 }
 
