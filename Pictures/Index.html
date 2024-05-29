@@ -16,7 +16,7 @@
         
         #sidebar {
             width: 250px;
-            background-color: #333;
+            background-color: maroon; 
             color: #fff;
             padding: 20px;
             height: 100vh;
@@ -24,6 +24,7 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
+            border-radius: 20px; /* Added border-radius for rounded edges */
         }
         
         #sidebar h2 {
@@ -52,16 +53,16 @@
         }
         
         #sidebar ul li a:hover {
-            background-color: #555;
+            background-color: #800000; /* Dark red hover color */
         }
         
         #content {
-            margin-left: 250px; /* Adjust based on sidebar width */
+            margin-left: 250px;
             padding: 20px;
         }
         
         h1 {
-            color: #333;
+            color: maroon;
             font-size: 28px;
             margin-bottom: 20px;
             text-align: center;
@@ -87,7 +88,7 @@
         </ul>
     </div>
     <div id="content">
-        <h1>Welcome to the <span style="color: #3498db;">Admin Dashboard</span></h1>
+        <h1><span style="color: maroon;">Admin Dashboard</span></h1>
         <div id="main-content"></div>
     </div>
     <script src="scripts.js"></script>
