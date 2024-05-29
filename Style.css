@@ -1,0 +1,135 @@
+body {
+    
+    background-color: #F5F5F5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    font-family: "Inter", sans-serif;
+    color: #121212;
+}
+
+#login-page {
+    background-image: url("Pictures/UPV-OCS-Background.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+#title {
+    position: absolute;
+    top: 20px;
+    left: 50px;
+    color: #7B1113;
+    font-size: 42px;
+    font-weight: 800;
+}
+
+.login-container {
+    position: absolute;
+    right: 250px;
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 300px;
+}
+
+.login-container h2, .sign-up-container h2 {
+    margin: 0 0 20px;
+    text-align: center;
+}
+
+.input-container {
+    display: flex;
+    box-sizing: border-box;
+    width: 100%;
+    margin: 15px 0;
+    background: #F5F5F5;
+    border-radius: 15px;
+    padding: 10px;
+}
+  
+.material-icons {
+    padding: 10px;
+    text-align: center;
+    color: #999;
+    font-size: 20px !important;
+}
+
+.input-field {
+    width: 100%;
+    padding: 5px;
+    border: none;
+    outline: none;
+    color: #121212;
+    background: #F5F5F5;
+    font-size: 16px;
+    font-family: "Inter", sans-serif;
+    font-weight: 500;
+}
+
+.input-container {
+    &:focus-within {
+        .material-icons {
+            color: #121212; 
+        }
+        .input-field {
+            color: #121212;
+        }
+    }
+}
+
+.login-container button, .sign-up-container button {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 15px 0;
+    background-color: #7B1113;
+    border: none;
+    color: white;
+    border-radius: 15px;
+    cursor: pointer;
+    font-size: 16px;
+    font-family: "Inter", sans-serif;
+    font-weight: 500;
+}
+
+.login-container button:hover, .sign-up-container button:hover {
+    background: #014421;
+    transition: 0.5s;
+}
+
+.sign-up {
+    position: absolute;
+    right: 285px;
+    top: 555px;
+    font-weight: 500;
+
+}
+
+.sign-up a, .login a {
+    text-decoration: none;
+    color: #7B1113;
+    font-weight: 700;
+}
+
+.sign-up a:hover, .login a:hover {
+    color: #014421;
+    transition: 0.5s;
+}
+
+.sign-up-container {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 300px;
+}
+
+.login {
+    display: inline-block;
+    position: absolute;
+    top: 590px;
+    right: 615px;
+    font-weight: 500;
+}
