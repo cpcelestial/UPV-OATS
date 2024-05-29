@@ -175,9 +175,34 @@ body {
     border-bottom: 1px solid rgba(255, 255, 255, 0.3);
 }
 
+.user-profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-top: 20px; 
+}
+
+.user-profile img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+}
+
+.user-profile h5 {
+    margin: 25px 0;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.user-profile span {
+    color: #7B1113;
+    font-weight: 800;
+}
+
 .side-nav ul {
     list-style-type: none;
-    padding: 20px 25px;
+    padding: 0 25px;
     margin: 0;
 }
 

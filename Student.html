@@ -15,6 +15,10 @@
     <aside class="side-nav">
         <h2>UPV OCS</h2>
         <hr>
+        <div class="user-profile">
+            <img src="Pictures/Blank-Profile-Picture.png">
+            <h5>Hello, <span>User</span>!</h5>
+        </div>
         <ul>
             <li>
                 <a href="Student.html"><i class="material-icons">space_dashboard</i>Dashboard</a>
@@ -40,7 +44,7 @@
     </div>
     <!-- Main Content -->
     <div class="dashboard">
-        <h1>Hello User! Here are your appointments:</h1>
+        <h1>Here are your upcoming appointments:</h1>
         <div class="upcoming-appointments">
             <div class="appointment-card">
                 <h5 class="card-title">Card 1</h5>
@@ -56,26 +60,5 @@
             </div>
         </div>
     </div>
-
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-  var ctx = document.getElementById('myChart').getContext('2d');
-  var myChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-      datasets: [{
-        label: 'My First dataset',
-        backgroundColor: 'rgba(0, 119, 204, 0.3)',
-        borderColor: 'rgb(0, 119, 204)',
-        data: [0, 10, 5, 2, 20, 30, 45]
-      }]
-    },
-    options: {}
-  });
-</script>
-
 </body>
 </html>
