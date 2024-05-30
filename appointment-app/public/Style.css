@@ -465,8 +465,8 @@ body {
 
 .profile {
     display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
+    flex-flow: row wrap;
+    align-items: flex-start;
     justify-content: space-between;
     width: 1180px;
     position: absolute;
@@ -609,9 +609,62 @@ body {
 }
 
 .profile-container {
+    display: flex;
+    flex-shrink: 20;
+    flex-direction: column;
+    align-items: center;
     box-sizing: border-box;
     width: 27%;
     background: #FFFFFF;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     border-radius: 20px;
+}
+
+.profile-background {
+    background-image: url("Pictures/Profile-Background.png");
+    background-size: cover;
+    background-position: top;
+    height: 190px;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    border-radius: 19px 19px 0 0;
+}
+
+.profile-picture {
+    position: absolute;
+    top: 180px;
+    width: 170px;
+    height: 170px;
+    border: 10px solid #FFFFFF;
+    border-radius: 50%;
+}
+
+.profile-container h2 {
+    margin: 85px 0 0 0;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.profile-container h3 {
+    margin: 10px 0 0 0;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.profile-container p {
+    margin: 35px 30px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 300;
+}
+
+.profile-container h4 {
+    background: #014421;
+    color: #FFFFFF;
+    margin: 0 0 30px 0;
+    padding: 13px 15px;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: 10px;
 }
