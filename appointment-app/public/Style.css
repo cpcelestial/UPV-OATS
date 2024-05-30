@@ -463,7 +463,7 @@ body {
     border-radius: 20px;
 }
 
-.profile {
+.profile, .settings {
     display: flex;
     flex-flow: row wrap;
     align-items: flex-start;
@@ -474,13 +474,13 @@ body {
     left: 310px;
 }
 
-.profile h1 {
+.profile h1, .settings h1 {
     width: 100%;
     color: #FFFFFF;
     font-size: 36px;
 }
 
-.edit-container {
+.edit-container, .settings-container {
     box-sizing: border-box;
     width: 70%;
     padding: 25px 25px 35px;
@@ -490,7 +490,7 @@ body {
     border-radius: 20px;
 }
 
-.edit-container h2 {
+.edit-container h2, .settings-container h2 {
     padding: 0;
     margin: 0;
     color: #7B1113;
@@ -498,7 +498,7 @@ body {
     font-weight: 700;
 }
 
-.edit-container hr {
+.edit-container hr, .settings-container hr {
     margin: 20px 0 25px 0;
     border: 0;
     height: 0;
@@ -507,20 +507,20 @@ body {
     border-bottom: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-.edit-container h5 {
+.edit-container h5, .settings-container h5 {
     text-transform: uppercase;
     font-size: 14px;
     font-weight: 500;
 }
 
-.edit-container label {
+.edit-container label, .settings-container label {
     display: block;
     padding-bottom: 7px;
     font-size: 16px;
     font-weight: 700;
 }
 
-.edit-container input, .edit-container textarea, .edit-container select {
+.edit-container input, .edit-container textarea, .edit-container select, .settings-container input {
     box-sizing: border-box;
     width: 100%;
     padding: 14px;
@@ -538,7 +538,7 @@ body {
     border-right: 15px solid #F5F5F5;
 }
 
-.edit-field {
+.edit-field, .settings-field {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
@@ -547,10 +547,7 @@ body {
     padding: 0 25px;
 }
 
-.edit-container button {
-    position: absolute;
-    top: 115px;
-    left: 680px;
+.edit-container button, .settings-container button {
     padding: 12px 16px;
     background-color: #7B1113;
     border: none;
@@ -562,7 +559,18 @@ body {
     font-weight: 500;
 }
 
-.edit-container button:hover {
+.edit-container button {
+    position: absolute;
+    top: 115px;
+    left: 690px;
+}
+
+.settings-container button {
+    position: relative;
+    left: 640px;
+}
+
+.edit-container button:hover, .settings-container button:hover {
     background: #014421;
     transition: 0.5s;
 }
@@ -667,4 +675,30 @@ body {
     font-size: 13px;
     font-weight: 700;
     border-radius: 10px;
+}
+
+.blank, .old-password, .new-password, .confirm-password, .delete-password {
+    width: 48%;
+}
+
+.old-password {
+    margin-bottom: 30px;
+}
+
+.new-password, .confirm-password {
+    margin-bottom: 20px;
+}
+
+.delete-field {
+    align-items: flex-end;
+    justify-content: flex-start;
+}
+
+.delete-password {
+    margin-bottom: 10px;
+}
+
+.delete-button {
+    position: static !important;
+    margin: 0 0 10px 20px;
 }

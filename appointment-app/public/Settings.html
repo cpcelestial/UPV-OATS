@@ -40,95 +40,40 @@
             <input class="search-field" type="text" placeholder="Search here..." name="search">
         </div>
     </div>
-    <div class="profile">
+    <div class="settings">
         <h1>Hello, User!</h1>
-        <div class="edit-container">
-            <h2>Edit Profile</h2>
+        <div class="settings-container">
+            <h2>Edit Settings</h2>
             <hr>
             <form action="" method="post">
-                <h5>User Information</h5>
-                <div class="edit-field">
-                    <div class="username-field">
-                        <label>Username</label>
-                        <input type="text" placeholder="Username" name="username">
+                <h5>Change Password</h5>
+                <div class="settings-field">
+                    <div class="old-password">
+                        <label>Old Password</label>
+                        <input type="password" name="old-password">
                     </div>
-                    <div class="email-field">
-                        <label>Email Address</label>
-                        <input type="email" placeholder="Email" name="email">
+                    <div class="blank"></div>
+                    <div class="new-password">
+                        <label>New Password</label>
+                        <input type="password" name="old-password">
                     </div>
-                    <div class="first-name-field">
-                        <label>First Name</label>
-                        <input type="text" placeholder="First Name" name="first-name">
-                    </div>
-                    <div class="last-name-field">
-                        <label>Last Name</label>
-                        <input type="text" placeholder="Last Name" name="last-name">
+                    <div class="confirm-password">
+                        <label>Confirm Password</label>
+                        <input type="password" name="old-password">
                     </div>
                 </div>
-                <hr>
-                <h5>Contact Information</h5>
-                <div class="edit-field">
-                    <div class="address-field">
-                        <label>Address</label>
-                        <input type="text" placeholder="Address" name="address">
+                <button type="submit">Change Password</button>
+            </form>
+            <hr>
+            <form action="" method="post">
+                <h5>Delete Account</h5>
+                <div class="settings-field delete-field">
+                    <div class="delete-password">
+                        <label>Enter Password</label>
+                        <input type="password" name="delete-password">
                     </div>
-                    <div class="city-field">
-                        <label>City</label>
-                        <input type="text" placeholder="City" name="city">
-                    </div>
-                    <div class="province-field">
-                        <label>Province</label>
-                        <input type="text" placeholder="Province" name="province">
-                    </div>
-                    <div class="zip-code-field">
-                        <label>ZIP Code</label>
-                        <input type="text" placeholder="ZIP Code" name="zip-code">
-                    </div>
+                    <button class="delete-button"type="submit">Delete Account</button>
                 </div>
-                <hr>
-                <h5>About Me</h5>
-                <div class="edit-field">
-                    <div class="bio-field">
-                        <label>Bio</label>
-                        <textarea placeholder="Bio" name="bio" rows="4"></textarea>
-                    </div>
-                    <div class="course-field">
-                        <label>Course</label>
-                        <select name="course">
-                            <option value="BA Communication & Media Studies">BA Communication & Media Studies</option>
-                            <option value="BA Community Development">BA Community Development</option>
-                            <option value="BA History">BA History</option>
-                            <option value="BA Literature">BA Literature</option>
-                            <option value="BA Political Science">BA Political Science</option>
-                            <option value="BA Psychology">BA Psychology</option>
-                            <option value="BA Sociology">BA Sociology</option>
-                            <option value="BS Accountancy">BS Accountancy</option>
-                            <option value="BS Applied Mathematics">BS Applied Mathematics</option>
-                            <option value="BS Biology">BS Biology</option>
-                            <option value="BS Chemical Engineering">BS Chemical Engineering</option>
-                            <option value="BS Chemistry">BS Chemistry</option>
-                            <option value="BS Computer Science">BS Computer Science</option>
-                            <option value="BS Economics">BS Economics</option>
-                            <option value="BS Fisheries">BS Fisheries</option>
-                            <option value="BS Food Technology">BS Food Technology</option>
-                            <option value="BS Management">BS Management</option>
-                            <option value="BS Marketing">BS Marketing</option>
-                            <option value="BS Public Health">BS Public Health</option>
-                            <option value="BS Statistics">BS Statistics</option>
-                        </select>
-                    </div>
-                    <div class="year-field">
-                        <label>Year</label>
-                        <select name="year">
-                            <option value="I">1st Year</option>
-                            <option value="II">2nd year</option>
-                            <option value="III">3rd Year</option>
-                            <option value="IV">4th Year</option>
-                            <option value="">Nth Year</option>
-                        </select>
-                    </div>
-                </div>
-                <button type="submit">Update Profile</button>
             </form>
         </div>
         <div class="profile-container">
