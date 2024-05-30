@@ -9,12 +9,16 @@ body {
 }
 
 .login-page {
-    background-image: url("Pictures/UPV-OCS-Background.png");
+    background-image: url("Pictures/Login-Background.png");
     background-size: contain;
     background-repeat: no-repeat;
 }
 
 .sign-up-page {
+    background-image: url("Pictures/Sign-Up-Background.png");
+    background-size: cover;
+    background-position: bottom;
+    background-repeat: no-repeat;
     justify-content: center;
 }
 
@@ -25,6 +29,10 @@ body {
     color: #7B1113;
     font-size: 42px;
     font-weight: 800;
+}
+
+.title span {
+    color: #014421;
 }
 
 .login-container {
@@ -66,9 +74,10 @@ body {
     outline: none;
     color: #121212;
     background: #F5F5F5;
-    font-size: 16px;
+    font-size: 15px;
     font-family: "Inter", sans-serif;
     font-weight: 500;
+    border-radius: 10px;
 }
 
 .input-container {
@@ -123,16 +132,82 @@ body {
 .sign-up-container {
     background-color: #FFFFFF;
     padding: 30px;
+    margin-bottom: 100px;
     border-radius: 20px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     width: 300px;
 }
 
+.radio-container {
+    display: flex;
+    justify-content: space-between;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0 20px 20px 20px;
+}
+
+.radio-button {
+    display: block;
+    position: relative;
+    padding-left: 28px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+  
+.radio-button input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+  
+.checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 20px;
+    width: 20px;
+    background-color: #F5F5F5;
+    border-radius: 50%;
+}
+  
+.radio-button:hover input ~ .checkmark {
+    background-color: #014421;
+    transition: 0.5s;
+}
+
+.radio-button input:checked ~ .checkmark {
+    background-color: #7B1113;
+}
+
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.radio-button input:checked ~ .checkmark:after {
+    display: block;
+}
+
+.radio-button .checkmark:after {
+    top: 6.5px;
+    left: 6.5px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: white;
+}
+
 .login {
     display: inline-block;
     position: absolute;
-    top: 590px;
-    right: 615px;
+    top: 560px;
+    left: 625px;
     font-weight: 500;
 }
 
@@ -167,6 +242,10 @@ body {
     font-weight: 800;
 }
 
+.side-nav h2 span {
+    color: #014421;
+}
+
 .side-nav hr {
     border: 0;
     height: 0;
@@ -195,7 +274,7 @@ body {
     font-weight: 700;
 }
 
-.user-profile span {
+.user-profile h5 span {
     color: #7B1113;
     font-weight: 800;
 }
@@ -225,9 +304,16 @@ body {
     border-radius: 15px;
 }
 
-.side-nav a:hover {
+.side-nav .odd:hover {
     color: #FFFFFF;
     background: #7B1113;
+    font-weight: 500;
+    transition: 0.5s;
+}
+
+.side-nav .even:hover {
+    color: #FFFFFF;
+    background: #014421;
     font-weight: 500;
     transition: 0.5s;
 }

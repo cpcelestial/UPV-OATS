@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
 </head>
 <body class="sign-up-page">
-    <h1 class="title">UPV OCS</h1>
+    <h1 class="title">UPV <span>OATS</span></h1>
     <div class="sign-up-container">
         <h2>Hello!</h2>
         <form action="/signup" method="post">
@@ -26,6 +26,16 @@
             <div class="input-container">
                 <i class="material-icons">lock</i>
                 <input class="input-field" type="password" placeholder="Password" name="password" required>
+            </div>
+            <div class="radio-container">
+                <label class="radio-button">Student
+                    <input type="radio" name="type" required>
+                    <span class="checkmark"></span>
+                </label>
+                <label class="radio-button">Faculty or Staff
+                    <input type="radio" name="type" required>
+                    <span class="checkmark"></span>
+                </label>
             </div>
             <button type="submit">Sign Up</button>
         </form>
