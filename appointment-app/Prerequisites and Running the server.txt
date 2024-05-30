@@ -1,0 +1,46 @@
+Make sure these command bash lines are used first for installing and the project structure is followed.
+[In the directory]
+Use  bash with these lines:
+mkdir appointment-app
+cd appointment-app
+npm init -y
+
+[Install the dependencies]
+Use bash:
+npm install express body-parser fs path
+
+Project Structure:
+appointment-app/
+│
+├── public/
+│   ├── Pictures/               # Your images directory
+│   ├── Style.css               # Your CSS file
+│   ├── Login.html              # Your login page
+│   ├── Sign-up.html            # Your sign-up page
+│   ├── Student.html            # Student dashboard
+│   └── Admin.html              # Admin dashboard
+│
+├── users.json                  # JSON file to store user data
+└── server.js                   # Your Node.js server file
+
+
+[For Implementing server]
+server.js
+
+[Updated Files]
+Sign-Up.html
+Login.html
+
+[Storing User accounts in this JSON file]
+users.json
+
+___________________________________________________________________
+Running the sever for enabling logins and sign-ups of accounts
+
+[Run Server script]
+Use bash:
+node server.js
+
+[Navigate for Signing up and Logging in]
+Sign-up page: http://localhost:3000/Sign-up.html
+Login page: http://localhost:3000/Login.html
