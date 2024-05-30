@@ -44,3 +44,17 @@ node server.js
 [Navigate for Signing up and Logging in]
 Sign-up page: http://localhost:3000/Sign-up.html
 Login page: http://localhost:3000/Login.html
+
+__________________________________________________________________
+
+**Pretend this block does NOT exist for the users (Admins only)**
+For accessing the Admin account:
+Email: admin@example.com
+Password: admin
+
+For accessing database of all registered users:
+(Go to http://localhost:3000/users)
+Username: admin
+Password: admin
+
+__________________________________________________________________
