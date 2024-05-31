@@ -235,7 +235,7 @@ body {
 }
 
 .side-nav h2 {
-    margin: 10px 0 25px 0;
+    margin: 10px 0;
     text-align: center;
     color: #7B1113;
     font-size: 32px;
@@ -259,13 +259,14 @@ body {
     flex-direction: column;
     align-items: center;
     width: 100%;
-    margin-top: 20px; 
+    margin-top: 30px; 
 }
 
 .user-profile img {
-    width: 100px;
-    height: 100px;
+    width: 150px;
+    height: 150px;
     border-radius: 50%;
+    box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
 }
 
 .user-profile h5 {
@@ -511,6 +512,7 @@ body {
     text-transform: uppercase;
     font-size: 14px;
     font-weight: 500;
+    margin-top: 0;
 }
 
 .edit-container label, .settings-container label {
@@ -573,6 +575,25 @@ body {
 .edit-container button:hover, .settings-container button:hover {
     background: #014421;
     transition: 0.5s;
+}
+
+.picture-field {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.picture-field img {
+    width: 200px;
+    margin-bottom: 30px;
+    border-radius: 10px;
+}
+
+.picture-field input {
+    width: 300px;
+    margin-bottom: 20px;
 }
 
 .username-field, .first-name-field {
