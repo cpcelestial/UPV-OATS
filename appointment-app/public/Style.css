@@ -112,8 +112,8 @@ body {
 
 .sign-up {
     position: absolute;
-    right: 285px;
-    top: 555px;
+    right: 28.5%;
+    top: 55.5%;
     font-weight: 500;
 
 }
@@ -206,8 +206,8 @@ body {
 .login {
     display: inline-block;
     position: absolute;
-    top: 56%;
-    left: 62.5%;
+    top: 560px;
+    left: 625px;
     font-weight: 500;
 }
 
