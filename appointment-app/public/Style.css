@@ -206,8 +206,8 @@ body {
 .login {
     display: inline-block;
     position: absolute;
-    top: 560px;
-    left: 625px;
+    top: 56%;
+    left: 62.5%;
     font-weight: 500;
 }
 
