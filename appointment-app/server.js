@@ -68,9 +68,9 @@ app.post('/login', (req, res) => {
     const user = users.find(user => user.email === email && user.password === password);
 
     if (user) {
-        res.redirect('/Student.html');
+        res.json({ success: true, email: user.email });
     } else {
-        res.status(400).send('Invalid credentials');
+        res.status(400).json({ success: false, message: 'Invalid credentials' });
     }
 });
 
@@ -78,6 +78,42 @@ app.post('/login', (req, res) => {
 app.get('/users', basicAuth, (req, res) => {
     const users = readUsers();
     res.json(users);
+});
+
+// route to handle password update
+app.post('/update-password', (req, res) => {
+    const { email, currentPassword, newPassword } = req.body;
+    console.log(`Email: ${email}, Current Password: ${currentPassword}, New Password: ${newPassword}`);
+    
+    const users = readUsers();
+    const user = users.find(user => user.email === email && user.password === currentPassword);
+
+    if (!user) {
+        console.log('Current password is incorrect');
+        return res.status(400).send('Current password is incorrect');
+    }
+
+    user.password = newPassword;
+    writeUsers(users);
+    res.send('Password updated successfully');
+});
+
+// Add this route to handle account deletion
+app.post('/delete-account', (req, res) => {
+    const { email, password } = req.body;
+    console.log(`Delete request for email: ${email}, password: ${password}`);
+
+    const users = readUsers();
+    const userIndex = users.findIndex(user => user.email === email && user.password === password);
+
+    if (userIndex === -1) {
+        console.log('Password is incorrect or user does not exist');
+        return res.status(400).send('Password is incorrect or user does not exist');
+    }
+
+    users.splice(userIndex, 1);
+    writeUsers(users);
+    res.send('Account deleted successfully');
 });
 
 app.listen(PORT, () => {

@@ -14,7 +14,7 @@
     <h1 class="title">UPV <span>OATS</span></h1>
     <div class="login-container">
         <h2>Welcome!</h2>
-        <form action="/login" method="post">
+        <form id="loginForm">
             <div class="input-container">
                 <i class="material-icons">mail</i>
                 <input class="input-field" type="email" placeholder="Email" name="email" required>
@@ -29,5 +29,34 @@
     <div class="sign-up">
         <p>Don't have an account? <a href="Sign-Up.html">Sign up now.</a></p>
     </div>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            const email = formData.get('email');
+            const password = formData.get('password');
+
+            fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    localStorage.setItem('email', data.email);
+                    window.location.href = '/Student.html';
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile</title>
+    <title>Settings</title>
     <link rel="stylesheet" href="Style.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -45,34 +45,33 @@
         <div class="settings-container">
             <h2>Edit Settings</h2>
             <hr>
-            <form action="" method="post">
+            <form id="passwordForm">
                 <h5>Change Password</h5>
                 <div class="settings-field">
                     <div class="old-password">
-                        <label>Old Password</label>
-                        <input type="password" name="old-password">
+                        <label>Current Password</label>
+                        <input type="password" name="currentPassword" required>
                     </div>
-                    <div class="blank"></div>
                     <div class="new-password">
                         <label>New Password</label>
-                        <input type="password" name="old-password">
+                        <input type="password" name="newPassword" required>
                     </div>
                     <div class="confirm-password">
-                        <label>Confirm Password</label>
-                        <input type="password" name="old-password">
+                        <label>Confirm New Password</label>
+                        <input type="password" name="confirmNewPassword" required>
                     </div>
                 </div>
                 <button type="submit">Change Password</button>
             </form>
             <hr>
-            <form action="" method="post">
+            <form id="deleteAccountForm">
                 <h5>Delete Account</h5>
                 <div class="settings-field delete-field">
                     <div class="delete-password">
                         <label>Enter Password</label>
-                        <input type="password" name="delete-password">
+                        <input type="password" name="deletePassword" required>
                     </div>
-                    <button class="delete-button"type="submit">Delete Account</button>
+                    <button class="delete-button" type="submit">Delete Account</button>
                 </div>
             </form>
         </div>
@@ -118,19 +117,95 @@
                         <div class="faculty-staff-field">
                             <label>Name of Faculty/Staff</label>
                             <select name="faculty-staff-name">
-                                <option value="">--- Choose Here ---</option>
+                                <option value="faculty1">Faculty/Staff 1</option>
+                                <option value="faculty2">Faculty/Staff 2</option>
+                                <option value="faculty3">Faculty/Staff 3</option>
+                                <option value="faculty4">Faculty/Staff 4</option>
                             </select>
                         </div>
-                        <div class="location-field">
-                            <label>Location</label>
-                            <input type="text" placeholder="Insert location here..." name="location">
+                        <div class="mode-field">
+                            <label>Mode of Appointment</label>
+                            <select name="mode">
+                                <option value="face-to-face">Face-to-Face</option>
+                                <option value="online">Online</option>
+                            </select>
                         </div>
                     </div>
-                    <button type="submit">Book Appointment</button>
+                    <button type="submit">Confirm Appointment</button>
                 </form>
             </div>
         </div>
     </div>
-    <script src="Script.js"></script>
+    <script>
+        // Function to open the popup
+        function openPopup() {
+            document.getElementById("popupOverlay").style.display = "block";
+        }
+
+        // Function to close the popup
+        document.getElementById("exit").addEventListener("click", function () {
+            document.getElementById("popupOverlay").style.display = "none";
+        });
+
+        // Function to handle password form submission
+        document.getElementById('passwordForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            const currentPassword = formData.get('currentPassword');
+            const newPassword = formData.get('newPassword');
+            const confirmNewPassword = formData.get('confirmNewPassword');
+            const email = localStorage.getItem('email'); // Retrieve the user's email from local storage
+
+            if (newPassword !== confirmNewPassword) {
+                alert('New passwords do not match');
+                return;
+            }
+
+            fetch('/update-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: email,
+                    currentPassword: currentPassword,
+                    newPassword: newPassword
+                })
+            })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        // Function to handle delete account form submission
+        document.getElementById('deleteAccountForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            const deletePassword = formData.get('deletePassword');
+            const email = localStorage.getItem('email'); // Retrieve the user's email from local storage
+
+            fetch('/delete-account', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: deletePassword
+                })
+            })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+                if (data === 'Account deleted successfully') {
+                    localStorage.removeItem('email'); // Clear the email from local storage
+                    window.location.href = '/Sign-Up.html'; // Redirect to sign-up page
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
 </body>
 </html>
