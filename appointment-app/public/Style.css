@@ -297,12 +297,30 @@ body {
     box-sizing: border-box;
     width: 100%;
     padding: 20px 0;
+    margin: 0;
     vertical-align: middle;
     text-decoration: none;
     color: #121212;
     font-size: 16px;
     font-weight: 400;
     border-radius: 15px;
+}
+
+.appointment-button {
+    box-sizing: border-box;
+    background: #FFFFFF;
+    width: 100%;
+    margin: 0;
+    padding: 20px 0;
+    vertical-align: middle;
+    text-align: left;
+    text-decoration: none;
+    color: #121212;
+    font-size: 16px;
+    font-weight: 400;
+    border-radius: 15px;
+    border: none;
+    cursor: pointer;
 }
 
 .side-nav .odd:hover {
@@ -312,7 +330,7 @@ body {
     transition: 0.5s;
 }
 
-.side-nav .even:hover {
+.side-nav .even:hover, .appointment-button:hover {
     color: #FFFFFF;
     background: #014421;
     font-weight: 500;
@@ -722,4 +740,147 @@ body {
 .delete-button {
     position: static !important;
     margin: 0 0 10px 20px;
+}
+
+.popup-overlay {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 100;
+}
+
+.popup {
+    background: #FFFFFF;
+    padding: 25px;
+    width: 600px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.popup-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.popup-content h2 {
+    padding: 0;
+    margin: 0;
+    color: #7B1113;
+    font-size: 32px;
+    font-weight: 800;
+}
+
+.popup-content hr {
+    margin: 20px 0 25px 0;
+    border: 0;
+    height: 0;
+    width: 100%;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.popup-content form {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0 15px;
+}
+
+.popup-content label {
+    display: block;
+    padding-bottom: 7px;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.popup-content input, .popup-content textarea, .popup-content select {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 14px;
+    border: none;
+    outline: none;
+    color: #121212;
+    background: #F5F5F5;
+    font-size: 13px;
+    font-family: "Inter", sans-serif;
+    font-weight: 500;
+    border-radius: 5px;
+}
+
+.popup-content button {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 16px;
+    margin: 25px 0 15px 0;
+    background-color: #7B1113;
+    border: none;
+    color: white;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    font-family: "Inter", sans-serif;
+    font-weight: 500;
+}
+
+.popup-content button:hover {
+    background: #014421;
+    transition: 0.5s;
+}
+
+.exit {
+    position: absolute;
+    top: 65px;
+    right: 445px;
+    cursor: pointer;
+    background: #7B1113;
+    border-radius: 50%;
+    color: #FFFFFF;
+    font-size: 15px;
+    padding: 0 6px 1px 6px;
+}
+
+.exit:hover {
+    background: #014421;
+    transition: 0.5s;
+}
+
+.adjustment {
+    right: 455px;
+}
+
+.appointment-field {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.date-field  {
+    width: 35%;
+}
+
+.start-field, .end-field {
+    width: 29%;
+}
+
+.title-field, .details-field {
+    width: 100%;
+    margin-top: 25px;
+}
+
+.faculty-staff-field {
+    width: 50%;
+    margin-top: 25px;
+}
+
+.location-field {
+    width: 47%;
+    margin-top: 25px;
 }

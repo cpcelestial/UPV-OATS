@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    
 </head>
 <body>
     <div class="background"></div>
@@ -24,7 +25,7 @@
                 <a href="Student.html" class="odd"><i class="material-icons">space_dashboard</i>Dashboard</a>
             </li>
             <li>
-                <a href="" class="even"><i class="material-icons">event_note</i>Appointment</a>
+                <button type="button" class="even appointment-button" onclick="openPopup();"><i class="material-icons">event_note</i>Appointment</button>
             </li>
             <li>
                 <a href="Profile.html" class="odd"><i class="material-icons">person</i>Profile</a>
@@ -74,6 +75,53 @@
             allowTransparency="true" scrolling="no" 
             frameborder="0" height="800px" width="100%"></iframe>
         </div>
+        <div class="popup-overlay" id="popupOverlay">
+            <div class="popup" id="popup">
+                <span class="exit" id="exit">&times;</span>
+                <div class="popup-content">
+                    <h2>Setup an Appointment</h2>
+                    <hr>
+                    <form action="" method="post">
+                        <div class="appointment-field">
+                            <div class="date-field">
+                                <label>Date</label>
+                                <input type="date" name="date">
+                            </div>
+                            <div class="start-field">
+                                <label>Start Time</label>
+                                <input type="time" name="start-time">
+                            </div>
+                            <div class="end-field">
+                                <label>End Time</label>
+                                <input type="time" name="end-time">
+                            </div>
+                        </div>
+                        <div class="title-field">
+                            <label>Appointment Title</label>
+                            <input type="text" placeholder="Insert title here..." name="appointment-title">
+                        </div>
+                        <div class="details-field">
+                            <label>Appointment Details</label>
+                            <textarea name="bio" placeholder="Insert details here..." rows="6"></textarea>
+                        </div>
+                        <div class="appointment-field">
+                            <div class="faculty-staff-field">
+                                <label>Name of Faculty/Staff</label>
+                                <select name="faculty-staff-name">
+                                    <option value="">--- Choose Here ---</option>
+                                </select>
+                            </div>
+                            <div class="location-field">
+                                <label>Location</label>
+                                <input type="text" placeholder="Insert location here..." name="location">
+                            </div>
+                        </div>
+                        <button type="submit">Book Appointment</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <script src="Script.js"></script>
     </div>
 </body>
 </html>
