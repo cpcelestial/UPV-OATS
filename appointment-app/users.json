@@ -1,12 +1,17 @@
 [
   {
-    "username": "John Smith",
-    "email": "jsmith@gmail.com",
-    "password": "qwert12345"
-  },
-  {
     "username": "celestialcdale",
     "email": "celestialcdale@gmail.com",
     "password": "Daleoats."
+  },
+  {
+    "username": "johnsmith",
+    "email": "jsmith@gmail.com",
+    "password": "123qwe"
+  },
+  {
+    "username": "barathrum",
+    "email": "sbreaker@gmail.com",
+    "password": "marathonmap"
   }
 ]

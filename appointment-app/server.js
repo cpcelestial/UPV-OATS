@@ -59,7 +59,7 @@ app.post('/signup', (req, res) => {
 app.post('/login', (req, res) => {
     const { email, password } = req.body;
 
-    // check for admin credentials  OR change here the admin credentials for login
+    // Check for admin credentials
     if (email === 'admin@example.com' && password === 'admin') {
         return res.redirect('/Admin.html');
     }
@@ -68,9 +68,9 @@ app.post('/login', (req, res) => {
     const user = users.find(user => user.email === email && user.password === password);
 
     if (user) {
-        res.json({ success: true, email: user.email });
+        return res.redirect('/Student.html');
     } else {
-        res.status(400).json({ success: false, message: 'Invalid credentials' });
+        res.status(400).send('Invalid credentials');
     }
 });
 

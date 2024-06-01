@@ -13,8 +13,8 @@
 <body class="login-page">
     <h1 class="title">UPV <span>OATS</span></h1>
     <div class="login-container">
-        <h2>Welcome!</h2>
-        <form id="loginForm">
+        <h2>Welcome!</h2>   
+        <form action="/login" method="post">   <!-- formerly known as <form id="loginForm"> -->
             <div class="input-container">
                 <i class="material-icons">mail</i>
                 <input class="input-field" type="email" placeholder="Email" name="email" required>
@@ -25,9 +25,7 @@
             </div>
             <button type="submit">Sign In</button>
         </form>
-    </div>
-    <div class="sign-up">
-        <p>Don't have an account? <a href="Sign-Up.html">Sign up now.</a></p>
+        <p>Don't have an account? <a href="Sign-Up.html">Sign up now.</a></p> <!-- formerly had its own <div class=sign-up> -->   
     </div>
     <script>
         document.getElementById('loginForm').addEventListener('submit', function(event) {
