@@ -1,45 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sign Up</title>
-    <link rel="stylesheet" href="Style.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
-</head>
-<body class="sign-up-page">
+    <link rel="stylesheet" href="Style.css" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
+      rel="stylesheet"
+    />
+    <script type="module" src="firebase-config.js" defer></script>
+  </head>
+  <body class="sign-up-page">
     <h1 class="title">UPV <span>OATS</span></h1>
     <div class="sign-up-container">
-        <h2>Hello!</h2>
-        <form action="/signup" method="post">
-            <div class="input-container">
-                <i class="material-icons">person</i>
-                <input class="input-field" type="text" placeholder="Username" name="username" required>
-            </div>
-            <div class="input-container">
-                <i class="material-icons">mail</i>
-                <input class="input-field" type="email" placeholder="Email" name="email" required>
-            </div>
-            <div class="input-container">
-                <i class="material-icons">lock</i>
-                <input class="input-field" type="password" placeholder="Password" name="password" required>
-            </div>
-            <div class="radio-container">
-                <label class="radio-button">Student
-                    <input type="radio" name="type" required>
-                    <span class="checkmark"></span>
-                </label>
-                <label class="radio-button">Faculty or Staff
-                    <input type="radio" name="type" required>
-                    <span class="checkmark"></span>
-                </label>
-            </div>
-            <button type="submit">Sign Up</button>
-        </form>
-        <p>Already have an account? <a href="Login.html">Sign in now.</a></p> <!-- formerly had its own <div class=login> -->
+      <h2>Hello!</h2>
+      <form id="signup-form">
+        <div class="input-container">
+          <i class="material-icons">person</i>
+          <input
+            class="input-field"
+            type="text"
+            placeholder="Username"
+            name="username"
+            id="username"
+            required
+          />
+        </div>
+        <div class="input-container">
+          <i class="material-icons">mail</i>
+          <input
+            class="input-field"
+            type="email"
+            placeholder="Email"
+            name="email"
+            id="email"
+            required
+          />
+        </div>
+        <div class="input-container">
+          <i class="material-icons">lock</i>
+          <input
+            class="input-field"
+            type="password"
+            placeholder="Password"
+            name="password"
+            id="password"
+            required
+          />
+        </div>
+        <button type="submit" id="submit">Sign Up</button>
+      </form>
+      <p>Already have an account? <a href="Login.html">Sign in now.</a></p>
     </div>
-</body>
+
+    <!---->
+    <script type="module">
+      import { auth } from "./firebase-config.js";
+      import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+
+      document
+        .getElementById("signup-form")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+          console.log(
+            "Form submission prevented. Starting user registration..."
+          );
+
+          const email = document.getElementById("email").value;
+          const password = document.getElementById("password").value;
+
+          console.log(`Email: ${email}, Password: ${password}`);
+
+          if (!email || !password) {
+            alert("Email and password fields are required.");
+            return;
+          }
+
+          createUserWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+              // Signed up successfully
+              const user = userCredential.user;
+              console.log("User registered successfully:", user);
+              alert("User registered successfully!");
+
+              // Redirect to the Login after successful sign-up
+              window.location.href = "Login.html";
+            })
+            .catch((error) => {
+              // Handle Errors here.
+              const errorCode = error.code;
+              const errorMessage = error.message;
+              console.error(`Error [${errorCode}]: ${errorMessage}`);
+              alert(`Error: ${errorMessage}`);
+            });
+        });
+    </script>
+  </body>
 </html>
