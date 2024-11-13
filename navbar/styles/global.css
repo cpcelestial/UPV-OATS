@@ -1,0 +1,283 @@
+@import 'material-icons/iconfont/material-icons.css';
+
+
+:root {
+    --color-primary: #7B1113;
+    --color-secondary: #3C5343;
+    --color-tertiary: #F5AB29;
+}
+
+.fira-sans-thin {
+  font-family: "Fira Sans", sans-serif;
+  font-weight: 100;
+  font-style: normal;
+}
+
+.fira-sans-extralight {
+  font-family: "Fira Sans", sans-serif;
+  font-weight: 200;
+  font-style: normal;
+}
+
+.fira-sans-light {
+  font-family: "Fira Sans", sans-serif;
+  font-weight: 300;
+  font-style: normal;
+}
+
+.fira-sans-regular {
+  font-family: "Fira Sans", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.fira-sans-medium {
+  font-family: "Fira Sans", sans-serif;
+  font-weight: 500;
+  font-style: normal;
+}
+
+.fira-sans-semibold {
+  font-family: "Fira Sans", sans-serif;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.fira-sans-bold {
+  font-family: "Fira Sans", sans-serif;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.fira-sans-extrabold {
+  font-family: "Fira Sans", sans-serif;
+  font-weight: 800;
+  font-style: normal;
+}
+
+.fira-sans-black {
+  font-family: "Fira Sans", sans-serif;
+  font-weight: 900;
+  font-style: normal;
+}
+
+
+.karla-thin {
+  font-family: "Karla", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 100;
+  font-style: normal;
+}
+
+.karla-extralight {
+  font-family: "Karla", sans-serif;
+  font-weight: 200;
+  font-style: normal;
+}
+
+.karla-light {
+  font-family: "Karla", sans-serif;
+  font-weight: 300;
+  font-style: normal;
+}
+
+.karla-regular {
+  font-family: "Karla", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.karla-medium {
+  font-family: "Karla", sans-serif;
+  font-weight: 500;
+  font-style: normal;
+}
+
+.karla-semibold {
+  font-family: "Karla", sans-serif;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.karla-bold {
+  font-family: "Karla", sans-serif;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.karla-extrabold {
+  font-family: "Karla", sans-serif;
+  font-weight: 800;
+  font-style: normal;
+}
+
+.karla-black {
+  font-family: "Karla", sans-serif;
+  font-weight: 900;
+  font-style: normal;
+}
+
+
+#sidebar {
+  list-style: none;
+  background-color: #F7F7F7;
+  height: 120vh; 
+  width: 15%; 
+  padding-top: 10%;
+  position: fixed;
+  left: 0;
+  border-right: 2px solid #FFFF;
+  font-weight: 550;
+
+}
+
+
+
+.logo {
+  border: none;
+  position: relative;
+  height: 10%;
+  margin-bottom: 40%;
+}
+
+.logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 10%;
+}
+
+.logo img {
+  height: 90px;
+  width: 90px;
+  margin-bottom: -5%;
+}
+
+.logo h1 {
+  font-size: 24px;
+  text-align: center;
+  letter-spacing: 0;
+
+
+}
+
+.logo h1 .primary-color {
+  color: var(--color-primary);
+}
+
+.logo h1 .secondary-color {
+  color: var(--color-secondary);
+}
+li {
+
+  a {
+      text-decoration: none;
+      padding: 10%;
+      display: block;
+      color: #A3A3A3;
+  }
+
+  a.active-page {
+      display: block;
+      color: #212121;
+  }
+
+  a:not(.active-page) {
+    color: #A3A3A3;
+}
+  a:not(.active-page):hover {
+      color: var(--color-primary);
+  }
+}
+
+
+.menu {
+  list-style-type: none;
+  padding: 0;
+}
+
+.menu li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 2% 10%;
+}
+
+.menu li{
+  color: #A3A3A3; 
+  font-size: 16px;
+}
+
+ .material-icons {
+  color: #A3A3A3; 
+  font-size: 16px;
+}
+
+
+.menu li a {
+  color: #A3A3A3;
+  text-decoration: none;
+  margin-left: 2%;
+
+}
+
+.menu li a.active-page {
+  color: #212121; 
+  position: relative; 
+
+}
+
+.menu li a:hover{
+  color: var(--color-primary);
+}
+
+
+.menu li .material-icons.active {
+  color: var(--color-primary); 
+}
+
+
+.menu li a.active-page::after {
+  content: "";
+  position: absolute;
+  right: -50%;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 50%; 
+  width: 5%; 
+  background-color: var(--color-primary);
+  border-radius: 2px;
+}
+
+.logout {
+  list-style-type: none;
+  padding: 0;
+  margin-top: 60%;
+}
+
+.logout li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 2% 10%;
+}
+
+.logout li a {
+  color: #A3A3A3;
+  text-decoration: none;
+  margin-left: 2%;
+
+}
+
+.logout a:hover {
+  color: var(--color-primary);
+}
+
+
+
+
+
+
+
+
+
