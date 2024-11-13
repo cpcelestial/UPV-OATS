@@ -1,12 +1,12 @@
 import React from 'react';
 import 'styles./global.css'; 
-import logoImage from './logo-image-1.png'; 
+import logoImage from 'logo-image-1.png'; 
 
 function Sidebar() {
   return (
     <div className="sidebar" id="sidebar">
       <div className="logo">
-        <img src={logoImage} alt="OATS Logo" className="logo-image" />
+        <img src={logoImage.src} alt="OATS Logo" className="logo-image" />
         <h1 className="fira-sans-black">
           <span className="primary-color">UPV</span>
           <span className="secondary-color">OATS</span>
