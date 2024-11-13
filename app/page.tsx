@@ -36,17 +36,17 @@ const App: React.FC = () => {
   return (
     <>
       <HeadContent />
-      <body className="sign-up-page">
-        <h1 className="title">
+      <body class="sign-up-page">
+        <h1 class="title">
           UPV <span>OATS</span>
         </h1>
-        <div className="sign-up-container">
+        <div class="sign-up-container">
           <h2>Hello!</h2>
           <form id="signup-form" onSubmit={handleSignUp}>
-            <div className="input-container">
-              <i className="material-icons">person</i>
+            <div class="input-container">
+              <i class="material-icons">person</i>
               <input
-                className="input-field"
+                class="input-field"
                 type="text"
                 placeholder="Username"
                 required
@@ -54,10 +54,10 @@ const App: React.FC = () => {
                 onChange={(e) => setUsername(e.target.value)}
               />
             </div>
-            <div className="input-container">
-              <i className="material-icons">mail</i>
+            <div class="input-container">
+              <i class="material-icons">mail</i>
               <input
-                className="input-field"
+                class="input-field"
                 type="email"
                 placeholder="Email"
                 required
@@ -65,10 +65,10 @@ const App: React.FC = () => {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <div className="input-container">
-              <i className="material-icons">lock</i>
+            <div class="input-container">
+              <i class="material-icons">lock</i>
               <input
-                className="input-field"
+                class="input-field"
                 type="password"
                 placeholder="Password"
                 required
