@@ -1,9 +1,10 @@
 "use client";
 import React, { useState } from "react";
 import HeadContent from "./HeadContent";
-import "./App.css";
+import "../styles/App.css";
 import { auth } from "./firebase-config";
 import { createUserWithEmailAndPassword } from "firebase/auth";
+import Link from "next/link";
 
 const App: React.FC = () => {
   const [username, setUsername] = useState("");
@@ -24,7 +25,7 @@ const App: React.FC = () => {
         const user = userCredential.user;
         console.log("User registered successfully:", user);
         alert("User registered successfully!");
-        window.location.href = "Login.html";
+        window.location.href = "/login";
       })
       .catch((error) => {
         const errorMessage = error.message;
@@ -36,17 +37,17 @@ const App: React.FC = () => {
   return (
     <>
       <HeadContent />
-      <body class="sign-up-page">
-        <h1 class="title">
+      <div className="sign-up-page">
+        <h1 className="title">
           UPV <span>OATS</span>
         </h1>
-        <div class="sign-up-container">
+        <div className="sign-up-container">
           <h2>Hello!</h2>
           <form id="signup-form" onSubmit={handleSignUp}>
-            <div class="input-container">
-              <i class="material-icons">person</i>
+            <div className="input-container">
+              <i className="material-icons">person</i>
               <input
-                class="input-field"
+                className="input-field"
                 type="text"
                 placeholder="Username"
                 required
@@ -54,10 +55,10 @@ const App: React.FC = () => {
                 onChange={(e) => setUsername(e.target.value)}
               />
             </div>
-            <div class="input-container">
-              <i class="material-icons">mail</i>
+            <div className="input-container">
+              <i className="material-icons">mail</i>
               <input
-                class="input-field"
+                className="input-field"
                 type="email"
                 placeholder="Email"
                 required
@@ -65,10 +66,10 @@ const App: React.FC = () => {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <div class="input-container">
-              <i class="material-icons">lock</i>
+            <div className="input-container">
+              <i className="material-icons">lock</i>
               <input
-                class="input-field"
+                className="input-field"
                 type="password"
                 placeholder="Password"
                 required
@@ -79,10 +80,10 @@ const App: React.FC = () => {
             <button type="submit">Sign Up</button>
           </form>
           <p>
-            Already have an account? <a href="Login.html">Sign in now.</a>
+            Already have an account? <Link href="/login">Sign in now.</Link>{" "}
           </p>
         </div>
-      </body>
+      </div>
     </>
   );
 };

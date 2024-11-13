@@ -13,13 +13,15 @@ html {
 }
 
 .login-page {
-  background-image: url("Pictures/Login-Background.png");
-  background-size: contain;
+  background-image: url("/Pictures/Login-Background.png");
+  background-size: cover;
+  background-position: bottom;
   background-repeat: no-repeat;
+  justify-content: center;
 }
 
 .sign-up-page {
-  background-image: url("Pictures/Sign-Up-Background.png");
+  background-image: url("/Pictures/Sign-Up-Background.png");
   background-size: cover;
   background-position: bottom;
   background-repeat: no-repeat;
@@ -696,7 +698,6 @@ html {
 }
 
 .profile-background {
-  background-image: url("Pictures/Profile-Background.png");
   background-size: cover;
   background-position: top;
   height: 190px;
