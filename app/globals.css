@@ -47,14 +47,21 @@ h1 {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
-    --sidebar-background: hsl(0, 0%, 98%);
-    --sidebar-foreground: hsl(240, 5.3%, 26.1%);
-    --sidebar-primary: hsl(240, 5.9%, 10%);
-    --sidebar-primary-foreground: hsl(0, 0%, 98%);
-    --sidebar-accent: hsl(240, 4.8%, 95.9%);
-    --sidebar-accent-foreground: hsl(240, 5.9%, 10%);
-    --sidebar-border: hsl(220, 13%, 91%);
-    --sidebar-ring: hsl(217.2, 91.2%, 59.8%);
+    --sidebar-background: #F7F7F7;
+    --sidebar-foreground: 0 0% 0%;
+    --sidebar-accent: 100 100% 100%;
+    --sidebar-accent-foreground: #014421;
+    --sidebar-border: 0 0% 0%;
+    --sidebar-ring: 0 0% 0%;
+
+
+    --font-primary: 'Karla', sans-serif;
+    --font-secondary: var(--font-fira_sans);
+    --text-color-primary: #7c0a02;
+    --text-color-secondary: #014421;
+    --text-color-tertiary: #a3a3a3;
+    --hover-bg-color: #e8d5d5;
+    --hover-text-color: #014421;
   }
 
   .dark {
@@ -101,4 +108,89 @@ h1 {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+
+/* Body Defaults */
+body {
+  font-family: var(--font-primary);
+  font-size: 16px; /* Default font size */
+  color: #333;
+  background-color: #f3f3f3;
+}
+
+/* Utility Classes */
+.text-primary {
+  color: var(--text-color-primary);
+}
+
+.text-secondary {
+  color: var(--text-color-secondary);
+}
+
+.text-tertiary {
+  color: var(--text-color-tertiary);
+}
+.hover-bg-primary:hover {
+  background-color: var(--hover-bg-color);
+}
+
+.hover-text-primary:hover {
+  color: var(--hover-text-color);
+}
+
+/* Header Styles */
+.header-logo {
+  font-family: var(--font-secondary);
+  font-size: 1.5rem; 
+  font-weight: 800;
+}
+
+/* Sidebar Button Text */
+.sidebar-button-text {
+  font-family: var(--font-secondary);
+  font-size: 0.875rem; /* Slightly smaller text */
+}
+
+/* Fine-tuned size and weight */
+.font-small {
+  font-size: 0.75rem;
+}
+
+.font-medium {
+  font-size: 1rem;
+}
+
+.font-large {
+  font-size: 1.5rem;
+}
+
+/* Active Link */
+a.active-page {
+  color: #212121; /* Dark color for active link */
+  position: relative;
+}
+
+/* Add an indicator bar for active page */
+a.active-page::after {
+  content: "";
+  position: absolute;
+  right: -50%; /* Adjust based on design */
+  top: 50%;
+  transform: translateY(-50%);
+  height: 50%; /* Indicator height */
+  width: 5%;
+  background-color: var(--text-color-primary); /* Primary theme color */
+  border-radius: 2px;
+}
+
+/* Non-active Links */
+a:not(.active-page) {
+  color: #a3a3a3; /* Gray for non-active links */
+}
+
+/* Active Icon */
+.material-icons.active,
+.active {
+  color: var(--text-color-primary); /* Primary theme color */
 }
