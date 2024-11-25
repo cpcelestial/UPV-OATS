@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { usePathname } from "next/navigation"; // Import usePathname
 import React from "react";
-import "./globals.css";
+import "../globals.css";
 import {
   SidebarProvider,
   Sidebar,
@@ -23,10 +23,10 @@ export default function AppSidebar() {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <Sidebar className="bg-[#f3f3f3] text-[#333] border-r-2 border-[#d4d4d4] w-60">
+      <Sidebar className="h-full flex flex-col justify-between w-64">
         {/* Header */}
         <SidebarHeader className="pb-10">
-          <div className="flex flex-col items-center gap-1 px-2 py-5">
+          <div className="flex flex-col items-center gap-2 px-8 py-5">
             <Image
               src="/logo.png"
               alt="OATS Logo"
