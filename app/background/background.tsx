@@ -2,20 +2,27 @@
 
 import React from "react";
 import AppSidebar from "@/app/sidebar/sidebar";
+import NavBar from "@/app/background/top-navbar";
 import "./globals.css";
 
 export default function Background({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-screen w-full">
+    <div className="flex h-screen">
       {/* Sidebar */}
-      <div className="w-64">
+      <div className="w-64 ">
         <AppSidebar />
       </div>
 
-      {/* Main Content */}
-      <main className="flex-grow bg-white shadow-lg p-6">
-        {children}
-      </main>
+      {/* Main Layout */}
+      <div className="flex flex-col flex-grow">
+        {/* Top Bar */}
+        <NavBar />
+
+        {/* Main Content */}
+        <main className="flex-grow bg-white shadow-lg px-100 py-2 border-r-10">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
