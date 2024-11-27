@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import HeadContent from "./HeadContent";
-import "./app.css";
+import "../styles/App.css";
 import { auth } from "./firebase-config";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import Link from "next/link";
