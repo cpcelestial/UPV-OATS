@@ -194,3 +194,19 @@ a:not(.active-page) {
 .active {
   color: var(--text-color-primary); /* Primary theme color */
 }
+
+.rdp-caption {
+  @apply mb-4;
+}
+
+.rdp-caption_label {
+  @apply text-base font-medium;
+}
+
+.rdp-head_cell {
+  @apply font-normal text-muted-foreground;
+}
+
+.rdp-day {
+  @apply h-9 w-9 text-sm p-0 font-normal aria-selected:opacity-100;
+}
