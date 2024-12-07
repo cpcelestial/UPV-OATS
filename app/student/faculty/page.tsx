@@ -1,28 +1,56 @@
-"use client";
+'use client'
 
-import React from "react";
-import AppSidebar from "./sidebar";
-import NavBar from "./top-navbar";
-import "./globals.css"; 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { FacultyAvailability } from "./faculty-avail"
+import { FacultyList } from "./faculty-list"
 
-export default function Background({ children }: { children: React.ReactNode }) {
+// Sample data - replace with your actual data source
+const FACULTY_DATA = [
+  {
+    id: "1",
+    name: "Jane Doe",
+    email: "janedoe@uni.edu.ph",
+    avatarUrl: "/placeholder.svg",
+    college: "Arts and Sciences",
+    department: "Physical Sciences and Mathematics",
+    course: "B.S. Computer Science",
+    availability: [
+      {
+        day: "Mon",
+        slots: [
+          { start: "9:00 AM", end: "10:00 AM" },
+          { start: "1:30 PM", end: "3:00 PM" }
+        ]
+      },
+      {
+        day: "Tue",
+        slots: [
+          { start: "9:00 AM", end: "10:00 AM" },
+          { start: "1:30 PM", end: "3:00 PM" },
+          { start: "4:00 PM", end: "5:30 PM" }
+        ]
+      }
+    ]
+  },
+  // Add more faculty members as needed
+]
+
+export default function ConsultationHours() {
   return (
-    <div className="flex h-screen">
-      {/* Sidebar */}
-      <div className="w-64 ">   
-        <AppSidebar />
-      </div>
-
-      {/* Main Layout */}
-      <div className="flex flex-col flex-grow">
-        {/* Top Bar */}
-        <NavBar />
-
-        {/* Main Content */}
-        <main className="flex-grow bg-white shadow-lg px-100 py-2 border-r-10">
-          {children}
-        </main>
-      </div>
+    <div className="container mx-auto py-6">
+      <Tabs defaultValue="availability" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="availability">Consultation Hours</TabsTrigger>
+          <TabsTrigger value="faculty">Faculty List</TabsTrigger>
+        </TabsList>
+        <TabsContent value="availability">
+          <FacultyAvailability faculty={FACULTY_DATA} />
+        </TabsContent>
+        <TabsContent value="faculty">
+          <FacultyList faculty={FACULTY_DATA} />
+        </TabsContent>
+      </Tabs>
     </div>
-  );
+  )
 }
+
