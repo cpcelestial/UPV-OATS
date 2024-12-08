@@ -9,7 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
-import { format } from "date-fns";  // Assuming you're using `date-fns` for formatting
+import { format } from "date-fns"; // Assuming you're using `date-fns` for formatting
+import { RescheduleDialog } from "./reschedule-dialog";
+import { DeclineDialog } from "./decline-dialog";
 
 interface Appointment {
   id: string;
@@ -34,7 +36,7 @@ const appointments: Appointment[] = [
   {
     id: "1",
     title: "Consultation Regarding CMSC 128 Grades",
-    date: new Date(2024, 9, 17), // October 17, 2024
+    date: new Date(2024, 11, 8), // December 8, 2024
     startTime: "11:30 AM",
     endTime: "1:00 PM",
     faculty: {
@@ -46,8 +48,9 @@ const appointments: Appointment[] = [
     location: "Faculty room",
     course: "CMSC 128",
     section: "Section 2",
-    meetingNotes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
-    createdAt: new Date(2024, 8, 17), // September 17, 2024
+    meetingNotes:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
+    createdAt: new Date(2024, 11, 1), // December 1, 2024
   },
 ];
 
@@ -55,7 +58,7 @@ const unapprovedAppointments: Appointment[] = [
   {
     id: "2",
     title: "Consultation Regarding CMSC 128 Grades",
-    date: new Date(2024, 9, 24), // October 24, 2024
+    date: new Date(2024, 11, 15), // December 15, 2024
     startTime: "11:30 AM",
     endTime: "1:00 PM",
     faculty: {
@@ -67,12 +70,14 @@ const unapprovedAppointments: Appointment[] = [
     location: "Faculty room",
     course: "CMSC 128",
     section: "Section 2",
-    createdAt: new Date(2024, 8, 17), // September 17, 2024
+    createdAt: new Date(2024, 11, 8), // December 8, 2024
   },
 ];
 
 export default function Background({ children }: { children: React.ReactNode }) {
-  const [date, setDate] = useState<Date>(new Date(2024, 9, 17)); // October 17, 2024
+  const [date, setDate] = useState<Date>(new Date(2024, 11, 8)); // December 8, 2024
+  const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
+  const [isDeclineOpen, setIsDeclineOpen] = useState(false);
 
   const hasAppointments = appointments.length > 0;
   const hasUnapprovedAppointments = unapprovedAppointments.length > 0;
@@ -92,7 +97,6 @@ export default function Background({ children }: { children: React.ReactNode }) 
         {/* Main Content */}
         <main className="flex-grow bg-white shadow-lg px-10 py-6">
           <div className="flex justify-between">
-            {/* Left Section: Main Content */}
             <div className="flex-grow">
               {children}
 
@@ -127,9 +131,14 @@ export default function Background({ children }: { children: React.ReactNode }) 
                                     <h3 className="text-lg font-semibold">{appointment.title}</h3>
                                   </div>
 
+                                  {/* Faculty Information */}
                                   <div className="flex items-center gap-3">
-                                    <Avatar className="h-8 w-8">
-                                      <img src={appointment.faculty.avatar} alt={appointment.faculty.name} />
+                                    <Avatar className="h-10 w-10">
+                                      <img
+                                        src={appointment.faculty.avatar}
+                                        alt={appointment.faculty.name}
+                                        className="rounded-full"
+                                      />
                                     </Avatar>
                                     <div>
                                       <div className="font-medium">{appointment.faculty.name}</div>
@@ -139,6 +148,7 @@ export default function Background({ children }: { children: React.ReactNode }) 
                                     </div>
                                   </div>
 
+                                  {/* Appointment Details */}
                                   <div className="grid grid-cols-2 gap-4">
                                     <div>
                                       <div className="text-sm font-medium">Time</div>
@@ -147,7 +157,7 @@ export default function Background({ children }: { children: React.ReactNode }) 
                                       </div>
                                     </div>
                                     <div>
-                                      <div className="text-sm font-medium">Type of meeting</div>
+                                      <div className="text-sm font-medium">Type of Meeting</div>
                                       <div className="text-sm text-muted-foreground">
                                         {appointment.typeOfMeeting}
                                       </div>
@@ -166,22 +176,45 @@ export default function Background({ children }: { children: React.ReactNode }) 
                                     </div>
                                   </div>
 
+                                  {/* Meeting Notes */}
                                   {appointment.meetingNotes && (
                                     <div>
-                                      <div className="text-sm font-medium">Meeting notes</div>
+                                      <div className="text-sm font-medium">Meeting Notes</div>
                                       <div className="text-sm text-muted-foreground">
                                         {appointment.meetingNotes}
                                       </div>
                                     </div>
                                   )}
 
-                                  <div className="flex justify-end gap-2">
-                                    <Button variant="outline">Reschedule</Button>
-                                    <Button variant="outline" className="text-red-500 hover:text-red-600">
+                                  {/* Buttons */}
+                                  <div className="flex justify-end gap-2 mt-4">
+                                    <Button variant="outline" onClick={() => setIsRescheduleOpen(true)}>
+                                      Reschedule
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      className="text-red-500 hover:text-red-600"
+                                      onClick={() => setIsDeclineOpen(true)}
+                                    >
                                       Decline
                                     </Button>
                                   </div>
                                 </div>
+
+                                {/* Dialogs */}
+                                <RescheduleDialog
+                                  open={isRescheduleOpen}
+                                  onOpenChange={setIsRescheduleOpen}
+                                  appointment={appointment}
+                                />
+                                <DeclineDialog
+                                  open={isDeclineOpen}
+                                  onOpenChange={setIsDeclineOpen}
+                                  onConfirm={() => {
+                                    setIsDeclineOpen(false);
+                                    // Add decline logic here
+                                  }}
+                                />
                               </CardContent>
                             </Card>
                           ))}
@@ -189,20 +222,19 @@ export default function Background({ children }: { children: React.ReactNode }) 
                       )}
                     </div>
 
+                    {/* Calendar Section */}
                     <div className="space-y-6">
                       <Card>
                         <CardContent className="p-0">
                           <div className="p-4 border-b">
-                            <div className="text-xl font-semibold">
-                              {format(date, "EEE, MMM d")}
-                            </div>
+                            <div className="text-xl font-semibold">{format(date, "EEE, MMM d")}</div>
                           </div>
-                            <AppCalendar
-                              mode="single"
-                              selected={date}
-                              onSelect={(date) => date && setDate(date)}
-                              className="rounded-md border"
-                            />
+                          <AppCalendar
+                            mode="single"
+                            selected={date}
+                            onSelect={(date) => date && setDate(date)}
+                            className="rounded-md border"
+                          />
                         </CardContent>
                       </Card>
 
@@ -221,19 +253,19 @@ export default function Background({ children }: { children: React.ReactNode }) 
                             {unapprovedAppointments.map((appointment) => (
                               <div key={appointment.id} className="text-sm text-muted-foreground">
                                 {format(appointment.date, "MMMM d, yyyy")}
-                                <div className="font-medium text-foreground">{appointment.title}</div>
+                                <div className="font-medium">{appointment.title}</div>
                               </div>
                             ))}
+                            {/* See All Appointments Button */}
+                            <div className="mt-4 text-center">
+                              <Link href="/student/dashboard/appointments">
+                                <Button variant="outline" className="w-full">
+                                  See All Appointments
+                                </Button>
+                              </Link>
+                            </div>
                           </div>
                         )}
-
-                        <div className="mt-4 flex justify-end">
-                          <Link href="/student/dashboard/appointments">
-                            <Button variant="outline" className="bg-[#35563F] text-white hover:bg-[#2A4A33]">
-                              See appointments
-                            </Button>
-                          </Link>
-                        </div>
                       </div>
                     </div>
                   </div>
