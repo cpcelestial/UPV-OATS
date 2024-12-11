@@ -171,7 +171,6 @@ body {
 /* Active Sidebar Item */
 .active-sidebar-item {
   color: #212121 !important;
-  font-weight: 500 !important;
 }
 
 /* Add an indicator bar for active page */

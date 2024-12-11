@@ -124,7 +124,7 @@ export default function ProfilePage() {
   const cancelledAppointments = profile.appointments?.filter(a => a.status === 'cancelled').length ?? 0
 
   return (
-    <main className="flex-grow bg-white px-6 py-6 overflow-auto">
+    <main className="flex-grow px-6 py-6 overflow-auto">
       <div className="grid grid-cols-4 gap-6">
         <div className="col-span-3 space-y-6">
           <Card>

@@ -5,15 +5,24 @@ import { Input } from "@/components/ui/input"
 import { Moon, Sun, MessageSquare } from 'lucide-react'
 import { useTheme } from "next-themes"
 import Image from "next/image"
+import { usePathname } from 'next/navigation';
 
-export default function NavBar() {
-  const { setTheme, theme } = useTheme()
+const routeTitles: { [key: string]: string } = {
+  '/admin/dashboard': 'Dashboard',
+  '/admin/calendar': 'Calendar',
+  '/admin/users': 'Users',
+};
+
+export default function AppNavbar() {
+  const { setTheme, theme } = useTheme();
+  const pathname = usePathname();
+  const title = routeTitles[pathname] || 'Page Not Found';
 
   return (
-    <header className="border-b bg-background">
+    <header className="border-b">
       <div className="flex h-20 items-center px-6">
         <div className="flex flex-col justify-center flex-1">
-          <h1 className="text-2xl font-semibold">Profile</h1>
+          <h1 className="text-2xl font-semibold">{title}</h1>
           <p className="text-base text-muted-foreground mt-1">Hello, User!</p>
         </div>
         <div className="flex items-center gap-4 flex-1 justify-center">
@@ -23,9 +32,9 @@ export default function NavBar() {
               placeholder="Search..."
               className="w-full pl-4 pr-12 h-12 text-lg"
             />
-            <Button 
+            <Button
               size="icon"
-              variant="ghost" 
+              variant="ghost"
               className="absolute right-0 top-0 h-full px-4"
             >
               <svg
