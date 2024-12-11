@@ -114,7 +114,8 @@ h1 {
 /* Body Defaults */
 body {
   font-family: var(--font-primary);
-  font-size: 16px; /* Default font size */
+  font-size: 16px;
+  /* Default font size */
   color: #333;
   background-color: #f3f3f3;
 }
@@ -131,6 +132,7 @@ body {
 .text-tertiary {
   color: var(--text-color-tertiary);
 }
+
 .hover-bg-primary:hover {
   background-color: var(--hover-bg-color);
 }
@@ -142,14 +144,15 @@ body {
 /* Header Styles */
 .header-logo {
   font-family: var(--font-secondary);
-  font-size: 1.5rem; 
+  font-size: 1.5rem;
   font-weight: 800;
 }
 
 /* Sidebar Button Text */
 .sidebar-button-text {
   font-family: var(--font-secondary);
-  font-size: 0.875rem; /* Slightly smaller text */
+  font-size: 0.875rem;
+  /* Slightly smaller text */
 }
 
 /* Fine-tuned size and weight */
@@ -167,7 +170,8 @@ body {
 
 /* Active Link */
 a.active-page {
-  color: #212121; /* Dark color for active link */
+  color: #212121;
+  /* Dark color for active link */
   position: relative;
 }
 
@@ -175,24 +179,29 @@ a.active-page {
 a.active-page::after {
   content: "";
   position: absolute;
-  right: -50%; /* Adjust based on design */
+  right: -50%;
+  /* Adjust based on design */
   top: 50%;
   transform: translateY(-50%);
-  height: 50%; /* Indicator height */
+  height: 50%;
+  /* Indicator height */
   width: 5%;
-  background-color: var(--text-color-primary); /* Primary theme color */
+  background-color: var(--text-color-primary);
+  /* Primary theme color */
   border-radius: 2px;
 }
 
 /* Non-active Links */
 a:not(.active-page) {
-  color: #a3a3a3; /* Gray for non-active links */
+  color: #a3a3a3;
+  /* Gray for non-active links */
 }
 
 /* Active Icon */
 .material-icons.active,
 .active {
-  color: var(--text-color-primary); /* Primary theme color */
+  color: var(--text-color-primary);
+  /* Primary theme color */
 }
 
 .rdp-caption {
@@ -209,4 +218,28 @@ a:not(.active-page) {
 
 .rdp-day {
   @apply h-9 w-9 text-sm p-0 font-normal aria-selected:opacity-100;
+}
+
+/* Active Sidebar Item */
+.active-sidebar-item {
+  color: #212121 !important;
+  font-weight: 500 !important;
+}
+
+.active-sidebar-item::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 40px;
+  width: 6px;
+  background-color: #7c0a02;
+  border-radius: 3px 0 0 3px;
+}
+
+/* Override shadcn/ui Sidebar styles if necessary */
+.active-sidebar-item[data-active="true"] {
+  background-color: transparent !important;
+  color: #212121 !important;
 }

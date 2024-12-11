@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FloatingInput } from "@/components/ui/floating-input";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase-config";
+import { auth } from "./firebase-config";
 
 const App: React.FC = () => {
   const [email, setEmail] = useState("");
