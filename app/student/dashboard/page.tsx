@@ -41,7 +41,7 @@ const appointments: Appointment[] = [
     faculty: {
       name: "James Doe",
       email: "jdoe@up.edu.ph",
-      avatar: "/placeholder.svg",
+      avatar: "/profile2.jpg",
     },
     typeOfMeeting: "Face to face meeting",
     location: "Faculty room",
@@ -64,7 +64,7 @@ const unapprovedAppointments: Appointment[] = [
     faculty: {
       name: "James Doe",
       email: "jdoe@up.edu.ph",
-      avatar: "/placeholder.svg",
+      avatar: "/profile2.jpg",
     },
     typeOfMeeting: "Face to face meeting",
     location: "Faculty room",
@@ -93,8 +93,8 @@ export default function Background({ children }: { children: React.ReactNode }) 
           <div className="grid md:grid-cols-[1fr,400px] gap-6">
             <div className="space-y-6">
               <div>
-                <h2 className="text-2xl font-semibold text-[#35563F] mb-1">Upcoming appointments</h2>
-                <p className="text-muted-foreground">Lorem ipsum dolor your appointments</p>
+                <h2 className="text-2xl font-black text-[#014421] mb-1">Upcoming appointments</h2>
+                <p className="font-bold">Here, take a look at your upcoming appointments</p>
               </div>
 
               {!hasAppointments ? (
@@ -177,13 +177,16 @@ export default function Background({ children }: { children: React.ReactNode }) 
                           )}
 
                           {/* Action Buttons */}
-                          <div className="flex justify-end gap-2 mt-4">
-                            <Button variant="outline" onClick={() => setIsRescheduleOpen(true)}>
+                          <div className="flex justify-end gap-2 mt-4 ">
+                            <Button
+                              variant="outline"
+                              onClick={() => setIsRescheduleOpen(true)}
+                            >
                               Reschedule
                             </Button>
                             <Button
                               variant="outline"
-                              className="text-red-500 hover:text-red-600"
+                              className="text-red-600 hover:bg-red-600 hover:text-white"
                               onClick={() => setIsDeclineOpen(true)}
                             >
                               Decline
@@ -217,21 +220,21 @@ export default function Background({ children }: { children: React.ReactNode }) 
               {/* Calendar Card */}
               <Card>
                 <CardContent className="p-0">
-                  <div className="p-4 border-b">
-                    <div className="text-xl font-semibold">{format(date, "EEE, MMM d")}</div>
+                  <div className="p-4">
+                    <div className="font-secondary text-2xl font-semibold">{format(date, "EEE, MMM d")}</div>
                   </div>
                   <AppCalendar
                     mode="single"
                     selected={date}
                     onSelect={(date) => date && setDate(date)}
-                    className="rounded-md border"
+                    className="border-t"
                   />
                 </CardContent>
               </Card>
 
               {/* Unapproved Appointments Section */}
               <div>
-                <h2 className="text-2xl font-semibold text-[#35563F] mb-6">Unapproved appointments</h2>
+                <h2 className="text-2xl font-black text-[#7B1113] mb-6">Unapproved appointments</h2>
                 {!hasUnapprovedAppointments ? (
                   // Display when there are no unapproved appointments
                   <Card>

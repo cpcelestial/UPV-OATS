@@ -40,9 +40,9 @@ export function RescheduleDialog({ open, onOpenChange, appointment }: Reschedule
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-2">
-            <CalendarIcon className="h-5 w-5 text-muted-foreground" />
+            <CalendarIcon className="h-7 w-7" />
             <div>
-              <DialogTitle>Reschedule Appointment</DialogTitle>
+              <DialogTitle className="font-bold">Reschedule Appointment</DialogTitle>
               <p className="text-sm text-muted-foreground">Please provide all required information</p>
             </div>
           </div>
@@ -135,7 +135,7 @@ export function RescheduleDialog({ open, onOpenChange, appointment }: Reschedule
           <Button variant="outline" onClick={() => onOpenChange(false)} className="border-gray-200">
             Cancel
           </Button>
-          <Button onClick={() => onOpenChange(false)} className="bg-[#35563F] hover:bg-[#2A4A33]">
+          <Button onClick={() => onOpenChange(false)} className="bg-[#212121] hover:opacity-90">
             Reschedule
           </Button>
         </div>

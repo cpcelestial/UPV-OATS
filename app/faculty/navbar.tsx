@@ -24,7 +24,7 @@ export default function AppNavbar() {
       <div className="flex h-20 items-center px-6">
         <div className="flex flex-col justify-center flex-1">
           <h1 className="text-2xl font-semibold">{title}</h1>
-          <p className="text-base text-muted-foreground mt-1">Hello, User!</p>
+          <p className="font-secondary text-base text-muted-foreground font-medium">Hello, User!</p>
         </div>
         <div className="flex items-center gap-4 flex-1 justify-center">
           <div className="relative w-full max-w-md">
@@ -72,7 +72,7 @@ export default function AppNavbar() {
           </Button>
           <Button size="icon" variant="ghost" className="relative h-12 w-12 rounded-full">
             <Image
-              src="/placeholder.svg"
+              src="/profile2.jpg"
               alt="Profile"
               className="rounded-full object-cover"
               fill

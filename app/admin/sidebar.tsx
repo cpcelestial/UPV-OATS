@@ -27,7 +27,7 @@ export default function AppSidebar() {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <Sidebar className="h-full flex flex-col justify-between w-56 bg-[#F7F7F7]">
+      <Sidebar className="h-full flex flex-col justify-between w-56 bg-[#F7F7F7] border-[#F7F7F7]">
         <div>
           <SidebarHeader className="p-4">
             <div className="flex flex-col items-center gap-2 px-6 py-3">
@@ -55,7 +55,7 @@ export default function AppSidebar() {
                     className={`flex items-center w-full px-6 py-8 text-sm duration-200 relative
                       ${isActive(item.route)
                         ? "active-sidebar-item"
-                        : "text-[#A3A3A3] hover:text-[#7c0a02]"
+                        : "text-[#A3A3A3] transition duration-500 hover:text-[#212121]"
                       }`
                     }
                   >

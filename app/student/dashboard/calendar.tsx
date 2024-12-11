@@ -18,7 +18,7 @@ export default function AppCalendar({
       selected={date}
       onSelect={setDate}
       showOutsideDays={showOutsideDays}
-      className={cn("p-4 w-full max-w-md border rounded-lg bg-white", className)}
+      className={cn("p-4 w-full max-w-md rounded-b-lg bg-white", className)}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-6 w-full",
@@ -44,8 +44,8 @@ export default function AppCalendar({
           "h-12 w-12 p-0 font-normal aria-selected:opacity-100 hover:bg-muted"
         ),
         day_selected:
-          "bg-[#7c0a02] text-white hover:bg-[#7c0a02] hover:text-white focus:bg-[#7c0a02] focus:text-white",
-        day_today: "bg-[#7c0a02] text-accent-foreground",
+          "bg-[#7B1113] text-white hover:bg-[#7c0a02] hover:text-white focus:bg-[#7c0a02] focus:text-white",
+        day_today: "bg-[#014421] text-white text-accent-foreground",
         day_outside: "text-muted-foreground opacity-50",
         day_disabled: "text-muted-foreground opacity-50",
         day_hidden: "invisible",

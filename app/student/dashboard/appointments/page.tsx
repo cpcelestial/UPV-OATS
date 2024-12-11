@@ -36,13 +36,13 @@ export default function AppointmentsPage() {
     {
       id: "1",
       requester: {
-        name: "John Doe",
-        avatar: "/placeholder.svg",
+        name: "Jack Doe",
+        avatar: "/profile2.jpg",
       },
       faculty: {
         name: "Jack Doe",
         email: "jsdoe@up.edu.ph",
-        avatar: "/placeholder.svg",
+        avatar: "/profile2.jpg",
       },
       date: new Date(2024, 9, 17), // October 17, 2024
       title: "Consultation Regarding Grades",
@@ -63,8 +63,8 @@ export default function AppointmentsPage() {
     <div className="container mx-auto p-6 max-w-4xl">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-[#35563F]">Unapproved appointments</h1>
-          <p className="text-muted-foreground">Lorem ipsum dolor your appointments</p>
+          <h2 className="text-2xl font-black text-[#7B1113]">Unapproved appointments</h2>
+          <p className="font-bold">Here, take a look at your pending appointments</p>
         </div>
         <Link href="/student/dashboard">
           <Button variant="ghost" size="icon">
@@ -148,10 +148,10 @@ export default function AppointmentsPage() {
                   <Button variant="outline">
                     Reschedule
                   </Button>
-                  <Button variant="outline" className="text-red-500 hover:text-red-600">
+                  <Button variant="outline" className="text-red-600 hover:bg-red-600 hover:text-white">
                     Decline
                   </Button>
-                  <Button className="bg-[#35563F] hover:bg-[#2A4A33] text-white">
+                  <Button className="text-white bg-green-600 hover:bg-green-400">
                     Accept
                   </Button>
                 </div>

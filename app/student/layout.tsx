@@ -17,7 +17,7 @@ export default function RootLayout({
             <AppSidebar />
           </div>
           {/* Main Layout */}
-          <div className="rounded-l-3xl bg-white shadow-xl flex flex-col flex-grow -ml-1 z-10">
+          <div className="rounded-l-3xl bg-white shadow-xl flex flex-col flex-grow z-10">
             {/* Top Bar */}
             <AppNavbar />
             {/* Main Content */}

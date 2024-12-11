@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 body {
-  font-family: Helvetica, Arial, sans-serif;
+  font-family: 'Karla', Helvetica, Arial, sans-serif;
 }
 
 h1 {
@@ -55,12 +55,12 @@ h1 {
     --sidebar-ring: 0 0% 0%;
 
 
-    --font-primary: 'Karla', sans-serif;
-    --font-secondary: var(--font-fira_sans);
-    --text-color-primary: #7c0a02;
+    --font-primary: 'Karla', Helvetica, Arial, sans-serif;
+    --font-secondary: var(--font-fira_sans), Impact, sans-serif;
+    --text-color-primary: #7B1113;
     --text-color-secondary: #014421;
-    --text-color-tertiary: #a3a3a3;
-    --hover-bg-color: #e8d5d5;
+    --text-color-tertiary: #A3A3A3;
+    --hover-bg-color: #E8D5D5;
     --hover-text-color: #014421;
   }
 
@@ -116,11 +116,19 @@ body {
   font-family: var(--font-primary);
   font-size: 16px;
   /* Default font size */
-  color: #333;
-  background-color: #f3f3f3;
+  color: #212121;
+  background-color: #F7F7F7;
 }
 
 /* Utility Classes */
+.font-primary {
+  font-family: 'Karla', Helvetica, Arial, sans-serif;
+}
+
+.font-secondary {
+  font-family: var(--font-fira_sans), Impact, sans-serif;
+}
+
 .text-primary {
   color: var(--text-color-primary);
 }
@@ -170,7 +178,7 @@ body {
 
 /* Active Sidebar Item */
 .active-sidebar-item {
-  color: #212121 !important;
+  color: var(--text-color-primary) !important;
 }
 
 /* Add an indicator bar for active page */
@@ -208,5 +216,5 @@ body {
 /* Override shadcn/ui Sidebar styles if necessary */
 .active-sidebar-item[data-active="true"] {
   background-color: transparent !important;
-  color: #212121 !important;
+  color: var(--text-color-primary) !important;
 }
