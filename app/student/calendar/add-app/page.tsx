@@ -43,6 +43,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
+import { db } from "../../../firebase-config" // Firebase initialization file
+import { collection, getDocs, query, where, addDoc, serverTimestamp } from "firebase/firestore"
+import { getAuth } from "firebase/auth"
+
 const formSchema = z.object({
   title: z.string().min(1, "Meeting title is required"),
   department: z.string().min(1, "Department is required"),
@@ -57,6 +61,7 @@ const formSchema = z.object({
   meetingType: z.string().min(1, "Meeting type is required"),
   location: z.string().min(1, "Location is required"),
   notes: z.string().optional(),
+  status: z.string().optional().default("pending") 
 })
 
 export function AddAppointmentForm() {
@@ -64,21 +69,76 @@ export function AddAppointmentForm() {
   const [showDialog, setShowDialog] = React.useState(false)
   const [formChanged, setFormChanged] = React.useState(false)
 
+  const [facultyList, setFacultyList] = React.useState<{ id: string; name: string }[]>([])
+  const [loading, setLoading] = React.useState(true)
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      title: "",
+      department: "",
+      facultyName: "",
+      course: "",
+      section: "",
+      date: undefined,
+      startTime: "",
+      endTime: "",
       meetingType: "Online meeting",
+      location: "",
+      notes: "",
+      status: "pending" 
     },
   })
+
+  React.useEffect(() => {
+    const fetchFaculty = async () => {
+      try {
+        const q = query(collection(db, "Users"), where("role", "==", "faculty"))
+        const querySnapshot = await getDocs(q)
+        const facultyData = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          name: doc.data().name, 
+        }))
+        setFacultyList(facultyData)
+      } catch (error) {
+        console.error("Error fetching faculty:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchFaculty()
+  }, [])
 
   React.useEffect(() => {
     const subscription = form.watch(() => setFormChanged(true))
     return () => subscription.unsubscribe()
   }, [form])
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values)
-    setFormChanged(false)
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    try {
+      const auth = getAuth()
+      const user = auth.currentUser
+  
+      if (!user) {
+        console.error("No user logged in")
+        return
+      }
+  
+      const appointmentData = {
+        ...values,
+        userId: user.uid,
+        createdAt: serverTimestamp()
+      }
+  
+      const docRef = await addDoc(collection(db, "appointments"), appointmentData)
+  
+      console.log("Appointment added with ID: ", docRef.id)
+      setFormChanged(false)
+      router.push('/student/calendar')
+    } catch (error) {
+      console.error("Error adding appointment: ", error)
+    }
   }
 
   const handleBackToCalendar = () => {
@@ -93,7 +153,7 @@ export function AddAppointmentForm() {
     setShowDialog(false)
     router.push('/student/calendar')
   }
-
+  console.log(facultyList);
   return (
     <div className="p-6 space-y-6 max-w-2xl mx-auto bg-white rounded-lg shadow">
       <div className="flex items-center justify-between">
@@ -108,6 +168,7 @@ export function AddAppointmentForm() {
           Back to Calendar
         </Button>
       </div>
+
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
@@ -123,6 +184,7 @@ export function AddAppointmentForm() {
               </FormItem>
             )}
           />
+          
           <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
@@ -147,23 +209,46 @@ export function AddAppointmentForm() {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="facultyName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Faculty Name</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter faculty name..."
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+<FormField
+  control={form.control}
+  name="facultyName"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Faculty Name</FormLabel>
+      <FormControl>
+        <Select 
+          onValueChange={field.onChange} 
+          value={field.value}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select faculty" />
+          </SelectTrigger>
+          <SelectContent>
+            {loading ? (
+              <SelectItem value="loading" disabled>Loading...</SelectItem>
+            ) : facultyList.length === 0 ? (
+              <SelectItem value="no-faculty" disabled>No faculty found</SelectItem>
+            ) : (
+              facultyList
+                .filter(faculty => faculty.id && faculty.name) // Filter out invalid entries
+                .map((faculty) => (
+                  <SelectItem 
+                    key={faculty.id} 
+                    value={faculty.name}
+                  >
+                    {faculty.name}
+                  </SelectItem>
+                ))
+            )}
+          </SelectContent>
+        </Select>
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
           </div>
+
           <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
@@ -192,6 +277,7 @@ export function AddAppointmentForm() {
               )}
             />
           </div>
+
           <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
@@ -263,6 +349,7 @@ export function AddAppointmentForm() {
               </div>
             </div>
           </div>
+
           <FormField
             control={form.control}
             name="meetingType"
@@ -279,6 +366,7 @@ export function AddAppointmentForm() {
               </FormItem>
             )}
           />
+          
           <FormField
             control={form.control}
             name="location"
@@ -292,6 +380,7 @@ export function AddAppointmentForm() {
               </FormItem>
             )}
           />
+          
           <FormField
             control={form.control}
             name="notes"
@@ -309,6 +398,7 @@ export function AddAppointmentForm() {
               </FormItem>
             )}
           />
+          
           <div className="flex justify-end">
             <Button type="submit" className="bg-[#35563F] hover:bg-[#2A4A33]">
               Add appointment
@@ -328,7 +418,8 @@ export function AddAppointmentForm() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmBack} className="bg-[#35563F] hover:bg-[#2A4A33] text-white">
-                Confirm</AlertDialogAction>
+              Confirm
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -337,4 +428,3 @@ export function AddAppointmentForm() {
 }
 
 export default AddAppointmentForm
-
