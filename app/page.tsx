@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FloatingInput } from "@/components/ui/floating-input";
@@ -13,6 +13,8 @@ const App: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isClient, setIsClient] = useState(false);
+
+  const router = useRouter(); // Use the updated hook
 
   useEffect(() => {
     setIsClient(true);
@@ -27,7 +29,7 @@ const App: React.FC = () => {
         const user = userCredential.user;
         console.log("Login successful:", user);
         alert("Login successful!");
-        window.location.href = "/navbar";
+        router.push("/student/dashboard");
       })
       .catch((error) => {
         console.error("Error:", error.message);
@@ -96,12 +98,12 @@ const App: React.FC = () => {
                   Remember Me
                 </label>
               </div>
-              <Link
+              <a
                 href="#"
                 className="text-sm text-blue-400 transition duration-500 hover:text-[#7B1113]"
               >
                 Forgot password?
-              </Link>
+              </a>
             </div>
 
             <div className="flex justify-center pt-4">
@@ -120,4 +122,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-
