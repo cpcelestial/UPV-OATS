@@ -8,8 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ProfileDialog } from './profile-dialog'
 import { ScheduleDialog } from './schedule-dialog'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import AppSidebar from './sidebar'
-import NavBar from './top-navbar'
 import type { StudentProfile } from './types/profile'
 import { AppointmentsDialog } from './appointments-dialog'
 
@@ -126,189 +124,179 @@ export default function ProfilePage() {
   const cancelledAppointments = profile.appointments?.filter(a => a.status === 'cancelled').length ?? 0
 
   return (
-    <div className="flex h-screen">
-      <div className="w-64">
-        <AppSidebar />
-      </div>
+    <main className="flex-grow bg-white px-6 py-6 overflow-auto">
+      <div className="grid grid-cols-4 gap-6">
+        <div className="col-span-3 space-y-6">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <img
+                  src={profile.avatarUrl}
+                  alt={`${profile.firstName} ${profile.lastName}`}
+                  className="h-16 w-16 rounded-full object-cover"
+                />
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold">{`${profile.firstName} ${profile.lastName}`}</h2>
+                  <div className="text-sm text-muted-foreground">
+                    <div>Email: {profile.email}</div>
+                    <div>College: {profile.college}</div>
+                    <div>Degree program: {profile.degreeProgram}</div>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsProfileDialogOpen(true)}
+                >
+                  Update profile
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
-      <div className="flex flex-col flex-grow">
-        <NavBar />
-
-        <main className="flex-grow bg-white shadow-lg px-6 py-6 overflow-auto">
-          <div className="grid grid-cols-4 gap-6">
-            <div className="col-span-3 space-y-6">
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    <img
-                      src={profile.avatarUrl}
-                      alt={`${profile.firstName} ${profile.lastName}`}
-                      className="h-16 w-16 rounded-full object-cover"
-                    />
-                    <div className="flex-1">
-                      <h2 className="text-xl font-bold">{`${profile.firstName} ${profile.lastName}`}</h2>
-                      <div className="text-sm text-muted-foreground">
-                        <div>Email: {profile.email}</div>
-                        <div>College: {profile.college}</div>
-                        <div>Degree program: {profile.degreeProgram}</div>
-                      </div>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold">Personal Schedule</h2>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsScheduleDialogOpen(true)}
+                >
+                  Update schedule
+                </Button>
+              </div>
+              <div className="space-y-6">
+                {profile.schedule?.filter(day => day.enabled).map((day) => (
+                  <div key={day.day} className="space-y-2">
+                    <h3 className="font-medium">{day.day}</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {day.slots?.map((slot, idx) => (
+                        <span
+                          key={idx}
+                          className={`inline-flex px-3 py-1 text-sm rounded-full
+                            ${idx % 2 === 0
+                              ? 'bg-orange-100 text-orange-800'
+                              : 'bg-green-100 text-green-800'
+                            }`}
+                        >
+                          {slot.start} - {slot.end}
+                        </span>
+                      ))}
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setIsProfileDialogOpen(true)}
-                    >
-                      Update profile
-                    </Button>
                   </div>
-                </CardContent>
-              </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-semibold">Personal Schedule</h2>
-                    <Button 
-                      variant="outline"
-                      onClick={() => setIsScheduleDialogOpen(true)}
-                    >
-                      Update schedule
-                    </Button>
-                  </div>
-                  <div className="space-y-6">
-                    {profile.schedule?.filter(day => day.enabled).map((day) => (
-                      <div key={day.day} className="space-y-2">
-                        <h3 className="font-medium">{day.day}</h3>
-                        <div className="flex flex-wrap gap-2">
-                          {day.slots?.map((slot, idx) => (
-                            <span
-                              key={idx}
-                              className={`inline-flex px-3 py-1 text-sm rounded-full
-                                ${idx % 2 === 0 
-                                  ? 'bg-orange-100 text-orange-800' 
-                                  : 'bg-green-100 text-green-800'
-                                }`}
-                            >
-                              {slot.start} - {slot.end}
-                            </span>
-                          ))}
+        <div className="space-y-6">
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select month" />
+            </SelectTrigger>
+            <SelectContent>
+              {['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+              ].map((month) => (
+                <SelectItem key={month} value={month}>
+                  {month}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Card>
+            <CardContent className="p-4">
+              <h2 className="text-xl font-semibold mb-4">Frequent Contacts</h2>
+              <div className="space-y-4">
+                {profile.contacts?.map((contact) => (
+                  <Dialog key={contact.id}>
+                    <DialogTrigger asChild>
+                      <Button variant="ghost" className="w-full justify-start">
+                        <img
+                          src={contact.avatarUrl}
+                          alt={contact.name}
+                          className="h-10 w-10 rounded-full mr-3"
+                        />
+                        <div className="text-left">
+                          <div className="font-medium">{contact.name}</div>
+                          <div className="text-sm text-muted-foreground">{contact.email}</div>
                         </div>
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>{contact.name}</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <img
+                          src={contact.avatarUrl}
+                          alt={contact.name}
+                          className="h-24 w-24 rounded-full mx-auto"
+                        />
+                        <div className="text-center">
+                          <div className="font-medium">{contact.name}</div>
+                          <div className="text-sm text-muted-foreground">{contact.email}</div>
+                        </div>
+                        <Button
+                          className="w-full"
+                          onClick={() => handleAddAppointment(contact.id)}
+                        >
+                          Add Appointment
+                        </Button>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                    </DialogContent>
+                  </Dialog>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
-            <div className="space-y-6">
-              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select month" />
-                </SelectTrigger>
-                <SelectContent>
-                  {['January', 'February', 'March', 'April', 'May', 'June', 
-                    'July', 'August', 'September', 'October', 'November', 'December'
-                  ].map((month) => (
-                    <SelectItem key={month} value={month}>
-                      {month}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Card>
-                <CardContent className="p-4">
-                  <h2 className="text-xl font-semibold mb-4">Frequent Contacts</h2>
-                  <div className="space-y-4">
-                    {profile.contacts?.map((contact) => (
-                      <Dialog key={contact.id}>
-                        <DialogTrigger asChild>
-                          <Button variant="ghost" className="w-full justify-start">
-                            <img
-                              src={contact.avatarUrl}
-                              alt={contact.name}
-                              className="h-10 w-10 rounded-full mr-3"
-                            />
-                            <div className="text-left">
-                              <div className="font-medium">{contact.name}</div>
-                              <div className="text-sm text-muted-foreground">{contact.email}</div>
-                            </div>
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>{contact.name}</DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            <img
-                              src={contact.avatarUrl}
-                              alt={contact.name}
-                              className="h-24 w-24 rounded-full mx-auto"
-                            />
-                            <div className="text-center">
-                              <div className="font-medium">{contact.name}</div>
-                              <div className="text-sm text-muted-foreground">{contact.email}</div>
-                            </div>
-                            <Button 
-                              className="w-full"
-                              onClick={() => handleAddAppointment(contact.id)}
-                            >
-                              Add Appointment
-                            </Button>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-4">
-                  <h2 className="text-xl font-semibold mb-4">Appointment Status</h2>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="text-sm text-muted-foreground">Total Appointments</div>
-                      <div className="text-4xl font-bold text-[#2F5233]">{totalAppointments}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground">Cancelled Appointments</div>
-                      <div className="text-4xl font-bold text-red-600">{cancelledAppointments}</div>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      className="w-full"
-                      onClick={() => setIsAppointmentsDialogOpen(true)}
-                    >
-                      See all appointments
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-
-          <ProfileDialog
-            open={isProfileDialogOpen}
-            onOpenChange={setIsProfileDialogOpen}
-            profile={profile}
-            onUpdateProfile={handleUpdateProfile}
-          />
-
-          <ScheduleDialog
-            open={isScheduleDialogOpen}
-            onOpenChange={setIsScheduleDialogOpen}
-            schedule={profile.schedule}
-            onUpdateSchedule={handleUpdateSchedule}
-          />
-          <AppointmentsDialog
-            open={isAppointmentsDialogOpen}
-            onOpenChange={setIsAppointmentsDialogOpen}
-            appointments={profile.appointments}
-          />
-        </main>
+          <Card>
+            <CardContent className="p-4">
+              <h2 className="text-xl font-semibold mb-4">Appointment Status</h2>
+              <div className="space-y-4">
+                <div>
+                  <div className="text-sm text-muted-foreground">Total Appointments</div>
+                  <div className="text-4xl font-bold text-[#2F5233]">{totalAppointments}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">Cancelled Appointments</div>
+                  <div className="text-4xl font-bold text-red-600">{cancelledAppointments}</div>
+                </div>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setIsAppointmentsDialogOpen(true)}
+                >
+                  See all appointments
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
+
+      <ProfileDialog
+        open={isProfileDialogOpen}
+        onOpenChange={setIsProfileDialogOpen}
+        profile={profile}
+        onUpdateProfile={handleUpdateProfile}
+      />
+
+      <ScheduleDialog
+        open={isScheduleDialogOpen}
+        onOpenChange={setIsScheduleDialogOpen}
+        schedule={profile.schedule}
+        onUpdateSchedule={handleUpdateSchedule}
+      />
+      <AppointmentsDialog
+        open={isAppointmentsDialogOpen}
+        onOpenChange={setIsAppointmentsDialogOpen}
+        appointments={profile.appointments}
+      />
+    </main>
   )
 }
 

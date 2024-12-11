@@ -37,20 +37,22 @@ const FACULTY_DATA = [
 
 export default function ConsultationHours() {
   return (
-    <div className="container mx-auto py-6">
-      <Tabs defaultValue="availability" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="availability">Consultation Hours</TabsTrigger>
-          <TabsTrigger value="faculty">Faculty List</TabsTrigger>
-        </TabsList>
-        <TabsContent value="availability">
-          <FacultyAvailability faculty={FACULTY_DATA} />
-        </TabsContent>
-        <TabsContent value="faculty">
-          <FacultyList faculty={FACULTY_DATA} />
-        </TabsContent>
-      </Tabs>
-    </div>
+    <main className="flex-grow px-6 py-6 overflow-auto">
+      <div className="container mx-auto py-6">
+        <Tabs defaultValue="availability" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="availability">Consultation Hours</TabsTrigger>
+            <TabsTrigger value="faculty">Faculty List</TabsTrigger>
+          </TabsList>
+          <TabsContent value="availability">
+            <FacultyAvailability faculty={FACULTY_DATA} />
+          </TabsContent>
+          <TabsContent value="faculty">
+            <FacultyList faculty={FACULTY_DATA} />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </main>
   )
 }
 

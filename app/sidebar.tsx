@@ -3,7 +3,15 @@
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import React from "react";
-import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
+import {
+  SidebarProvider,
+  Sidebar,
+  SidebarHeader,
+  SidebarContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+} from "@/components/ui/sidebar";
 import { Calendar, LayoutDashboard, Users2, UserRound, LogOut } from 'lucide-react';
 
 export default function AppSidebar() {
@@ -20,7 +28,7 @@ export default function AppSidebar() {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <Sidebar className="h-full flex flex-col justify-between w-64 bg-[#F7F7F7]">
+      <Sidebar className="h-full flex flex-col justify-between w-56 bg-[#F7F7F7]">
         <div>
           <SidebarHeader className="p-4">
             <div className="flex flex-col items-center gap-2 px-6 py-3">
@@ -76,4 +84,3 @@ export default function AppSidebar() {
     </SidebarProvider>
   );
 }
-
