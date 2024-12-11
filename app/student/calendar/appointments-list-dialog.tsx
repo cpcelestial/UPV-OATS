@@ -1,4 +1,3 @@
-
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -16,12 +15,6 @@ interface AppointmentsListDialogProps {
   onClose: () => void
   date: Date
   appointments: Appointment[]
-}
-
-const timeSlotColors = {
-  "10:00 AM": "bg-[#FFE4BC] text-[#B66A00]",
-  "1:00 PM": "bg-[#E8F0EB] text-[#35563F]",
-  "4:00 PM": "bg-[#8B0000] text-white"
 }
 
 export function AppointmentsListDialog({
@@ -42,48 +35,68 @@ export function AppointmentsListDialog({
           </p>
         </DialogHeader>
         <div className="space-y-4 mt-4">
-          {appointments.map((appointment) => (
-            <div
-              key={appointment.id}
-              className="bg-gray-50 rounded-lg p-4 flex items-center justify-between"
-            >
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={appointment.avatar} alt={appointment.name} />
-                  <AvatarFallback>
-                    {appointment.name.split(' ').map(n => n[0]).join('')}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h3 className="font-medium">{appointment.name}</h3>
-                  <p className="text-[#35563F]">{appointment.email}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <span className={cn(
-                  "px-4 py-1 rounded-full text-sm font-medium",
-                  timeSlotColors[appointment.time as keyof typeof timeSlotColors] || "bg-gray-200"
-                )}>
-                  {appointment.time}
-                </span>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
-                    Reschedule
-                  </Button>
-                  <Button 
-                    variant="destructive" 
-                    size="sm"
-                    className="bg-[#8B0000] hover:bg-[#660000]"
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </div>
+          {appointments.length === 0 ? (
+            <div className="text-center text-muted-foreground">
+              No appointments for this day
             </div>
-          ))}
+          ) : (
+            appointments.map((appointment) => (
+              <div
+                key={appointment.id}
+                className="bg-gray-50 rounded-lg p-4 flex items-center justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback>
+                      {appointment.facultyName.split(' ')
+                        .map(n => n[0])
+                        .join('')
+                        .toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className="font-medium">{appointment.title}</h3>
+                    <p className="text-muted-foreground">
+                      {appointment.facultyName} | {appointment.department}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex flex-col items-end">
+                    <span className="text-sm font-medium">
+                      {appointment.startTime} - {appointment.endTime}
+                    </span>
+                    <span 
+                      className={cn(
+                        "px-2 py-1 rounded-full text-xs mt-1",
+                        appointment.status === 'pending' 
+                          ? 'bg-yellow-100 text-yellow-800' 
+                          : appointment.status === 'confirmed'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      )}
+                    >
+                      {appointment.status}
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm">
+                      Details
+                    </Button>
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      className="bg-[#8B0000] hover:bg-[#660000]"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </DialogContent>
     </Dialog>
   )
 }
-

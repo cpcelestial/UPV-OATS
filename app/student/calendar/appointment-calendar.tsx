@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../../firebase-config"; // Firebase config
 import {
   addDays,
   format,
@@ -32,49 +34,18 @@ import { useRouter } from "next/navigation"; // Importing useRouter
 export interface Appointment {
   id: string;
   date: Date;
-  time: string;
-  name: string;
-  email: string;
-  avatar: string;
-  attendees: {
-    name: string;
-    avatar: string;
-  }[];
+  startTime: string;
+  endTime: string;
   title: string;
+  facultyName: string;
+  department: string;
+  location: string;
+  meetingType: string;
+  notes: string;
+  section: string;
+  status: string;
+  userId: string;
 }
-
-const appointments: Appointment[] = [
-  {
-    id: "1",
-    date: new Date(2024, 11, 30),
-    time: "10:00 AM",
-    name: "John Doe",
-    email: "jsdelacruz@up.edu.ph",
-    avatar: "/placeholder.svg",
-    attendees: [{ name: "John Doe", avatar: "/placeholder.svg" }],
-    title: "Morning Meeting",
-  },
-  {
-    id: "2",
-    date: new Date(2024, 11, 30),
-    time: "1:00 PM",
-    name: "John Doe",
-    email: "jsdelacruz@up.edu.ph",
-    avatar: "/placeholder.svg",
-    attendees: [{ name: "John Doe", avatar: "/placeholder.svg" }],
-    title: "Afternoon Review",
-  },
-  {
-    id: "3",
-    date: new Date(2024, 11, 30),
-    time: "4:00 PM",
-    name: "John Doe",
-    email: "jsdelacruz@up.edu.ph",
-    avatar: "/placeholder.svg",
-    attendees: [{ name: "John Doe", avatar: "/placeholder.svg" }],
-    title: "Evening Sync",
-  },
-];
 
 type ViewType = "month" | "week" | "day";
 
@@ -82,9 +53,42 @@ export function AppointmentCalendar() {
   const [currentDate, setCurrentDate] = React.useState<Date>(new Date());
   const [selectedDay, setSelectedDay] = React.useState<Date>();
   const [viewType, setViewType] = React.useState<ViewType>("month");
+  const [appointments, setAppointments] = React.useState<Appointment[]>([]); // State to store appointments
   const [selectedDate, setSelectedDate] = React.useState<Date | null>(null);
 
-  const router = useRouter(); // Initialize the router
+  const router = useRouter();
+
+  React.useEffect(() => {
+    // Fetch appointments from Firestore
+    const fetchAppointments = async () => {
+      const appointmentsRef = collection(db, "appointments"); // Your Firestore collection name
+      const querySnapshot = await getDocs(appointmentsRef);
+      const fetchedAppointments: Appointment[] = [];
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        fetchedAppointments.push({
+          id: doc.id,
+          date: data.date.toDate(), // Convert Firestore timestamp to Date object
+          startTime: data.startTime,
+          endTime: data.endTime,
+          title: data.title,
+          facultyName: data.facultyName,
+          department: data.department,
+          location: data.location,
+          meetingType: data.meetingType,
+          notes: data.notes,
+          section: data.section,
+          status: data.status,
+          userId: data.userId,
+        });
+      });
+      
+      setAppointments(fetchedAppointments);
+    };
+
+    fetchAppointments();
+  }, []); // Empty dependency array means this effect runs once on mount
 
   const firstDayOfMonth = startOfMonth(currentDate);
   const lastDayOfMonth = endOfMonth(currentDate);
@@ -121,7 +125,7 @@ export function AppointmentCalendar() {
   };
 
   const handleAddAppointment = () => {
-    router.push("/student/calendar/add-app"); // Navigate to the add appointment page
+    router.push("/student/calendar/add-app");
   };
 
   return (
@@ -186,23 +190,14 @@ export function AppointmentCalendar() {
                 <div className="mt-1 space-y-1">
                   {dayAppointments.map((appointment) => (
                     <div key={appointment.id} className="rounded bg-[#E8F0EB] p-1 text-xs">
-                      <div className="font-medium">{appointment.time}</div>
+                      <div className="font-medium">{appointment.startTime} - {appointment.endTime}</div>
                       <div className="mt-1">{appointment.title}</div>
+                      <div className="mt-1 text-sm">{appointment.facultyName}</div>
                       <div className="flex -space-x-2 mt-1">
-                        {appointment.attendees.map((attendee, index) => (
-                          <Avatar
-                            key={index}
-                            className="h-6 w-6 border-2 border-background"
-                          >
-                            <AvatarImage src={attendee.avatar} alt={attendee.name} />
-                            <AvatarFallback>
-                              {attendee.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")}
-                            </AvatarFallback>
-                          </Avatar>
-                        ))}
+                        <Avatar className="h-6 w-6 border-2 border-background">
+                          <AvatarImage src="/placeholder.svg" alt={appointment.facultyName} />
+                          <AvatarFallback>{appointment.facultyName[0]}</AvatarFallback>
+                        </Avatar>
                       </div>
                     </div>
                   ))}
