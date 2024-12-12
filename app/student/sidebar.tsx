@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import React from "react";
 import {
   SidebarProvider,
@@ -13,9 +13,12 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
 import { Calendar, LayoutDashboard, Users2, UserRound, LogOut } from 'lucide-react';
+import { signOut } from "firebase/auth";
+import { auth } from "../firebase-config"; // Adjust the import path to your Firebase configuration
 
 export default function AppSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
 
   const isActive = (route: string) => pathname === route;
 
@@ -26,9 +29,25 @@ export default function AppSidebar() {
     { name: "Profile", icon: UserRound, route: "/student/profile" },
   ];
 
+  const handleLogout = async () => {
+    try {
+      // Sign out from Firebase
+      await signOut(auth);
+      
+      // Clear any local storage or session storage if needed
+      localStorage.clear(); // Optional: clear local storage
+      
+      // Redirect to home page
+      router.push('/');
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Optionally, show an error toast or message to the user
+    }
+  };
+
   return (
     <SidebarProvider defaultOpen={true}>
-      <Sidebar className="h-full flex flex-col justify-between w-56 bg-[#F7F7F7] border-[#F7F7F7]">
+      <Sidebar className="h-full flex flex-col justify-between w-56 bg-[#F7F7F7]">
         <div>
           <SidebarHeader className="p-4">
             <div className="flex flex-col items-center gap-2 px-6 py-3">
@@ -56,7 +75,7 @@ export default function AppSidebar() {
                     className={`flex items-center w-full px-6 py-8 text-sm duration-200 relative
                       ${isActive(item.route)
                         ? "active-sidebar-item"
-                        : "text-[#A3A3A3] transition duration-500 hover:text-[#212121]"
+                        : "text-[#A3A3A3] hover:text-[#7c0a02]"
                       }`
                     }
                   >
@@ -73,8 +92,9 @@ export default function AppSidebar() {
 
         <div className="mt-auto px-2 py-10">
           <SidebarMenuButton
+            onClick={handleLogout}
             tooltip="Logout"
-            className="flex font-medium items-center gap-2 w-full px-4 py-8 text-sm text-tertiary sidebar-button-text transition duration-500 hover:text-[#7c0a02]"
+            className="flex items-center gap-2 w-full px-4 py-8 text-sm text-tertiary sidebar-button-text hover:text-[#7c0a02] font-medium"
           >
             <LogOut className="h-4 w-4" />
             <span>Logout</span>
