@@ -1,8 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "../../firebase-config"; // Firebase config
 import {
   addDays,
   format,
@@ -29,66 +27,83 @@ import { cn } from "@/lib/utils";
 import { WeekView } from "./week-view";
 import { DayView } from "./day-view";
 import { AppointmentsListDialog } from "./appointments-list-dialog";
-import { useRouter } from "next/navigation"; // Importing useRouter
+import { useRouter } from "next/navigation";
 
-export interface Appointment {
-  id: string;
-  date: Date;
-  startTime: string;
-  endTime: string;
-  title: string;
-  facultyName: string;
-  department: string;
-  location: string;
-  meetingType: string;
-  notes: string;
-  section: string;
-  status: string;
-  userId: string;
-}
+import { 
+  collection, 
+  query, 
+  where,
+  or, 
+  onSnapshot 
+} from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
+import { db, auth } from "../../firebase-config";
+
 
 type ViewType = "month" | "week" | "day";
+
+export interface Appointment {
+  time: "10:00 AM" | "1:00 PM" | "4:00 PM";
+  id: string;
+  date: Date;
+  startTime: string; 
+  endTime: string;   
+  name: string;
+  email: string;
+  avatar: string;
+  facultyName: string;
+  title: string;
+  location: string;
+  course: string;
+  section: string;
+  meetingNotes?: string;
+}
 
 export function AppointmentCalendar() {
   const [currentDate, setCurrentDate] = React.useState<Date>(new Date());
   const [selectedDay, setSelectedDay] = React.useState<Date>();
   const [viewType, setViewType] = React.useState<ViewType>("month");
-  const [appointments, setAppointments] = React.useState<Appointment[]>([]); // State to store appointments
   const [selectedDate, setSelectedDate] = React.useState<Date | null>(null);
+  const [appointments, setAppointments] = React.useState<Appointment[]>([]);
+  const [currentUser, setCurrentUser] = React.useState<any>(null);
 
   const router = useRouter();
 
   React.useEffect(() => {
-    // Fetch appointments from Firestore
-    const fetchAppointments = async () => {
-      const appointmentsRef = collection(db, "appointments"); // Your Firestore collection name
-      const querySnapshot = await getDocs(appointmentsRef);
-      const fetchedAppointments: Appointment[] = [];
-      
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        fetchedAppointments.push({
-          id: doc.id,
-          date: data.date.toDate(), // Convert Firestore timestamp to Date object
-          startTime: data.startTime,
-          endTime: data.endTime,
-          title: data.title,
-          facultyName: data.facultyName,
-          department: data.department,
-          location: data.location,
-          meetingType: data.meetingType,
-          notes: data.notes,
-          section: data.section,
-          status: data.status,
-          userId: data.userId,
-        });
-      });
-      
-      setAppointments(fetchedAppointments);
-    };
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setCurrentUser(user);
 
-    fetchAppointments();
-  }, []); // Empty dependency array means this effect runs once on mount
+      const appointmentsRef = collection(db, "appointments");
+      const combinedQuery = query(
+        appointmentsRef, 
+        or(
+          where("userId", "==", user.uid),
+          where("facultyId", "==", user.uid)
+        )
+      );
+
+      const unsubscribeAppointments = onSnapshot(combinedQuery, (snapshot) => {
+        const fetchedAppointments: Appointment[] = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          date: doc.data().date.toDate(), // Convert Firestore timestamp to Date
+        } as Appointment));
+
+        setAppointments(fetchedAppointments);
+      });
+        return () => {
+          unsubscribeAppointments();
+        };
+      } else {
+        setCurrentUser(null);
+        setAppointments([]);
+        router.push("/login");
+      }
+    });
+
+    return () => unsubscribeAuth();
+  }, []);
 
   const firstDayOfMonth = startOfMonth(currentDate);
   const lastDayOfMonth = endOfMonth(currentDate);
@@ -172,7 +187,7 @@ export function AppointmentCalendar() {
               {day}
             </div>
           ))}
-          {daysInMonth.map((day, index) => {
+          {daysInMonth.map((day) => {
             const dayAppointments = getAppointmentsForDay(day);
             const isCurrentMonth = isSameMonth(day, currentDate);
 
@@ -190,15 +205,10 @@ export function AppointmentCalendar() {
                 <div className="mt-1 space-y-1">
                   {dayAppointments.map((appointment) => (
                     <div key={appointment.id} className="rounded bg-[#E8F0EB] p-1 text-xs">
-                      <div className="font-medium">{appointment.startTime} - {appointment.endTime}</div>
-                      <div className="mt-1">{appointment.title}</div>
-                      <div className="mt-1 text-sm">{appointment.facultyName}</div>
-                      <div className="flex -space-x-2 mt-1">
-                        <Avatar className="h-6 w-6 border-2 border-background">
-                          <AvatarImage src="/placeholder.svg" alt={appointment.facultyName} />
-                          <AvatarFallback>{appointment.facultyName[0]}</AvatarFallback>
-                        </Avatar>
-                      </div>
+                      {/* Displaying faculty and time */}
+                      <div className="font-medium">{appointment.title}</div>
+                      <div className="font-light">{appointment.facultyName}</div>
+                      <div className="text-xs">{appointment.startTime} - {appointment.endTime}</div>
                     </div>
                   ))}
                 </div>
