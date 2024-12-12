@@ -25,7 +25,7 @@ const initialProfile: StudentProfile = {
   timezone: 'Asia/Manila',
   contactNumber: '09123456789',
   description: '',
-  avatarUrl: '/placeholder.svg',
+  avatarUrl: '/profile.jpg',
   schedule: [
     {
       day: 'Monday',
@@ -74,13 +74,13 @@ const initialProfile: StudentProfile = {
       id: '1',
       name: 'John Doe',
       email: 'jdoe@up.edu.ph',
-      avatarUrl: '/placeholder.svg'
+      avatarUrl: '/profile2.jpg'
     },
     {
       id: '2',
       name: 'Jane Smith',
       email: 'jsmith@up.edu.ph',
-      avatarUrl: '/placeholder.svg'
+      avatarUrl: '/profile3.jpg'
     }
   ],
   appointments: [

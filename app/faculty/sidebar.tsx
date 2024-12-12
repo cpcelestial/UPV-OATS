@@ -25,7 +25,7 @@ export default function AppSidebar() {
   const menuItems = [
     { name: "Dashboard", icon: LayoutDashboard, route: "/faculty/dashboard" },
     { name: "Calendar", icon: Calendar, route: "/faculty/calendar" },
-    { name: "Faculty", icon: Users2, route: "/faculty/student" },
+    { name: "Student", icon: Users2, route: "/faculty/student" },
     { name: "Profile", icon: UserRound, route: "/faculty/profile" },
   ];
 
@@ -33,10 +33,10 @@ export default function AppSidebar() {
     try {
       // Sign out from Firebase
       await signOut(auth);
-      
+
       // Clear any local storage or session storage if needed
       localStorage.clear(); // Optional: clear local storage
-      
+
       // Redirect to home page
       router.push('/');
     } catch (error) {
@@ -47,7 +47,7 @@ export default function AppSidebar() {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <Sidebar className="h-full flex flex-col justify-between w-56 bg-[#F7F7F7]">
+      <Sidebar className="h-full flex flex-col justify-between w-56 bg-[#F7F7F7] border-[#F7F7F7]">
         <div>
           <SidebarHeader className="p-4">
             <div className="flex flex-col items-center gap-2 px-6 py-3">
@@ -75,7 +75,7 @@ export default function AppSidebar() {
                     className={`flex items-center w-full px-6 py-8 text-sm duration-200 relative
                       ${isActive(item.route)
                         ? "active-sidebar-item"
-                        : "text-[#A3A3A3] hover:text-[#7c0a02]"
+                        : "text-[#A3A3A3] transition duration-200 hover:text-[#212121]"
                       }`
                     }
                   >
@@ -94,7 +94,8 @@ export default function AppSidebar() {
           <SidebarMenuButton
             onClick={handleLogout}
             tooltip="Logout"
-            className="flex items-center gap-2 w-full px-4 py-8 text-sm text-tertiary sidebar-button-text hover:text-[#7c0a02] font-medium"
+            className="flex items-center gap-2 w-full px-4 py-8 text-sm text-tertiary sidebar-button-text font-medium
+            transition duration-200 hover:text-[#7B1113]"
           >
             <LogOut className="h-4 w-4" />
             <span>Logout</span>

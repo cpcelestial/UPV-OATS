@@ -13,11 +13,13 @@ import { doc, getDoc } from "firebase/firestore"; // Firestore methods to fetch 
 
 const routeTitles: { [key: string]: string } = {
   '/faculty/dashboard': 'Dashboard',
+  '/faculty/dashboard/appointments': 'Dashboard',
   '/faculty/calendar': 'Calendar',
+  '/faculty/calendar/add-app': 'Appointment',
   '/faculty/faculty': 'Faculty',
   '/faculty/profile': 'Profile',
-  '/faculty/calendar/add-app': 'Add Appointment',
-  '/faculty/dashboard/appointments' : 'Appointments'
+
+
 };
 
 export default function AppNavbar() {
@@ -62,11 +64,10 @@ export default function AppNavbar() {
       <div className="flex h-20 items-center px-6">
         <div className="flex flex-col justify-center flex-1">
           <h1 className="text-2xl font-semibold">{title}</h1>
-          <p className="text-base text-muted-foreground mt-1">
+          <p className="font-secondary text-base text-muted-foreground font-medium">
             Hello, {userName}!
           </p>
         </div>
-        {/* Theme toggle button */}
         <div className="flex items-center gap-4 flex-1 justify-center">
           <div className="relative w-full max-w-md">
             <Input
@@ -95,13 +96,28 @@ export default function AppNavbar() {
               </svg>
             </Button>
           </div>
-          </div>
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="ghost" 
-            size="icon"
+        </div>
+        <div className="flex items-center gap-4 flex-1 justify-end">
+          <Button
+            variant="ghost"
+            className="text-muted-foreground h-12 w-12"
             onClick={toggleTheme}
           >
+            <Sun className="h-6 w-6 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon className="absolute h-6 w-6 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            <span className="sr-only">Toggle theme</span>
+          </Button>
+          <Button variant="ghost" size="icon" className="text-muted-foreground h-12 w-12">
+            <MessageSquare className="h-6 w-6" />
+            <span className="sr-only">Messages</span>
+          </Button>
+          <Button size="icon" variant="ghost" className="relative h-12 w-12 rounded-full">
+            <Image
+              src="/profile2.jpg"
+              alt="Profile"
+              className="rounded-full object-cover"
+              fill
+            />
             {theme === 'dark' ? <Sun /> : <Moon />}
           </Button>
         </div>

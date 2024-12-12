@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import React from "react";
 import {
   SidebarProvider,
@@ -12,10 +12,13 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import { Calendar, LayoutDashboard, Users2, LogOut } from 'lucide-react';
+import { Calendar, LayoutDashboard, Users2, UserRound, LogOut } from 'lucide-react';
+import { signOut } from "firebase/auth";
+import { auth } from "../firebase-config"; // Adjust the import path to your Firebase configuration
 
 export default function AppSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
 
   const isActive = (route: string) => pathname === route;
 
@@ -55,7 +58,7 @@ export default function AppSidebar() {
                     className={`flex items-center w-full px-6 py-8 text-sm duration-200 relative
                       ${isActive(item.route)
                         ? "active-sidebar-item"
-                        : "text-[#A3A3A3] transition duration-500 hover:text-[#212121]"
+                        : "text-[#A3A3A3] transition duration-200 hover:text-[#212121]"
                       }`
                     }
                   >
@@ -72,8 +75,10 @@ export default function AppSidebar() {
 
         <div className="mt-auto px-2 py-10">
           <SidebarMenuButton
+            onClick={handleLogout}
             tooltip="Logout"
-            className="flex items-center gap-2 w-full px-4 py-8 text-sm text-tertiary sidebar-button-text hover:text-[#7c0a02] font-medium"
+            className="flex items-center gap-2 w-full px-4 py-8 text-sm text-tertiary sidebar-button-text font-medium
+            transition duration-200 hover:text-[#7B1113]"
           >
             <LogOut className="h-4 w-4" />
             <span>Logout</span>
