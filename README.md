@@ -1,7 +1,5 @@
 # UPV OATS: Online Appointment Tracking System
 
-## Overview
-
 UPV OATS is a web-based application designed to streamline the appointment scheduling process for University of the Philippines Visayas (UPV) students and faculty. The system provides a centralized platform for efficient communication and appointment management.
 
 ## Key Features
