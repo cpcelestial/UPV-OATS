@@ -60,4 +60,4 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 - Kezia Judith C. Sajonia (Frontend)
 - Mark Rensel D. Yeban (Backend)
 
-** University of the Philippines Visayas **
+**University of the Philippines Visayas**
