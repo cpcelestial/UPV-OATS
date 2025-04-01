@@ -1,63 +1,71 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Avatar } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ArrowLeft } from 'lucide-react'
 import Link from "next/link"
+import { db } from "../../../firebase-config"  // import Firestore DB
+import { collection, getDocs, query, where,deleteDoc,doc } from "firebase/firestore"
+import { RescheduleDialog } from "../reschedule-dialog";
+import { DeclineDialog } from "../decline-dialog";
 
-interface Appointment {
-  id: string
-  requester: {
-    name: string
-    avatar: string
-  }
-  faculty: {
-    name: string
-    email: string
-    avatar: string
-  }
-  date: Date
-  title: string
-  time: {
-    start: string
-    end: string
-  }
-  location: string
-  typeOfMeeting: string
-  course: string
-  section: string
-  meetingNotes?: string
+
+export interface Appointment {
+  id: string;
+  date: Date;
+  startTime: string; 
+  endTime: string;   
+  name: string;
+  email: string;
+  avatar: string;
+  facultyName: string;
+  title: string;
+  location: string;
+  course: string;
+  section: string;
+  meetingNotes?: string;
 }
 
 export default function AppointmentsPage() {
-  const [appointments] = useState<Appointment[]>([
-    {
-      id: "1",
-      requester: {
-        name: "Jack Doe",
-        avatar: "/profile2.jpg",
-      },
-      faculty: {
-        name: "Jack Doe",
-        email: "jsdoe@up.edu.ph",
-        avatar: "/profile2.jpg",
-      },
-      date: new Date(2024, 9, 17), // October 17, 2024
-      title: "Consultation Regarding Grades",
-      time: {
-        start: "11:30 AM",
-        end: "1:00 PM",
-      },
-      location: "Faculty room",
-      typeOfMeeting: "Face to face meeting",
-      course: "CMSC 128",
-      section: "Section 2",
-      meetingNotes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
-    },
-    // Add more appointments as needed
-  ])
+  const [date, setDate] = useState<Date>(new Date(2024, 11, 8)); // December 8, 2024
+  const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
+  const [isDeclineOpen, setIsDeclineOpen] = useState(false);
+  const [appointments, setAppointments] = useState<Appointment[]>([])
+
+
+  
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "appointments"))
+
+        const fetchedAppointments: Appointment[] = querySnapshot.docs.map(doc => {
+          return {
+            id: doc.id,
+            ...doc.data()
+          } as Appointment
+        })
+
+        setAppointments(fetchedAppointments)
+      } catch (error) {
+        console.error("Error fetching appointments:", error)
+      }
+    }
+
+    fetchAppointments()
+  }, [])
+  const deleteAppointment = async (appointmentId: string) => {
+    try {
+      await deleteDoc(doc(db, "appointments", appointmentId));
+      console.log("Appointment deleted successfully");
+      // Update the appointments state to reflect the deletion
+      setAppointments(appointments.filter(appointment => appointment.id !== appointmentId));
+    } catch (error) {
+      console.error("Error deleting appointment:", error);
+    }
+  };
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
@@ -79,10 +87,10 @@ export default function AppointmentsPage() {
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-6">
                 <Avatar className="h-12 w-12">
-                  <img src={appointment.requester.avatar} alt={appointment.requester.name} />
+                  <img src={appointment.avatar} alt={appointment.name} />
                 </Avatar>
                 <p className="text-lg">
-                  <span className="font-semibold">{appointment.requester.name}</span>
+                  <span className="font-semibold">{appointment.name}</span>
                   {" has scheduled an appointment with you."}
                 </p>
               </div>
@@ -95,7 +103,6 @@ export default function AppointmentsPage() {
                     year: 'numeric'
                   })}
                 </div>
-
                 <h2 className="text-xl font-semibold">{appointment.title}</h2>
 
                 <div className="grid md:grid-cols-2 gap-6">
@@ -103,11 +110,11 @@ export default function AppointmentsPage() {
                     <h3 className="text-sm font-medium mb-2">Meeting with</h3>
                     <div className="flex items-center gap-3">
                       <Avatar className="h-8 w-8">
-                        <img src={appointment.faculty.avatar} alt={appointment.faculty.name} />
+                        <img src={appointment.avatar} alt={appointment.facultyName} />
                       </Avatar>
                       <div>
-                        <div className="font-medium">{appointment.faculty.name}</div>
-                        <div className="text-sm text-[#35563F]">{appointment.faculty.email}</div>
+                        <div className="font-medium">{appointment.facultyName}</div>
+                        <div className="text-sm text-[#35563F]">{appointment.email}</div>
                       </div>
                     </div>
                   </div>
@@ -115,18 +122,13 @@ export default function AppointmentsPage() {
                   <div>
                     <h3 className="text-sm font-medium mb-2">Time</h3>
                     <p className="text-muted-foreground">
-                      {appointment.time.start} to {appointment.time.end}
+                      {appointment.startTime} to {appointment.endTime}
                     </p>
                   </div>
 
                   <div>
                     <h3 className="text-sm font-medium mb-2">Location</h3>
                     <p className="text-muted-foreground">{appointment.location}</p>
-                  </div>
-
-                  <div>
-                    <h3 className="text-sm font-medium mb-2">Type of meeting</h3>
-                    <p className="text-muted-foreground">{appointment.typeOfMeeting}</p>
                   </div>
 
                   <div>
@@ -145,15 +147,28 @@ export default function AppointmentsPage() {
                 )}
 
                 <div className="flex justify-end gap-2">
-                  <Button variant="outline">
+                  <Button variant="outline" onClick={() => setIsRescheduleOpen(true)} >
                     Reschedule
                   </Button>
-                  <Button variant="outline" className="text-red-600 hover:bg-red-600 hover:text-white">
+                  <Button variant="outline" className="text-red-500 hover:text-red-600" onClick={() => setIsDeclineOpen(true)}>
                     Decline
                   </Button>
-                  <Button className="text-white bg-green-600 hover:bg-green-400">
+                  <Button className="bg-[#35563F] hover:bg-[#2A4A33] text-white">
                     Accept
                   </Button>
+                  <RescheduleDialog
+                          open={isRescheduleOpen}
+                          onOpenChange={setIsRescheduleOpen}
+                          appointment={appointment}
+                        />
+                        <DeclineDialog
+                          open={isDeclineOpen}
+                          onOpenChange={setIsDeclineOpen}
+                          onConfirm={() => {
+                            setIsDeclineOpen(false);
+                            deleteAppointment(appointment.id)
+                          }}
+                        />
                 </div>
               </div>
             </CardContent>
@@ -163,4 +178,3 @@ export default function AppointmentsPage() {
     </div>
   )
 }
-

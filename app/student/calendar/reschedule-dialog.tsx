@@ -49,7 +49,7 @@ interface RescheduleDialogProps {
   appointment: {
     id: string
     title: string
-    facultyName: string 
+    facultyName: string
     location: string
     meetingNotes?: string
     date: Date
