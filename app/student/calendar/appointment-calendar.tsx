@@ -28,7 +28,6 @@ import { WeekView } from "./week-view";
 import { DayView } from "./day-view";
 import { AppointmentsListDialog } from "./appointments-list-dialog";
 import { useRouter } from "next/navigation";
-
 import { 
   collection, 
   query, 
@@ -79,7 +78,7 @@ export function AppointmentCalendar() {
         appointmentsRef, 
         or(
           where("userId", "==", user.uid),
-          where("facultyId", "==", user.uid)
+          where("facultyUid", "==", user.uid)
         )
       );
 

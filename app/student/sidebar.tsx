@@ -20,7 +20,7 @@ export default function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const isActive = (route: string) => pathname === route;
+  const isActive = (route: string) => pathname.startsWith(route);
 
   const menuItems = [
     { name: "Dashboard", icon: LayoutDashboard, route: "/student/dashboard" },

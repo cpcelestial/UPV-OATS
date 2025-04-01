@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import type { Appointment } from "./appointment-calendar"
 import { deleteDoc, doc } from "firebase/firestore"
 import { getFirestore } from "firebase/firestore"
-import {RescheduleDialog} from "../dashboard/reschedule-dialog"
+import {RescheduleDialog} from "./reschedule-dialog"
 
 interface AppointmentsListDialogProps {
   isOpen: boolean

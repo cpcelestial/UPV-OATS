@@ -32,7 +32,7 @@ export default function AppNavbar() {
       if (user) {
         try {
           // Fetch user document from Firestore
-          const userDocRef = doc(db, 'users', user.uid);
+          const userDocRef = doc(db, 'Users', user.uid);
           const userDocSnap = await getDoc(userDocRef);
 
           if (userDocSnap.exists()) {
