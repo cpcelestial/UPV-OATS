@@ -12,8 +12,41 @@ const routeTitles: { [key: string]: string } = {
 }
 
 export default function AppNavbar() {
-  const pathname = usePathname()
+  const { setTheme, theme } = useTheme();
+  const pathname = usePathname();
   const title = pathname ? routeTitles[pathname] || "Page Not Found" : "Loading..."
+  const [userName, setUserName] = useState('User');
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          // Fetch user document from Firestore
+          const userDocRef = doc(db, 'users', user.uid);
+          const userDocSnap = await getDoc(userDocRef);
+
+          if (userDocSnap.exists()) {
+            const userData = userDocSnap.data();
+            // Assuming the user document has a 'name' field
+            setUserName(userData.name || userData.firstName || 'User');
+          } else {
+            // Fallback to email or display name if no Firestore doc
+            setUserName(user.displayName || user.email?.split('@')[0] || 'User');
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+          setUserName('User');
+        }
+      }
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, []);
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
 
   return (
     <header className="border-b">
