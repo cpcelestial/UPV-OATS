@@ -38,7 +38,7 @@ export function ProfileSection({ profile, onUpdateProfile }: ProfileSectionProps
                                 <p className="text-muted-foreground mb-6">This is my bio.</p>
                             </div>
                             <Button variant="secondary" onClick={onUpdateProfile} className="whitespace-nowrap">
-                                Update profile
+                                Edit profile
                             </Button>
                         </div>
 

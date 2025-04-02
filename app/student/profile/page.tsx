@@ -21,48 +21,7 @@ const initialProfile: Student = {
   country: "Philippines",
   description: "",
   avatarUrl: "/profile.jpg",
-  schedule: [
-    {
-      day: "Monday",
-      slots: [
-        { start: "8:00 AM", end: "10:00 AM" },
-        { start: "11:30 AM", end: "1:00 PM" },
-        { start: "4:00 PM", end: "5:30 PM" },
-      ],
-    },
-    {
-      day: "Tuesday",
-      slots: [
-        { start: "8:00 AM", end: "10:00 AM" },
-        { start: "11:30 AM", end: "1:00 PM" },
-      ],
-    },
-    {
-      day: "Wednesday",
-      slots: [
-        { start: "8:00 AM", end: "10:00 AM" },
-        { start: "11:30 AM", end: "1:00 PM" },
-      ],
-    },
-    {
-      day: "Thursday",
-      slots: [
-        { start: "8:00 AM", end: "10:00 AM" },
-        { start: "11:30 AM", end: "1:00 PM" },
-      ],
-    },
-    {
-      day: "Friday",
-      slots: [
-        { start: "8:00 AM", end: "10:00 AM" },
-        { start: "11:30 AM", end: "1:00 PM" },
-      ],
-    },
-    {
-      day: "Saturday",
-      slots: [],
-    },
-  ]
+  schedule: []
 }
 
 export default function Page() {

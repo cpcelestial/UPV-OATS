@@ -14,12 +14,23 @@ export interface Student {
   schedule: DaySchedule[]
 }
 
-export interface DaySchedule {
-  day: string
-  slots: TimeSlot[]
+export interface TimeSlot {
+  start: string;
+  end: string;
+  subject?: string;
+  room?: string;
+  professor?: string;
+  days: string[];
+  color?: string;
 }
 
-export interface TimeSlot {
-  start: string
-  end: string
+export interface DaySchedule {
+  day: string;
+  slots: TimeSlot[];
+}
+
+export interface ClassSchedule {
+  id: string;
+  name: string;
+  schedule: DaySchedule[];
 }

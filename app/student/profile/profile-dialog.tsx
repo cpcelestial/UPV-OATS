@@ -29,7 +29,7 @@ export function ProfileDialog({ open, onOpenChange, profile, onUpdateProfile }: 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl py-6 pl-6 pr-4">
         <DialogHeader>
-          <DialogTitle className="font-bold">Update Profile</DialogTitle>
+          <DialogTitle className="font-bold">Edit Profile</DialogTitle>
           <p className="text-sm text-muted-foreground">Please provide all required information</p>
         </DialogHeader>
         <div className="space-y-6 max-h-[70vh] overflow-y-auto py-2 pl-2 pr-4">
@@ -115,7 +115,7 @@ export function ProfileDialog({ open, onOpenChange, profile, onUpdateProfile }: 
               Cancel
             </Button>
             <Button onClick={handleSave}>
-              Update
+              Save
             </Button>
           </div>
         </div>
