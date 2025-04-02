@@ -50,7 +50,7 @@ const App: React.FC = () => {
           className="object-fill"
         />
         <h1 className="relative z-10 pl-24 pt-40 text-6xl font-bold text-white">
-          Welcome Back!
+          Welcome!
         </h1>
       </div>
 
@@ -98,7 +98,7 @@ const App: React.FC = () => {
               </div>
               <a
                 href="#"
-                className="text-sm text-blue-400 transition duration-500 hover:text-[#7B1113]"
+                className="text-sm text-blue-500 transition duration-500 hover:text-[#7B1113]"
               >
                 Forgot password?
               </a>
