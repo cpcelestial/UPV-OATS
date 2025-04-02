@@ -20,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning={true} data-qb-installed="true">
       <body className={`${karla.className} ${fira_sans.variable}`}>{children}</body>
     </html>
   );

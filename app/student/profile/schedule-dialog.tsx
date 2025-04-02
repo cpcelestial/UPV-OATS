@@ -5,9 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { X } from 'lucide-react'
-import type { DaySchedule } from './types/profile'
+import type { DaySchedule } from '../data'
 
 interface ScheduleDialogProps {
   open: boolean
@@ -24,10 +23,9 @@ const HOURS = Array.from({ length: 24 }, (_, i) => {
 
 export function ScheduleDialog({ open, onOpenChange, schedule, onUpdateSchedule }: ScheduleDialogProps) {
   const [editedSchedule, setEditedSchedule] = useState(schedule)
-  const [isSpecificHoursOpen, setIsSpecificHoursOpen] = useState(false)
 
   const handleDayToggle = (day: string, enabled: boolean) => {
-    setEditedSchedule(prev => 
+    setEditedSchedule(prev =>
       prev.map(d => d.day === day ? { ...d, enabled, slots: d.slots || [] } : d)
     )
   }
@@ -73,97 +71,13 @@ export function ScheduleDialog({ open, onOpenChange, schedule, onUpdateSchedule 
     )
   }
 
-  const handleAddSpecificHours = (day: string, start: string, end: string) => {
-    setEditedSchedule(prev =>
-      prev.map(d => {
-        if (d.day === day) {
-          return {
-            ...d,
-            enabled: true,
-            slots: [...(d.slots || []), { start, end }]
-          }
-        }
-        return d
-      })
-    )
-  }
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Update Schedule Availability</DialogTitle>
+          <DialogTitle>Update Class Schedule</DialogTitle>
         </DialogHeader>
         <div className="space-y-6">
-          <div className="flex justify-end">
-            <Sheet open={isSpecificHoursOpen} onOpenChange={setIsSpecificHoursOpen}>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="sm">
-                  Add specific hours
-                </Button>
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>Add Specific Hours</SheetTitle>
-                </SheetHeader>
-                <div className="space-y-6 mt-6">
-                  {editedSchedule.map((day) => (
-                    <div key={day.day} className="space-y-4">
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          checked={day.enabled}
-                          onCheckedChange={(checked) => handleDayToggle(day.day, checked as boolean)}
-                        />
-                        <span className="font-medium">{day.day}</span>
-                      </div>
-                      {day.enabled && (
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <Select defaultValue="9:00 AM" onValueChange={(value) => {
-                              handleAddSpecificHours(day.day, value, '10:00 AM')
-                            }}>
-                              <SelectTrigger className="w-[140px]">
-                                <SelectValue placeholder="Start time" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {HOURS.map((hour) => (
-                                  <SelectItem key={hour} value={hour}>
-                                    {hour}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <span>to</span>
-                            <Select defaultValue="10:00 AM" onValueChange={(value) => {
-                              handleAddSpecificHours(day.day, '9:00 AM', value)
-                            }}>
-                              <SelectTrigger className="w-[140px]">
-                                <SelectValue placeholder="End time" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {HOURS.map((hour) => (
-                                  <SelectItem key={hour} value={hour}>
-                                    {hour}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleAddSpecificHours(day.day, '9:00 AM', '10:00 AM')}
-                            >
-                              Add
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
           <div className="space-y-4">
             {editedSchedule.map((day) => (
               <div key={day.day} className="space-y-4 p-4 border rounded-lg">
@@ -234,7 +148,7 @@ export function ScheduleDialog({ open, onOpenChange, schedule, onUpdateSchedule 
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button 
+            <Button
               className="bg-[#2F5233] hover:bg-[#2F5233]/90"
               onClick={() => {
                 onUpdateSchedule(editedSchedule)

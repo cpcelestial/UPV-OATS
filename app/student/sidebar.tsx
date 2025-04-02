@@ -40,11 +40,17 @@ export default function AppSidebar() {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <Sidebar className="w-56 pl-4 h-full flex flex-col justify-between bg-[#F7F7F7] border-none">
+      <Sidebar className="w-56 pl-4 h-full flex flex-col justify-between border-none">
         <div>
           <SidebarHeader className="p-4">
             <div className="flex flex-col items-center gap-2 px-6 py-3">
-              <Image src="/logo.png" alt="OATS Logo" width={80} height={80} className="object-contain" />
+              <Image
+                src="/logo.png"
+                alt="OATS Logo"
+                width={80}
+                height={80}
+                className="object-contain"
+              />
               <span className="header-logo text-sm">
                 <span className="text-primary">UPV</span> <span className="text-secondary">OATS</span>
               </span>
