@@ -115,7 +115,7 @@ export function ProfileDialog({ open, onOpenChange, profile, onUpdateProfile }: 
               value={editedProfile.description}
               onChange={(e) => setEditedProfile((prev) => ({ ...prev, description: e.target.value }))}
               placeholder="Tell us about yourself..."
-              className="h-24"
+              className="h-24 resize-none"
             />
           </div>
         </div>
