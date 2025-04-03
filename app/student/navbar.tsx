@@ -1,7 +1,5 @@
 "use client"
-
-import { Button } from "@/components/ui/button"
-import Image from "next/image"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { usePathname } from "next/navigation"
 
 const routeTitles: { [key: string]: string } = {
@@ -13,7 +11,7 @@ const routeTitles: { [key: string]: string } = {
 }
 
 export default function AppNavbar() {
-  const pathname = usePathname();
+  const pathname = usePathname()
   const title = pathname ? routeTitles[pathname] || "Page Not Found" : "Loading..."
 
   return (
@@ -24,9 +22,10 @@ export default function AppNavbar() {
           <p className="font-secondary text-base text-muted-foreground font-medium">Hello, Student!</p>
         </div>
         <div className="flex items-center gap-4 flex-1 justify-end">
-          <Button size="icon" variant="ghost" className="relative h-12 w-12 rounded-full">
-            <Image src="/profile2.jpg" alt="Profile" className="rounded-full object-cover" fill />
-          </Button>
+          <Avatar className="h-12 w-12">
+            <AvatarImage src="/profile2.jpg" alt="Profile" className="object-cover" />
+            <AvatarFallback>ST</AvatarFallback>
+          </Avatar>
         </div>
       </div>
     </header>
