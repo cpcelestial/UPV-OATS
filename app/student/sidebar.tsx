@@ -12,7 +12,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar"
-import { Calendar, LayoutDashboard, Users2, UserRound, LogOut } from "lucide-react"
+import { Calendar, LayoutDashboard, BookUser, UserRound, LogOut } from "lucide-react"
 
 export default function AppSidebar() {
   const pathname = usePathname()
@@ -34,7 +34,7 @@ export default function AppSidebar() {
   const menuItems = [
     { name: "Dashboard", icon: LayoutDashboard, route: "/student/dashboard" },
     { name: "Calendar", icon: Calendar, route: "/student/calendar" },
-    { name: "Faculty", icon: Users2, route: "/student/faculty" },
+    { name: "Faculty", icon: BookUser, route: "/student/faculty" },
     { name: "Profile", icon: UserRound, route: "/student/profile" },
   ]
 
