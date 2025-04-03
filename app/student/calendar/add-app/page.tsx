@@ -1,37 +1,21 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from 'next/navigation'
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { CalendarIcon } from 'lucide-react'
+import { CalendarIcon, Plus, X } from "lucide-react"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import { format } from 'date-fns'
+import { format } from "date-fns"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,26 +26,73 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Badge } from "@/components/ui/badge"
 
-import { db } from "../../../firebase-config" // Firebase initialization file
+import { db } from "@/app/firebase-config" // Firebase initialization file
 import { collection, getDocs, query, where, addDoc, serverTimestamp } from "firebase/firestore"
 import { getAuth } from "firebase/auth"
 
+function generateTimeSlots() {
+  const slots = []
+  for (let hour = 7; hour <= 17; hour++) {
+    const hourFormatted = hour % 12 === 0 ? 12 : hour % 12
+    const period = hour < 12 ? "AM" : "PM"
+
+    // Add slot for current hour to half hour (e.g., 7:00 - 7:30)
+    if (hour !== 17) {
+      // Don't add 5:00 - 5:30 PM
+      slots.push(`${hourFormatted}:00 ${period} - ${hourFormatted}:30 ${period}`)
+    }
+
+    // Add slot for half hour to next hour (e.g., 7:30 - 8:00)
+    if (hour !== 17) {
+      // Don't add 5:30 - 6:00 PM
+      const nextHour = (hour + 1) % 12 === 0 ? 12 : (hour + 1) % 12
+      const nextPeriod = hour + 1 < 12 ? "AM" : "PM"
+      slots.push(`${hourFormatted}:30 ${period} - ${nextHour}:00 ${nextPeriod}`)
+    }
+  }
+  return slots
+}
+
+// Sample data for classes and sections
+const classOptions = [
+  "Mathematics",
+  "Science",
+  "English",
+  "History",
+  "Computer Science",
+  "Physics",
+  "Chemistry",
+  "Biology",
+  "Economics",
+  "Psychology",
+]
+
+const sectionOptions = ["A", "B", "C", "D", "E", "F"]
+
 const formSchema = z.object({
-  title: z.string().min(1, "Meeting title is required"),
+  purpose: z.string().min(1, "Purpose is required"),
+  class: z.string().min(1, "Class is required"),
+  section: z.string().min(1, "Section is required"),
   department: z.string().min(1, "Department is required"),
   facultyName: z.string().min(1, "Faculty name is required"),
-  course: z.string().min(1, "Course is required"),
-  section: z.string().min(1, "Section is required"),
   date: z.date({
     required_error: "Date is required",
   }),
-  startTime: z.string().min(1, "Start time is required"),
-  endTime: z.string().min(1, "End time is required"),
-  meetingType: z.string().min(1, "Meeting type is required"),
-  location: z.string().min(1, "Location is required"),
-  notes: z.string().optional(),
-  status: z.string().optional().default("pending") 
+  timeSlot: z.string().min(1, "Time slot is required"),
+  meetingType: z.enum(["f2f", "online"]).default("f2f"),
+  details: z.string().optional(),
+  participants: z
+    .array(
+      z.object({
+        email: z.string().email("Invalid email address"),
+        name: z.string().optional(),
+      }),
+    )
+    .optional()
+    .default([]),
+  status: z.string().optional().default("pending"),
 })
 
 export function AddAppointmentForm() {
@@ -75,18 +106,17 @@ export function AddAppointmentForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: "",
+      purpose: "",
+      class: "",
+      section: "",
       department: "",
       facultyName: "",
-      course: "",
-      section: "",
       date: undefined,
-      startTime: "",
-      endTime: "",
-      meetingType: "Online meeting",
-      location: "",
-      notes: "",
-      status: "pending" 
+      timeSlot: "",
+      meetingType: "f2f", // Default to F2F
+      details: "",
+      participants: [],
+      status: "pending",
     },
   })
 
@@ -95,9 +125,9 @@ export function AddAppointmentForm() {
       try {
         const q = query(collection(db, "Users"), where("role", "==", "faculty"))
         const querySnapshot = await getDocs(q)
-        const facultyData = querySnapshot.docs.map(doc => ({
+        const facultyData = querySnapshot.docs.map((doc) => ({
           id: doc.id,
-          name: doc.data().name, 
+          name: doc.data().name,
         }))
         setFacultyList(facultyData)
       } catch (error) {
@@ -119,23 +149,23 @@ export function AddAppointmentForm() {
     try {
       const auth = getAuth()
       const user = auth.currentUser
-  
+
       if (!user) {
         console.error("No user logged in")
         return
       }
-  
+
       const appointmentData = {
         ...values,
         userId: user.uid,
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
       }
-  
+
       const docRef = await addDoc(collection(db, "appointments"), appointmentData)
-  
+
       console.log("Appointment added with ID: ", docRef.id)
       setFormChanged(false)
-      router.push('/student/calendar')
+      router.push("/student/calendar")
     } catch (error) {
       console.error("Error adding appointment: ", error)
     }
@@ -145,22 +175,22 @@ export function AddAppointmentForm() {
     if (formChanged) {
       setShowDialog(true)
     } else {
-      router.push('/student/calendar')
+      router.push("/student/calendar")
     }
   }
 
   const handleConfirmBack = () => {
     setShowDialog(false)
-    router.push('/student/calendar')
+    router.push("/student/calendar")
   }
-  console.log(facultyList);
+  console.log(facultyList)
   return (
-    <div className="p-6 space-y-6 max-w-2xl mx-auto bg-white rounded-lg shadow">
-      <div className="flex items-center justify-between">
+    <div className="mb-4 p-6 space-y-6 max-w-2xl mx-auto bg-white rounded-lg">
+      <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-2">
-          <CalendarIcon className="h-5 w-5 text-muted-foreground" />
+          <CalendarIcon className="h-7 w-7" />
           <div>
-            <h2 className="text-lg font-semibold">Add Appointment</h2>
+            <h2 className="text-lg font-semibold">Schedule Appointment</h2>
             <p className="text-sm text-muted-foreground">Please provide all the required information</p>
           </div>
         </div>
@@ -170,94 +200,103 @@ export function AddAppointmentForm() {
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="title"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Meeting Title</FormLabel>
-                <FormControl>
-                  <Input placeholder="Insert meeting title here..." {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="department"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Degree</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <div>
+            <FormLabel className="block w-full mb-2">Purpose</FormLabel>
+            <div className="flex gap-2">
+              <FormField
+                control={form.control}
+                name="class"
+                render={({ field }) => (
+                  <FormItem className="w-[120px]">
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Degree name" />
-                      </SelectTrigger>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Class" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {classOptions.map((option) => (
+                            <SelectItem key={option} value={option}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="cs">Computer Science</SelectItem>
-                      <SelectItem value="math">Applied Mathematics</SelectItem>
-                      <SelectItem value="physics">Physics</SelectItem>
-                      <SelectItem value="stats">Statistics</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-<FormField
-  control={form.control}
-  name="facultyName"
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel>Faculty Name</FormLabel>
-      <FormControl>
-        <Select 
-          onValueChange={field.onChange} 
-          value={field.value}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select faculty" />
-          </SelectTrigger>
-          <SelectContent>
-            {loading ? (
-              <SelectItem value="loading" disabled>Loading...</SelectItem>
-            ) : facultyList.length === 0 ? (
-              <SelectItem value="no-faculty" disabled>No faculty found</SelectItem>
-            ) : (
-              facultyList
-                .filter(faculty => faculty.id && faculty.name) // Filter out invalid entries
-                .map((faculty) => (
-                  <SelectItem 
-                    key={faculty.id} 
-                    value={faculty.name}
-                  >
-                    {faculty.name}
-                  </SelectItem>
-                ))
-            )}
-          </SelectContent>
-        </Select>
-      </FormControl>
-      <FormMessage />
-    </FormItem>
-  )}
-/>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="section"
+                render={({ field }) => (
+                  <FormItem className="w-[140px]">
+                    <FormControl>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Section" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {sectionOptions.map((option) => (
+                            <SelectItem key={option} value={option}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="purpose"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormControl>
+                      <Input placeholder="Insert purpose here..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
-              name="course"
+              name="facultyName"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Course</FormLabel>
+                <FormItem className="flex flex-col">
+                  <FormLabel>Faculty Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter course name..." {...field} />
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select faculty" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {loading ? (
+                          <SelectItem value="loading" disabled>
+                            Loading...
+                          </SelectItem>
+                        ) : facultyList.length === 0 ? (
+                          <SelectItem value="no-faculty" disabled>
+                            No faculty found
+                          </SelectItem>
+                        ) : (
+                          facultyList
+                            .filter((faculty) => faculty.id && faculty.name) // Filter out invalid entries
+                            .map((faculty) => (
+                              <SelectItem key={faculty.id} value={faculty.name}>
+                                {faculty.name}
+                              </SelectItem>
+                            ))
+                        )}
+                      </SelectContent>
+                    </Select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -265,12 +304,17 @@ export function AddAppointmentForm() {
             />
             <FormField
               control={form.control}
-              name="section"
+              name="meetingType"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Section</FormLabel>
+                <FormItem className="flex flex-col">
+                  <FormLabel>Type of Meeting</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter section..." {...field} />
+                    <Tabs defaultValue={field.value} onValueChange={field.onChange} className="w-full">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="f2f">Face-to-Face</TabsTrigger>
+                        <TabsTrigger value="online">Online</TabsTrigger>
+                      </TabsList>
+                    </Tabs>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -290,16 +334,9 @@ export function AddAppointmentForm() {
                       <FormControl>
                         <Button
                           variant={"outline"}
-                          className={cn(
-                            "pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
+                          className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
                         >
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span>Select date</span>
-                          )}
+                          {field.value ? format(field.value, "PPP") : <span>Select date</span>}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
                       </FormControl>
@@ -318,90 +355,119 @@ export function AddAppointmentForm() {
                 </FormItem>
               )}
             />
-            <div className="space-y-2">
-              <FormLabel>Time Schedule</FormLabel>
-              <div className="flex items-center gap-2">
-                <FormField
-                  control={form.control}
-                  name="startTime"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormControl>
-                        <Input type="time" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+            <FormField
+              control={form.control}
+              name="timeSlot"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Time</FormLabel>
+                  <FormControl>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select time slot" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {generateTimeSlots().map((slot) => (
+                          <SelectItem key={slot} value={slot}>
+                            {slot}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="space-y-4">
+            <FormLabel className="block w-full">For Group Appointments</FormLabel>
+            <div className="flex flex-col gap-2">
+              {form.watch("participants")?.length > 0 && (
+                <div className="flex flex-wrap gap-2 my-2">
+                  {form.watch("participants").map((participant, index) => (
+                    <Badge key={index} variant="secondary" className="px-3 py-1.5">
+                      {participant.email}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const currentParticipants = form.getValues("participants") || []
+                          form.setValue(
+                            "participants",
+                            currentParticipants.filter((_, i) => i !== index),
+                          )
+                        }}
+                        className="ml-2 text-muted-foreground hover:text-foreground"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <Input
+                  id="participant-email"
+                  placeholder="Enter participant email"
+                  className="flex-1"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault()
+                      const input = e.currentTarget
+                      const email = input.value.trim()
+
+                      if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                        const currentParticipants = form.getValues("participants") || []
+                        if (!currentParticipants.some((p) => p.email === email)) {
+                          form.setValue("participants", [...currentParticipants, { email }])
+                          input.value = ""
+                        }
+                      }
+                    }
+                  }}
                 />
-                <span className="text-muted-foreground">to</span>
-                <FormField
-                  control={form.control}
-                  name="endTime"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormControl>
-                        <Input type="time" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <Button
+                  type="button"
+                  onClick={() => {
+                    const input = document.getElementById("participant-email") as HTMLInputElement
+                    const email = input.value.trim()
+
+                    if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                      const currentParticipants = form.getValues("participants") || []
+                      if (!currentParticipants.some((p) => p.email === email)) {
+                        form.setValue("participants", [...currentParticipants, { email }])
+                        input.value = ""
+                      }
+                    }
+                  }}
+                >
+                  Add
+                </Button>
               </div>
+              <p className="text-xs text-muted-foreground">Press Enter or click Add to add a participant</p>
             </div>
           </div>
 
           <FormField
             control={form.control}
-            name="meetingType"
+            name="details"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Type of Meeting</FormLabel>
+                <FormLabel>Details</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="Online meeting, in-person, etc."
-                    {...field}
-                  />
+                  <Textarea placeholder="Insert meeting notes here..." className="resize-none" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
-          <FormField
-            control={form.control}
-            name="location"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Location</FormLabel>
-                <FormControl>
-                  <Input placeholder="Insert location here..." {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="notes"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Meeting Notes</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Insert meeting notes here..."
-                    className="resize-none"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
+
           <div className="flex justify-end">
-            <Button type="submit" className="bg-[#35563F] hover:bg-[#2A4A33]">
-              Add appointment
+            <Button type="submit" className="bg-[#2F5233] hover:bg-[#2F5233]/90">
+              <Plus className="h-4 w-4" />
+              Add Appointment
             </Button>
           </div>
         </form>
