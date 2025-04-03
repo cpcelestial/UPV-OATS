@@ -21,7 +21,14 @@ const initialProfile: Student = {
   country: "Philippines",
   description: "",
   avatarUrl: "/profile.jpg",
-  schedule: []
+  schedule: [
+    { day: "Monday", slots: [] },
+    { day: "Tuesday", slots: [] },
+    { day: "Wednesday", slots: [] },
+    { day: "Thursday", slots: [] },
+    { day: "Friday", slots: [] },
+    { day: "Saturday", slots: [] },
+  ],
 }
 
 export default function Page() {
@@ -61,4 +68,3 @@ export default function Page() {
     </main>
   )
 }
-

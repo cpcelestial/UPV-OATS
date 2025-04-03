@@ -1,8 +1,10 @@
 "use client"
 
+import { useState } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { PasswordDialog } from "./password-dialog"
 import type { Student } from "../data"
 
 interface ProfileSectionProps {
@@ -11,6 +13,8 @@ interface ProfileSectionProps {
 }
 
 export function ProfileSection({ profile, onUpdateProfile }: ProfileSectionProps) {
+    const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false)
+
     return (
         <Card className="mb-8">
             <CardContent className="p-6">
@@ -26,7 +30,7 @@ export function ProfileSection({ profile, onUpdateProfile }: ProfileSectionProps
                                 priority
                             />
                         </div>
-                        <Button className="w-full">
+                        <Button className="w-full" onClick={() => setIsPasswordDialogOpen(true)}>
                             Change password
                         </Button>
                     </div>
@@ -70,6 +74,7 @@ export function ProfileSection({ profile, onUpdateProfile }: ProfileSectionProps
                         </div>
                     </div>
                 </div>
+                <PasswordDialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen} />
             </CardContent>
         </Card>
     )

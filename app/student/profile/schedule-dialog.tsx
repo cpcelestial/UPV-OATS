@@ -1,29 +1,42 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, Plus } from "lucide-react";
-import type { DaySchedule, TimeSlot } from "../data";
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Trash2, Plus, AlertCircle } from "lucide-react"
+import type { DaySchedule } from "../data"
 
 interface ScheduleDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  schedule: DaySchedule[];
-  onUpdateSchedule: (schedule: DaySchedule[]) => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  schedule: DaySchedule[]
+  onUpdateSchedule: (schedule: DaySchedule[]) => void
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => {
-  const hour = i % 12 || 12;
-  const minutes = ["00", "30"];
-  const period = i < 12 ? "AM" : "PM";
-  return minutes.map(minute => `${hour}:${minute} ${period}`);
-}).flat();
+  const hour = i % 12 || 12
+  const minutes = ["00", "30"]
+  const period = i < 12 ? "AM" : "PM"
+  return minutes.map((minute) => `${hour}:${minute} ${period}`)
+}).flat()
 
-const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
 const CLASS_COLORS = [
   { label: "Pink", value: "bg-pink-100 border-pink-200 text-pink-700" },
@@ -34,104 +47,149 @@ const CLASS_COLORS = [
   { label: "Blue", value: "bg-blue-100 border-blue-200 text-blue-700" },
   { label: "Indigo", value: "bg-indigo-100 border-indigo-200 text-indigo-700" },
   { label: "Purple", value: "bg-purple-100 border-purple-200 text-purple-700" },
-];
+]
 
 interface ClassFormData {
-  days: string[];
-  start: string;
-  end: string;
-  subject: string;
-  room: string;
-  professor: string;
-  color: string;
+  days: string[]
+  start: string
+  end: string
+  subject: string
+  room: string
+  professor: string
+  color: string
 }
 
 export function ScheduleDialog({ open, onOpenChange, schedule, onUpdateSchedule }: ScheduleDialogProps) {
-  const [classes, setClasses] = useState<ClassFormData[]>([]);
+  const [classes, setClasses] = useState<ClassFormData[]>([])
+  const [invalidClasses, setInvalidClasses] = useState<number[]>([])
 
   const handleDayToggle = (classIndex: number, day: string, checked: boolean) => {
-    setClasses(prev => {
-      const newClasses = [...prev];
+    setClasses((prev) => {
+      const newClasses = [...prev]
       if (checked) {
-        newClasses[classIndex].days.push(day);
+        newClasses[classIndex].days.push(day)
       } else {
-        newClasses[classIndex].days = newClasses[classIndex].days.filter(d => d !== day);
+        newClasses[classIndex].days = newClasses[classIndex].days.filter((d) => d !== day)
       }
-      return newClasses;
-    });
-  };
+      return newClasses
+    })
+
+    // Remove from invalid classes if days are now selected
+    if (checked) {
+      setInvalidClasses((prev) => prev.filter((idx) => idx !== classIndex))
+    }
+  }
 
   const handleClassChange = (index: number, field: keyof ClassFormData, value: any) => {
-    setClasses(prev => {
-      const newClasses = [...prev];
-      newClasses[index] = { ...newClasses[index], [field]: value };
-      return newClasses;
-    });
-  };
+    setClasses((prev) => {
+      const newClasses = [...prev]
+      newClasses[index] = { ...newClasses[index], [field]: value }
+      return newClasses
+    })
+  }
 
   const handleAddClass = () => {
-    setClasses(prev => [...prev, {
-      days: [],
-      start: "8:00 AM",
-      end: "9:30 AM",
-      subject: "",
-      room: "",
-      professor: "",
-      color: CLASS_COLORS[prev.length % CLASS_COLORS.length].value
-    }]);
-  };
+    setClasses((prev) => [
+      ...prev,
+      {
+        days: [],
+        start: "8:00 AM",
+        end: "9:30 AM",
+        subject: "",
+        room: "",
+        professor: "",
+        color: CLASS_COLORS[prev.length % CLASS_COLORS.length].value,
+      },
+    ])
+  }
 
   const handleRemoveClass = (index: number) => {
-    setClasses(prev => prev.filter((_, i) => i !== index));
-  };
+    setClasses((prev) => prev.filter((_, i) => i !== index))
+    setInvalidClasses((prev) => prev.filter((idx) => idx !== index).map((idx) => (idx > index ? idx - 1 : idx)))
+  }
 
   const handleSave = () => {
-    const newSchedule = DAYS.map(day => ({
+    // Find classes with no days selected
+    const classesWithNoDays = classes
+      .map((cls, index) => (cls.days.length === 0 ? index : -1))
+      .filter((index) => index !== -1)
+
+    if (classesWithNoDays.length > 0) {
+      // Set invalid classes to highlight them
+      setInvalidClasses(classesWithNoDays)
+      return
+    }
+
+    const newSchedule = DAYS.map((day) => ({
       day,
       slots: classes
-        .filter(cls => cls.days.includes(day))
-        .map(cls => ({
+        .filter((cls) => cls.days.includes(day))
+        .map((cls) => ({
           start: cls.start,
           end: cls.end,
           subject: cls.subject,
           room: cls.room,
           professor: cls.professor,
           color: cls.color,
-          days: cls.days
-        }))
-    }));
-    onUpdateSchedule(newSchedule);
-    onOpenChange(false);
-  };
+          days: cls.days,
+        })),
+    }))
 
-  // Initialize classes from schedule on dialog open
-  useState(() => {
-    const existingClasses = new Map<string, ClassFormData>();
+    onUpdateSchedule(newSchedule)
+    onOpenChange(false)
+  }
 
-    schedule.forEach(day => {
-      day.slots.forEach(slot => {
-        const key = `${slot.subject}-${slot.start}-${slot.end}`;
-        if (!existingClasses.has(key)) {
-          existingClasses.set(key, {
-            days: [day.day],
-            ...slot,
-            color: slot.color || CLASS_COLORS[0].value
-          });
-        } else {
-          const existing = existingClasses.get(key)!;
-          existing.days.push(day.day);
-        }
-      });
-    });
+  useEffect(() => {
+    if (open) {
+      const existingClasses = new Map<string, ClassFormData>()
 
-    setClasses(Array.from(existingClasses.values()));
-  });
+      schedule.forEach((day) => {
+        day.slots.forEach((slot) => {
+          const key = `${slot.subject}-${slot.start}-${slot.end}`
+          if (!existingClasses.has(key)) {
+            existingClasses.set(key, {
+              days: [day.day],
+              ...slot,
+              color: slot.color || CLASS_COLORS[0].value,
+            })
+          } else {
+            const existing = existingClasses.get(key)!
+            existing.days.push(day.day)
+          }
+        })
+      })
+
+      setClasses(Array.from(existingClasses.values()))
+      setInvalidClasses([]) // Reset invalid classes when dialog opens
+    }
+  }, [open, schedule])
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(newOpen) => {
+        // Only allow closing if there are no invalid classes
+        if (newOpen === false) {
+          // Check for classes with no days selected
+          const classesWithNoDays = classes
+            .map((cls, index) => (cls.days.length === 0 ? index : -1))
+            .filter((index) => index !== -1)
+
+          if (classesWithNoDays.length > 0) {
+            // Set invalid classes to highlight them
+            setInvalidClasses(classesWithNoDays)
+            return // Prevent dialog from closing
+          }
+        }
+        onOpenChange(newOpen)
+      }}
+    >
       <DialogContent className="max-w-3xl py-6 pl-6 pr-4">
         <DialogHeader>
           <DialogTitle className="font-bold">Edit Class Schedule</DialogTitle>
+          <DialogDescription>
+            Customize your class schedule
+          </DialogDescription>
         </DialogHeader>
         <div className="max-h-[60vh] overflow-y-auto py-2 pr-4 space-y-6">
           {classes.map((cls, index) => (
@@ -145,10 +203,7 @@ export function ScheduleDialog({ open, onOpenChange, schedule, onUpdateSchedule 
                   />
 
                   <div className="flex items-center gap-2">
-                    <Select
-                      value={cls.start}
-                      onValueChange={(value) => handleClassChange(index, "start", value)}
-                    >
+                    <Select value={cls.start} onValueChange={(value) => handleClassChange(index, "start", value)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Start time" />
                       </SelectTrigger>
@@ -161,10 +216,7 @@ export function ScheduleDialog({ open, onOpenChange, schedule, onUpdateSchedule 
                       </SelectContent>
                     </Select>
                     <span>to</span>
-                    <Select
-                      value={cls.end}
-                      onValueChange={(value) => handleClassChange(index, "end", value)}
-                    >
+                    <Select value={cls.end} onValueChange={(value) => handleClassChange(index, "end", value)}>
                       <SelectTrigger>
                         <SelectValue placeholder="End time" />
                       </SelectTrigger>
@@ -191,10 +243,7 @@ export function ScheduleDialog({ open, onOpenChange, schedule, onUpdateSchedule 
                   />
                 </div>
                 <div className="space-y-4">
-                  <Select
-                    value={cls.color}
-                    onValueChange={(value) => handleClassChange(index, "color", value)}
-                  >
+                  <Select value={cls.color} onValueChange={(value) => handleClassChange(index, "color", value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Choose color" />
                     </SelectTrigger>
@@ -202,7 +251,7 @@ export function ScheduleDialog({ open, onOpenChange, schedule, onUpdateSchedule 
                       {CLASS_COLORS.map((color) => (
                         <SelectItem key={color.value} value={color.value}>
                           <div className="flex items-center gap-2">
-                            <div className={`w-4 h-4 rounded ${color.value.split(' ')[0]}`} />
+                            <div className={`w-4 h-4 rounded ${color.value.split(" ")[0]}`} />
                             <span>{color.label}</span>
                           </div>
                         </SelectItem>
@@ -210,8 +259,15 @@ export function ScheduleDialog({ open, onOpenChange, schedule, onUpdateSchedule 
                     </SelectContent>
                   </Select>
                   <div>
-                    <div className="font-semibold mb-2">Choose the days:</div>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div
+                      className={`font-semibold mb-1 flex items-center ${invalidClasses.includes(index) ? "text-red-500" : ""}`}
+                    >
+                      Choose the days:
+                      {invalidClasses.includes(index) && <AlertCircle className="h-4 w-4 ml-2" />}
+                    </div>
+                    <div
+                      className={`grid grid-cols-2 gap-2 p-2 rounded-md border ${invalidClasses.includes(index) ? "bg-red-50 border-red-200" : "border-transparent"}`}
+                    >
                       {DAYS.map((day) => (
                         <div key={day} className="flex items-center space-x-2">
                           <Checkbox
@@ -242,23 +298,35 @@ export function ScheduleDialog({ open, onOpenChange, schedule, onUpdateSchedule 
               </div>
             </div>
           ))}
-          <Button
-            className="bg-[#2F5233] hover:bg-[#2F5233]/90"
-            onClick={handleAddClass}
-          >
-            <Plus className="h-4 w-4" />
-            Add Class
-          </Button>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave}>
-              Save
+        </div>
+        <DialogFooter>
+          <div className="w-full">
+            <Button className="float-left bg-[#2F5233] hover:bg-[#2F5233]/90" onClick={handleAddClass}>
+              <Plus className="h-4 w-4" />
+              Add Class
             </Button>
           </div>
-        </div>
+          <Button
+            variant="outline"
+            onClick={() => {
+              // Check for classes with no days selected
+              const classesWithNoDays = classes
+                .map((cls, index) => (cls.days.length === 0 ? index : -1))
+                .filter((index) => index !== -1)
+
+              if (classesWithNoDays.length > 0) {
+                // Set invalid classes to highlight them
+                setInvalidClasses(classesWithNoDays)
+                return // Prevent dialog from closing
+              }
+              onOpenChange(false)
+            }}
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleSave}>Save</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

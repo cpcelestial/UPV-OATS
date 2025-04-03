@@ -3,7 +3,14 @@
 import { useState } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -30,10 +37,12 @@ export function ProfileDialog({ open, onOpenChange, profile, onUpdateProfile }: 
       <DialogContent className="max-w-2xl py-6 pl-6 pr-4">
         <DialogHeader>
           <DialogTitle className="font-bold">Edit Profile</DialogTitle>
-          <p className="text-sm text-muted-foreground">Please provide all required information</p>
+          <DialogDescription>
+            Please provide all required information
+          </DialogDescription>
         </DialogHeader>
-        <div className="space-y-6 max-h-[70vh] overflow-y-auto py-2 pl-2 pr-4">
-          <div className="flex justify-center">
+        <div className="space-y-6 max-h-[60vh] overflow-y-auto py-2 pl-2 pr-4">
+          <div className="flex justify-center mb-4">
             <div className="relative">
               <Image
                 src={profile.avatarUrl || "/placeholder.svg"}
@@ -109,16 +118,15 @@ export function ProfileDialog({ open, onOpenChange, profile, onUpdateProfile }: 
               className="h-24"
             />
           </div>
-
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave}>
-              Save
-            </Button>
-          </div>
         </div>
+        <DialogFooter className="mt-6">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave}>
+            Save
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )
