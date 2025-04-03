@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation"
 const routeTitles: { [key: string]: string } = {
   "/student/dashboard": "Dashboard",
   "/student/calendar": "Calendar",
+  "/student/appointments": "Appointments",
   "/student/faculty": "Faculty",
   "/student/profile": "Profile",
 }
