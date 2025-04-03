@@ -50,7 +50,7 @@ const App: React.FC = () => {
           className="object-fill"
         />
         <h1 className="relative z-10 pl-24 pt-40 text-6xl font-bold text-white">
-          Welcome!
+          Welcome User!
         </h1>
       </div>
 
