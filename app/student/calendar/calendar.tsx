@@ -103,10 +103,10 @@ export function Calendar() {
     });
 
     return (
-      <div className="overflow-hidden">
+      <div className="border rounded-lg overflow-hidden">
         <div className="grid grid-cols-7">
           {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-            <div key={day} className="p-2 text-center text-sm font-medium">
+            <div key={day} className="p-2 text-center text-sm font-medium border-b border-r last:border-r-0">
               {day}
             </div>
           ))}
@@ -154,7 +154,7 @@ export function Calendar() {
     const days = eachDayOfInterval({ start, end });
 
     return (
-      <div className="overflow-hidden">
+      <div className="border rounded-lg overflow-hidden">
         <div className="grid grid-cols-7">
           {days.map((day, index) => {
             const dayAppointments = appointments.filter(appt => isSameDay(appt.date, day));
@@ -192,7 +192,7 @@ export function Calendar() {
     const hours = Array.from({ length: 24 }, (_, i) => i);
 
     return (
-      <div className="overflow-hidden">
+      <div className="border rounded-lg overflow-hidden">
         <div className="grid grid-cols-[100px_1fr]">
           {hours.map((hour, index) => {
             const timeString = `${hour.toString().padStart(2, "0")}:00`;
@@ -251,10 +251,10 @@ export function Calendar() {
             </SelectContent>
           </Select>
           <div className="flex items-center space-x-2">
-            <Button variant="outline" size="icon" onClick={navigatePrevious}>
+            <Button size="icon" onClick={navigatePrevious}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="icon" onClick={navigateNext}>
+            <Button size="icon" onClick={navigateNext}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
