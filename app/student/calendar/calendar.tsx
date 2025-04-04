@@ -1,41 +1,67 @@
 "use client";
 
 import * as React from "react";
-import { addDays, format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, subDays } from "date-fns";
+import {
+  addDays,
+  format,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  isSameMonth,
+  isSameDay
+} from "date-fns";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { CalendarDialog } from "./calendar-dialog";
 
 type ViewType = "month" | "week" | "day";
 
-interface Event {
+export interface Appointment {
   id: string;
   title: string;
+  facultyName: string;
+  email: string;
+  startTime: string;
+  endTime: string;
   date: Date;
-  time?: string;
 }
 
 export function Calendar() {
   const [currentDate, setCurrentDate] = React.useState<Date>(new Date());
   const [viewType, setViewType] = React.useState<ViewType>("month");
+  const [selectedDate, setSelectedDate] = React.useState<Date | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
 
-  // Sample events - in a real app, this would come from your backend
-  const [events] = React.useState<Event[]>([
+  const [appointments] = React.useState<Appointment[]>([
     {
       id: "1",
-      title: "Team Meeting",
-      date: new Date(2025, 3, 15),
-      time: "10:00 AM"
+      title: "Project Discussion",
+      facultyName: "Dr. Smith",
+      email: "smith@example.com",
+      startTime: "10:00 AM",
+      endTime: "11:00 AM",
+      date: new Date(2025, 3, 15)
     },
     {
       id: "2",
-      title: "Project Review",
-      date: new Date(2025, 3, 16),
-      time: "2:00 PM"
+      title: "Thesis Review",
+      facultyName: "Dr. Johnson",
+      email: "johnson@example.com",
+      startTime: "02:00 PM",
+      endTime: "03:00 PM",
+      date: new Date(2025, 3, 16)
     }
   ]);
+
+  const handleDayClick = (day: Date) => {
+    setSelectedDate(day);
+    setIsDialogOpen(true);
+  };
 
   const navigatePrevious = () => {
     switch (viewType) {
@@ -66,110 +92,133 @@ export function Calendar() {
   };
 
   const renderMonthView = () => {
-    const start = startOfMonth(currentDate);
-    const end = endOfMonth(currentDate);
-
-    // Get the first day of the month
     const firstDayOfMonth = startOfMonth(currentDate);
-    // Get the last day of the month
     const lastDayOfMonth = endOfMonth(currentDate);
+    const firstDayOfFirstWeek = startOfWeek(firstDayOfMonth, { weekStartsOn: 0 });
+    const lastDayOfLastWeek = endOfWeek(lastDayOfMonth, { weekStartsOn: 0 });
 
-    // Get the first day of the first week of the month
-    const firstDayOfFirstWeek = startOfWeek(firstDayOfMonth, { weekStartsOn: 0 }); // Sunday as week start
-    // Get the last day of the last week of the month
-    const lastDayOfLastWeek = endOfWeek(lastDayOfMonth, { weekStartsOn: 0 }); // Sunday as week start
-
-    // Get all days between start and end
     const days = eachDayOfInterval({
       start: firstDayOfFirstWeek,
       end: lastDayOfLastWeek
     });
 
     return (
-      <div className="grid grid-cols-7 gap-px bg-muted rounded-lg overflow-hidden">
-        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-          <div key={day} className="bg-background p-2 text-center text-sm font-medium">
-            {day}
-          </div>
-        ))}
-        {days.map((day) => {
-          const dayEvents = events.filter(event => isSameDay(event.date, day));
-          return (
-            <div
-              key={day.toString()}
-              className={cn(
-                "min-h-[100px] bg-background p-2",
-                !isSameMonth(day, currentDate) && "text-muted-foreground bg-muted/5",
-                "hover:bg-accent cursor-pointer"
-              )}
-            >
-              <span className="text-sm">{format(day, "d")}</span>
-              <div className="mt-1">
-                {dayEvents.map(event => (
-                  <div
-                    key={event.id}
-                    className="text-xs bg-primary/10 text-primary rounded p-1 mb-1 truncate"
-                  >
-                    {event.time && <span className="mr-1">{event.time}</span>}
-                    {event.title}
-                  </div>
-                ))}
-              </div>
+      <div className="overflow-hidden">
+        <div className="grid grid-cols-7">
+          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+            <div key={day} className="p-2 text-center text-sm font-medium">
+              {day}
             </div>
-          );
-        })}
+          ))}
+        </div>
+        <div className="grid grid-cols-7">
+          {days.map((day, index) => {
+            const dayAppointments = appointments.filter(appt => isSameDay(appt.date, day));
+            const isLastInRow = (index + 1) % 7 === 0;
+            const isLastRow = index >= days.length - 7;
+
+            return (
+              <div
+                key={day.toString()}
+                onClick={() => handleDayClick(day)}
+                className={cn(
+                  "min-h-[100px] p-2 border-r border-b border-border",
+                  !isSameMonth(day, currentDate) && "bg-muted/70 text-muted-foreground",
+                  "hover:bg-accent cursor-pointer transition-colors",
+                  isLastInRow && "border-r-0",
+                  isLastRow && "border-b-0"
+                )}
+              >
+                <span className="text-sm font-medium">{format(day, "d")}</span>
+                <div className="mt-1 space-y-1">
+                  {dayAppointments.map(appointment => (
+                    <div
+                      key={appointment.id}
+                      className="text-xs rounded p-1 truncate border bg-red-100 border-red-200 text-red-700"
+                    >
+                      {appointment.startTime} - {appointment.title}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     );
   };
 
   const renderWeekView = () => {
-    const start = startOfWeek(currentDate, { weekStartsOn: 0 }); // Sunday as week start
-    const end = endOfWeek(currentDate, { weekStartsOn: 0 }); // Sunday as week start
+    const start = startOfWeek(currentDate, { weekStartsOn: 0 });
+    const end = endOfWeek(currentDate, { weekStartsOn: 0 });
     const days = eachDayOfInterval({ start, end });
 
     return (
-      <div className="grid grid-cols-7 gap-px bg-muted rounded-lg overflow-hidden">
-        {days.map(day => {
-          const dayEvents = events.filter(event => isSameDay(event.date, day));
-          return (
-            <div key={day.toString()} className="bg-background p-2 min-h-[400px]">
-              <div className="text-sm font-medium mb-2">
-                {format(day, "EEE MMM d")}
+      <div className="overflow-hidden">
+        <div className="grid grid-cols-7">
+          {days.map((day, index) => {
+            const dayAppointments = appointments.filter(appt => isSameDay(appt.date, day));
+            const isLast = index === days.length - 1;
+
+            return (
+              <div
+                key={day.toString()}
+                onClick={() => handleDayClick(day)}
+                className={cn(
+                  "min-h-[400px] p-2 border-r border-border",
+                  "hover:bg-accent/5 cursor-pointer transition-colors",
+                  isLast && "border-r-0"
+                )}
+              >
+                <div className="text-sm font-medium mb-2">
+                  {format(day, "EEE MMM d")}
+                </div>
+                {dayAppointments.map(appointment => (
+                  <Card key={appointment.id} className="p-2 mb-2 bg-red-100 border-red-200 text-red-700 shadow-none">
+                    <div className="text-sm font-medium">{appointment.startTime}</div>
+                    <div className="text-sm">{appointment.title}</div>
+                  </Card>
+                ))}
               </div>
-              {dayEvents.map(event => (
-                <Card key={event.id} className="p-2 mb-2">
-                  <div className="text-sm font-medium">{event.time}</div>
-                  <div className="text-sm">{event.title}</div>
-                </Card>
-              ))}
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     );
   };
 
   const renderDayView = () => {
-    const dayEvents = events.filter(event => isSameDay(event.date, currentDate));
+    const dayAppointments = appointments.filter(appt => isSameDay(appt.date, currentDate));
     const hours = Array.from({ length: 24 }, (_, i) => i);
 
     return (
-      <div className="bg-background rounded-lg overflow-hidden">
-        <div className="grid grid-cols-[100px_1fr] divide-x">
-          {hours.map(hour => {
+      <div className="overflow-hidden">
+        <div className="grid grid-cols-[100px_1fr]">
+          {hours.map((hour, index) => {
             const timeString = `${hour.toString().padStart(2, "0")}:00`;
-            const hourEvents = dayEvents.filter(event => event.time?.includes(timeString));
+            const hourAppointments = dayAppointments.filter(appt =>
+              appt.startTime.includes(timeString)
+            );
+            const isLast = index === hours.length - 1;
 
             return (
               <React.Fragment key={hour}>
-                <div className="p-2 text-sm text-muted-foreground">
+                <div className={cn(
+                  "p-2 text-sm border-r border-b border-border",
+                  isLast && "border-b-0"
+                )}>
                   {format(new Date().setHours(hour), "ha")}
                 </div>
-                <div className="p-2 min-h-[60px] relative">
-                  {hourEvents.map(event => (
-                    <Card key={event.id} className="p-2 mb-2">
-                      <div className="text-sm font-medium">{event.time}</div>
-                      <div className="text-sm">{event.title}</div>
+                <div className={cn(
+                  "p-2 min-h-[60px] relative border-b border-border",
+                  isLast && "border-b-0"
+                )}>
+                  {hourAppointments.map(appointment => (
+                    <Card key={appointment.id} className="p-2 mb-2 bg-red-100 border-red-200 text-red-700 shadow-none">
+                      <div className="text-sm font-medium">
+                        {appointment.startTime} - {appointment.endTime}
+                      </div>
+                      <div className="text-sm">{appointment.title}</div>
                     </Card>
                   ))}
                 </div>
@@ -215,6 +264,15 @@ export function Calendar() {
       {viewType === "month" && renderMonthView()}
       {viewType === "week" && renderWeekView()}
       {viewType === "day" && renderDayView()}
+
+      {selectedDate && (
+        <CalendarDialog
+          isOpen={isDialogOpen}
+          onClose={() => setIsDialogOpen(false)}
+          date={selectedDate}
+          appointments={appointments.filter(appt => isSameDay(appt.date, selectedDate))}
+        />
+      )}
     </div>
   );
 }
