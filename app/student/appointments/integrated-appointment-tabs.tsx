@@ -87,7 +87,7 @@ export default function IntegratedAppointmentTabs() {
               <p>Loading appointments...</p>
             </div>
           ) : (
-            <AppointmentList appointments={upcomingAppointments} emptyMessage="No upcoming appointments found." />
+            <AppointmentList appointments={upcomingAppointments} emptyMessage="No upcoming appointments found" />
           )}
         </TabsContent>
 
@@ -121,7 +121,7 @@ export default function IntegratedAppointmentTabs() {
               <p>Loading appointments...</p>
             </div>
           ) : (
-            <AppointmentList appointments={declinedAppointments} emptyMessage="No declined appointments found." />
+            <AppointmentList appointments={declinedAppointments} emptyMessage="No declined appointments found" />
           )}
         </TabsContent>
 
@@ -136,7 +136,7 @@ export default function IntegratedAppointmentTabs() {
                 <h3 className="text-lg font-medium mb-4">Appointments For Reschedule</h3>
                 <AppointmentList
                   appointments={rescheduleAppointments}
-                  emptyMessage="No appointments for reschedule found."
+                  emptyMessage="No appointments for reschedule found"
                 />
               </>
             )}
