@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 
-import { db } from "@/app/firebase-config" // Firebase initialization file
+import { db } from "../../../firebase-config" // Firebase initialization file
 import { collection, getDocs, query, where, addDoc, serverTimestamp } from "firebase/firestore"
 import { getAuth } from "firebase/auth"
 
@@ -115,7 +115,7 @@ export function AddAppointmentForm() {
       timeSlot: "",
       meetingType: "f2f",
       details: "",
-      participants: [],
+      participants: [{email:""}],
       status: "pending",
     },
   })

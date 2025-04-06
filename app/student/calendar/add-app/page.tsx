@@ -171,6 +171,8 @@ export function AddAppointmentForm() {
     }
   }
 
+  
+
   const handleBackToCalendar = () => {
     if (formChanged) {
       setShowDialog(true)
