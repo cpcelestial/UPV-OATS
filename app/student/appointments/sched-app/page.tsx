@@ -115,7 +115,7 @@ export function AddAppointmentForm() {
       timeSlot: "",
       meetingType: "f2f",
       details: "",
-      participants: [{email:""}],
+      participants: [],
       status: "pending",
     },
   })
@@ -183,7 +183,6 @@ export function AddAppointmentForm() {
     setShowDialog(false)
     router.push("/student/calendar")
   }
-  console.log(facultyList)
   return (
     <div className="mb-4 p-6 space-y-6 max-w-2xl mx-auto bg-white rounded-lg">
       <div className="flex items-center justify-between mb-8">
@@ -465,7 +464,13 @@ export function AddAppointmentForm() {
           </div>
 
           <div className="flex justify-end">
-            <Button type="submit" className="bg-[#2F5233] hover:bg-[#2F5233]/90">
+            <Button type="button"  onClick={() => {
+              console.log("Direct submit attempt");
+              const values = form.getValues();
+              console.log("Values:", values);
+              onSubmit(values);
+              }} 
+              className="bg-[#2F5233] hover:bg-[#2F5233]/90">
               <Plus className="h-4 w-4" />
               Add Appointment
             </Button>
