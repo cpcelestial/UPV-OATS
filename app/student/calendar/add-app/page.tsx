@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 
-import { db } from "@/app/firebase-config" // Firebase initialization file
+import { db } from "../../../firebase-config" // Firebase initialization file
 import { collection, getDocs, query, where, addDoc, serverTimestamp } from "firebase/firestore"
 import { getAuth } from "firebase/auth"
 
@@ -161,7 +161,7 @@ export function AddAppointmentForm() {
         createdAt: serverTimestamp(),
       }
 
-      const docRef = await addDoc(collection(db, "appointments"), appointmentData)
+      const docRef = await addDoc(collection(db, "appointmens"), appointmentData)
 
       console.log("Appointment added with ID: ", docRef.id)
       setFormChanged(false)
@@ -170,6 +170,8 @@ export function AddAppointmentForm() {
       console.error("Error adding appointment: ", error)
     }
   }
+
+  
 
   const handleBackToCalendar = () => {
     if (formChanged) {
@@ -183,7 +185,6 @@ export function AddAppointmentForm() {
     setShowDialog(false)
     router.push("/student/calendar")
   }
-  console.log(facultyList)
   return (
     <div className="mb-4 p-6 space-y-6 max-w-2xl mx-auto bg-white rounded-lg">
       <div className="flex items-center justify-between mb-8">

@@ -18,6 +18,15 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { CalendarDialog } from "./calendar-dialog";
+import { 
+  collection, 
+  query, 
+  where,
+  or,   
+  onSnapshot 
+} from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
+import { db, auth } from "../../firebase-config";
 
 type ViewType = "month" | "week" | "day";
 
