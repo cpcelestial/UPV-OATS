@@ -69,7 +69,7 @@ const classOptions = [
   "Psychology",
 ]
 
-const sectionOptions = ["A", "B", "C", "D", "E", "F"]
+// const sectionOptions = ["A", "B", "C", "D", "E", "F"]
 
 const formSchema = z.object({
   purpose: z.string().min(1, "Purpose is required"),
@@ -99,9 +99,13 @@ export function AddAppointmentForm() {
   const router = useRouter()
   const [showDialog, setShowDialog] = React.useState(false)
   const [formChanged, setFormChanged] = React.useState(false)
-
   const [facultyList, setFacultyList] = React.useState<{ id: string; name: string }[]>([])
+  const [subjectOptions, setSubjectOptions] = React.useState<{
+    subject: string; id: string; sections: string[]; Prof: string[]; sub_id: string}[]>([])
   const [loading, setLoading] = React.useState(true)
+
+  const [selectedSubject, setSelectedSubject] = React.useState('');
+  const [availableSections, setAvailableSections] = React.useState<string[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -141,9 +145,49 @@ export function AddAppointmentForm() {
   }, [])
 
   React.useEffect(() => {
+    const fetchSections = async () => {
+      try {
+        const q = query(collection(db, "Subjects"))
+        const querySnapshot = await getDocs(q)
+        const subjectsData = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...(doc.data() as { sections: string[]; Prof: string[]; subject: string ; sub_id: string}) // Explicitly define the expected structure
+        }))
+
+        if (subjectsData.length > 0) {
+          console.log("Prof list:", subjectsData[0].Prof)
+          console.log("Sections:", subjectsData[0].sections)
+        }
+        setSubjectOptions(subjectsData)
+      } catch (error) {
+        console.error("Error fetching sections:", error)
+      }finally {
+        setLoading(false)
+      }
+    }
+    fetchSections()
+  },[])
+
+  React.useEffect(() => {
     const subscription = form.watch(() => setFormChanged(true))
     return () => subscription.unsubscribe()
   }, [form])
+
+  React.useEffect(() => {
+    if (selectedSubject) {
+      const subjectObj = subjectOptions.find(subject => subject.sub_id === selectedSubject);
+      
+      if (subjectObj && subjectObj.sections) {  
+        setAvailableSections(subjectObj.sections);
+      } else {
+        setAvailableSections([]);
+      }
+    } else {
+      setAvailableSections([]);
+    }
+  }, [selectedSubject])
+
+    
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -209,16 +253,31 @@ export function AddAppointmentForm() {
                 render={({ field }) => (
                   <FormItem className="w-[120px]">
                     <FormControl>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={(value) => {
+                        setSelectedSubject(value);
+                        field.onChange(value);
+                       }}
+                        value={field.value}>
                         <SelectTrigger>
                           <SelectValue placeholder="Class" />
                         </SelectTrigger>
                         <SelectContent>
-                          {classOptions.map((option) => (
-                            <SelectItem key={option} value={option}>
-                              {option}
-                            </SelectItem>
-                          ))}
+                        {loading ? (
+                          <SelectItem value="loading" disabled>
+                            Loading...
+                          </SelectItem>
+                        ) : subjectOptions.length === 0 ? (
+                          <SelectItem value="no-subjects" disabled>
+                            No subjects found
+                          </SelectItem> 
+                        ) : (
+                          subjectOptions
+                            .map((subject) => ( 
+                              <SelectItem key={subject.sub_id} value={subject.sub_id}>
+                                {subject.subject}
+                              </SelectItem>
+                            ))
+                        )}
                         </SelectContent>
                       </Select>
                     </FormControl>
@@ -226,6 +285,7 @@ export function AddAppointmentForm() {
                   </FormItem>
                 )}
               />
+              {selectedSubject !== "0" && (
               <FormField
                 control={form.control}
                 name="section"
@@ -237,11 +297,21 @@ export function AddAppointmentForm() {
                           <SelectValue placeholder="Section" />
                         </SelectTrigger>
                         <SelectContent>
-                          {sectionOptions.map((option) => (
-                            <SelectItem key={option} value={option}>
-                              {option}
-                            </SelectItem>
-                          ))}
+                        {loading ? (
+                          <SelectItem value="loading" disabled>
+                            Loading...
+                          </SelectItem>
+                        ) : subjectOptions.length === 0 ? (
+                          <SelectItem value="no-section" disabled>
+                            No faculty found
+                          </SelectItem>
+                        ) : (
+                          availableSections.map((section, index) => (
+                                <SelectItem key={index} value={section}>
+                                  {section}
+                                </SelectItem>
+                            ))
+                        )}
                         </SelectContent>
                       </Select>
                     </FormControl>
@@ -249,6 +319,7 @@ export function AddAppointmentForm() {
                   </FormItem>
                 )}
               />
+              )}  
               <FormField
                 control={form.control}
                 name="purpose"
