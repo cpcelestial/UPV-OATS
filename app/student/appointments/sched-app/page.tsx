@@ -55,21 +55,6 @@ function generateTimeSlots() {
   return slots
 }
 
-// Sample data for classes and sections
-const classOptions = [
-  "Mathematics",
-  "Science",
-  "English",
-  "History",
-  "Computer Science",
-  "Physics",
-  "Chemistry",
-  "Biology",
-  "Economics",
-  "Psychology",
-]
-
-// const sectionOptions = ["A", "B", "C", "D", "E", "F"]
 
 const formSchema = z.object({
   purpose: z.string().min(1, "Purpose is required"),
@@ -105,7 +90,10 @@ export function AddAppointmentForm() {
   const [loading, setLoading] = React.useState(true)
 
   const [selectedSubject, setSelectedSubject] = React.useState('');
+  const [selectedFIC, setSelectedFIC] = React.useState('');
   const [availableSections, setAvailableSections] = React.useState<string[]>([]);
+  const [facultySections, setFacultySections] = React.useState<{ Faculty: string; sections: string[] }[]>([]);
+
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -143,6 +131,21 @@ export function AddAppointmentForm() {
 
     fetchFaculty()
   }, [])
+
+  React.useEffect(() => {
+    const fetchFacultySections = async () => {
+      try {
+        const q = query(collection(db, "Faculty_in_charge"))
+        const querySnapshot = await getDocs(q)
+        const facultySectionsData = querySnapshot.docs.map((doc) => doc.data() as { Faculty: string; sections: string[] });
+        setFacultySections(facultySectionsData);
+      }
+      catch (error) {
+        console.error("Error fetching faculty sections:", error);
+      }
+    };
+      fetchFacultySections()
+    }, [])
 
   React.useEffect(() => {
     const fetchSections = async () => {
@@ -187,7 +190,6 @@ export function AddAppointmentForm() {
     }
   }, [selectedSubject])
 
-    
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -292,22 +294,26 @@ export function AddAppointmentForm() {
                 render={({ field }) => (
                   <FormItem className="w-[140px]">
                     <FormControl>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={(value) => {
+                        setSelectedFIC(value);
+                        field.onChange(value);
+                       }}
+                        value={field.value}>
                         <SelectTrigger>
                           <SelectValue placeholder="Section" />
-                        </SelectTrigger>
+                        </SelectTrigger>  
                         <SelectContent>
                         {loading ? (
                           <SelectItem value="loading" disabled>
                             Loading...
                           </SelectItem>
                         ) : subjectOptions.length === 0 ? (
-                          <SelectItem value="no-section" disabled>
-                            No faculty found
-                          </SelectItem>
+                          <SelectItem value="no-sections" disabled>
+                            No sections found
+                          </SelectItem> 
                         ) : (
                           availableSections.map((section, index) => (
-                                <SelectItem key={index} value={section}>
+                                <SelectItem key={index} value={selectedSubject + '_' + section   }>
                                   {section}
                                 </SelectItem>
                             ))
@@ -349,22 +355,29 @@ export function AddAppointmentForm() {
                       </SelectTrigger>
                       <SelectContent>
                         {loading ? (
-                          <SelectItem value="loading" disabled>
+                        <SelectItem value="loading" disabled>
                             Loading...
-                          </SelectItem>
-                        ) : facultyList.length === 0 ? (
-                          <SelectItem value="no-faculty" disabled>
-                            No faculty found
-                          </SelectItem>
-                        ) : (
-                          facultyList
+                        </SelectItem> 
+                        ) : facultySections.length === 0 ? (
+                        <SelectItem value="no-faculty" disabled > 
+                            No faculty found  
+                        </SelectItem>
+                        ) : selectedSubject === "0" ? (
+                            facultyList
                             .filter((faculty) => faculty.id && faculty.name) // Filter out invalid entries
                             .map((faculty) => (
                               <SelectItem key={faculty.id} value={faculty.name}>
                                 {faculty.name}
                               </SelectItem>
+                          ))
+
+                        ) : (
+                            facultySections.filter((fs) => fs.sections.includes(selectedFIC)).map((fs) => (
+                        <SelectItem key={fs.Faculty} value={fs.Faculty}>
+                          {fs.Faculty}
+                        </SelectItem>
                             ))
-                        )}
+                          )}
                       </SelectContent>
                     </Select>
                   </FormControl>
