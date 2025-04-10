@@ -191,6 +191,12 @@ export function AddAppointmentForm() {
   }, [selectedSubject])
 
 
+  React.useEffect(() => {
+    const singleFaculty = facultySections.filter((fs) => fs.sections.includes(selectedFIC))[0]?.Faculty || "";
+    form.setValue("facultyName", singleFaculty); // Use form.setValue to update the field
+  }, [selectedFIC])
+
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       const auth = getAuth()
@@ -307,9 +313,9 @@ export function AddAppointmentForm() {
                           <SelectItem value="loading" disabled>
                             Loading...
                           </SelectItem>
-                        ) : subjectOptions.length === 0 ? (
+                        ) : selectedSubject.length === 0 ? (
                           <SelectItem value="no-sections" disabled>
-                            No sections found
+                            Please choose a class
                           </SelectItem> 
                         ) : (
                           availableSections.map((section, index) => (
@@ -349,7 +355,7 @@ export function AddAppointmentForm() {
                 <FormItem className="flex flex-col">
                   <FormLabel>Faculty Name</FormLabel>
                   <FormControl>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value} disabled = {selectedSubject !== "0"}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select faculty" />
                       </SelectTrigger>
@@ -358,9 +364,9 @@ export function AddAppointmentForm() {
                         <SelectItem value="loading" disabled>
                             Loading...
                         </SelectItem> 
-                        ) : facultySections.length === 0 ? (
+                        ) : selectedFIC.length === 0 && selectedSubject !== "0" ?(
                         <SelectItem value="no-faculty" disabled > 
-                            No faculty found  
+                            Please select a class and section  
                         </SelectItem>
                         ) : selectedSubject === "0" ? (
                             facultyList
