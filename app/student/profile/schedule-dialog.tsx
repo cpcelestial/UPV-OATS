@@ -99,10 +99,10 @@ export function ScheduleDialog({
     }
   };
 
-  const handleClassChange = (
+  const handleClassChange = <K extends keyof ClassFormData>(
     index: number,
-    field: keyof ClassFormData,
-    value: any
+    field: K,
+    value: ClassFormData[K]
   ) => {
     setClasses((prev) => {
       const newClasses = [...prev];
@@ -145,9 +145,10 @@ export function ScheduleDialog({
       return;
     }
 
-    const newSchedule = DAYS.map((day) => ({
-      day,
-      slots: classes
+    // Merge new classes with the existing schedule
+    const newSchedule = DAYS.map((day) => {
+      const existingSlots = schedule.find((d) => d.day === day)?.slots || [];
+      const newSlots = classes
         .filter((cls) => cls.days.includes(day))
         .map((cls) => ({
           start: cls.start,
@@ -156,9 +157,27 @@ export function ScheduleDialog({
           room: cls.room,
           professor: cls.professor,
           color: cls.color,
-          days: cls.days,
-        })),
-    }));
+        }));
+
+      // Prevent duplicate slots
+      const mergedSlots = [
+        ...existingSlots,
+        ...newSlots.filter(
+          (newSlot) =>
+            !existingSlots.some(
+              (existingSlot) =>
+                existingSlot.start === newSlot.start &&
+                existingSlot.end === newSlot.end &&
+                existingSlot.subject === newSlot.subject
+            )
+        ),
+      ];
+
+      return {
+        day,
+        slots: mergedSlots,
+      };
+    });
 
     try {
       await updateSchedule(newSchedule); // Save to Firestore
@@ -171,47 +190,41 @@ export function ScheduleDialog({
 
   useEffect(() => {
     if (open) {
-      const existingClasses = new Map<string, ClassFormData>();
+      // Map existing schedule to editable classes
+      const existingClasses: ClassFormData[] = [];
 
       schedule.forEach((day) => {
         day.slots.forEach((slot) => {
-          const key = `${slot.subject}-${slot.start}-${slot.end}`;
-          if (!existingClasses.has(key)) {
-            existingClasses.set(key, {
+          const existingClass = existingClasses.find(
+            (cls) =>
+              cls.start === slot.start &&
+              cls.end === slot.end &&
+              cls.subject === slot.subject
+          );
+
+          if (existingClass) {
+            existingClass.days.push(day.day);
+          } else {
+            existingClasses.push({
               days: [day.day],
-              ...slot,
+              start: slot.start,
+              end: slot.end,
+              subject: slot.subject,
+              room: slot.room,
+              professor: slot.professor,
               color: slot.color || CLASS_COLORS[0].value,
             });
-          } else {
-            const existing = existingClasses.get(key)!;
-            existing.days.push(day.day);
           }
         });
       });
 
-      setClasses(Array.from(existingClasses.values()));
+      setClasses(existingClasses); // Initialize classes with all existing slots
       setInvalidClasses([]); // Reset invalid classes when dialog opens
     }
   }, [open, schedule]);
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(newOpen) => {
-        // Only allow closing if there are no invalid classes
-        if (newOpen === false) {
-          const classesWithNoDays = classes
-            .map((cls, index) => (cls.days.length === 0 ? index : -1))
-            .filter((index) => index !== -1);
-
-          if (classesWithNoDays.length > 0) {
-            setInvalidClasses(classesWithNoDays);
-            return;
-          }
-        }
-        onOpenChange(newOpen);
-      }}
-    >
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl py-6 pl-6 pr-4">
         <DialogHeader>
           <DialogTitle className="font-bold">Edit Class Schedule</DialogTitle>
@@ -229,7 +242,6 @@ export function ScheduleDialog({
                       handleClassChange(index, "subject", e.target.value)
                     }
                   />
-
                   <div className="flex items-center gap-2">
                     <Select
                       value={cls.start}
@@ -267,7 +279,6 @@ export function ScheduleDialog({
                       </SelectContent>
                     </Select>
                   </div>
-
                   <Input
                     placeholder="Room"
                     value={cls.room}
@@ -275,7 +286,6 @@ export function ScheduleDialog({
                       handleClassChange(index, "room", e.target.value)
                     }
                   />
-
                   <Input
                     placeholder="Professor"
                     value={cls.professor}
@@ -390,25 +400,5 @@ export function ScheduleDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
-}
-
-export function ScheduleSection({ schedule }: { schedule: DaySchedule[] }) {
-  return (
-    <div>
-      {schedule.map((day) => (
-        <div key={day.day}>
-          <h3>{day.day}</h3>
-          {day.slots.map((slot, idx) => (
-            <div key={idx} className={`rounded px-2 py-1 border ${slot.color}`}>
-              <strong>{slot.subject}</strong> <br />
-              {slot.start} - {slot.end} <br />
-              Room: {slot.room} <br />
-              Prof: {slot.professor}
-            </div>
-          ))}
-        </div>
-      ))}
-    </div>
   );
 }

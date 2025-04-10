@@ -1,14 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { auth } from "/app/firebase-config"; // Adjust the path as needed
-
+import { auth } from "/app/firebase-config";
 import {
   updatePassword,
   reauthenticateWithCredential,
   EmailAuthProvider,
 } from "firebase/auth";
-
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -39,7 +37,6 @@ export function PasswordDialog({ open, onOpenChange }: PasswordDialogProps) {
     e.preventDefault();
     setError(null);
 
-    // Validation
     if (!currentPassword || !newPassword || !confirmPassword) {
       setError("All fields are required");
       return;
@@ -55,7 +52,6 @@ export function PasswordDialog({ open, onOpenChange }: PasswordDialogProps) {
       return;
     }
 
-    // Actual Firebase password update
     setIsSubmitting(true);
     try {
       const user = auth.currentUser;
@@ -69,7 +65,6 @@ export function PasswordDialog({ open, onOpenChange }: PasswordDialogProps) {
         await reauthenticateWithCredential(user, credential);
         await updatePassword(user, newPassword);
 
-        // Reset and close
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
@@ -82,14 +77,6 @@ export function PasswordDialog({ open, onOpenChange }: PasswordDialogProps) {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleCancel = () => {
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-    setError(null);
-    onOpenChange(false);
   };
 
   return (
@@ -141,7 +128,11 @@ export function PasswordDialog({ open, onOpenChange }: PasswordDialogProps) {
             </div>
           </div>
           <DialogFooter className="mt-6">
-            <Button type="button" variant="outline" onClick={handleCancel}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>

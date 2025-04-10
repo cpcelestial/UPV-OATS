@@ -1,47 +1,55 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ProfileSection } from "./profile-section";
 import { ScheduleSection } from "./schedule-section";
 import { ProfileDialog } from "./profile-dialog";
 import { ScheduleDialog } from "./schedule-dialog";
+import { PasswordDialog } from "./password-dialog";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "/app/firebase-config"; // Firestore instance
 import type { Student } from "../data";
 
-const initialProfile: Student = {
-  id: "1",
-  firstName: "Juan",
-  lastName: "dela Cruz",
-  email: "jdelacruz@up.edu.ph",
-  emailVisibility: true,
-  studentNumber: "2022-12345",
-  college: "Arts and Sciences",
-  degreeProgram: "BS Computer Science",
-  cityTown: "Miagao, Iloilo",
-  country: "Philippines",
-  description: "",
-  avatarUrl: "/profile.jpg",
-  schedule: [
-    { day: "Monday", slots: [] },
-    { day: "Tuesday", slots: [] },
-    { day: "Wednesday", slots: [] },
-    { day: "Thursday", slots: [] },
-    { day: "Friday", slots: [] },
-    { day: "Saturday", slots: [] },
-  ],
-};
-
 export default function Page() {
-  const [profile, setProfile] = useState<Student>(initialProfile);
+  const [profile, setProfile] = useState<Student | null>(null); // Start with null
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+
+  // Fetch profile data from Firestore
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const profileDocRef = doc(db, "students", "1"); // Replace "1" with the actual document ID
+        const profileSnapshot = await getDoc(profileDocRef);
+
+        if (profileSnapshot.exists()) {
+          setProfile(profileSnapshot.data() as Student);
+        } else {
+          console.error("Profile document does not exist.");
+        }
+      } catch (error) {
+        console.error("Failed to fetch profile:", error);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   const handleUpdateProfile = (updatedProfile: Partial<Student>) => {
-    setProfile((prev) => ({ ...prev, ...updatedProfile }));
+    setProfile((prev) => (prev ? { ...prev, ...updatedProfile } : null));
+    console.log("Updated Profile:", updatedProfile);
   };
 
-  const handleUpdateSchedule = (newSchedule: typeof profile.schedule) => {
-    handleUpdateProfile({ schedule: newSchedule });
+  const handleUpdateSchedule = (newSchedule: Student["schedule"]) => {
+    if (profile) {
+      handleUpdateProfile({ schedule: newSchedule });
+    }
   };
+
+  if (!profile) {
+    return <div>Loading...</div>; // Show a loading state while fetching the profile
+  }
 
   return (
     <main className="flex-grow p-4 overflow-auto">
@@ -49,6 +57,7 @@ export default function Page() {
         <ProfileSection
           profile={profile}
           onUpdateProfile={() => setIsProfileDialogOpen(true)}
+          onChangePassword={() => setIsPasswordDialogOpen(true)}
         />
 
         <ScheduleSection
@@ -71,6 +80,11 @@ export default function Page() {
         onUpdateSchedule={(newSchedule) => {
           handleUpdateSchedule(newSchedule); // Update schedule
         }}
+      />
+
+      <PasswordDialog
+        open={isPasswordDialogOpen}
+        onOpenChange={setIsPasswordDialogOpen}
       />
     </main>
   );

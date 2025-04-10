@@ -25,8 +25,8 @@ const App: React.FC = () => {
     console.log("Starting user authentication...");
 
     signInWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        const user = userCredential.user;
+      .then(() => {
+        // User authentication successful
         router.push("/student/dashboard");
       })
       .catch((error) => {

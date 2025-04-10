@@ -5,28 +5,32 @@ import { fetchSchedule, updateSchedule } from "/app/firebaseService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, MapPin, User } from "lucide-react";
-import type { DaySchedule, Slot } from "../data";
+import type { DaySchedule } from "../data";
 
 export function ScheduleSection({
   schedule: initialSchedule,
   onUpdateSchedule,
 }: {
   schedule: DaySchedule[];
-  onUpdateSchedule: () => void;
+  onUpdateSchedule: (updatedSchedule: DaySchedule[]) => void;
 }) {
   const [schedule, setSchedule] = useState<DaySchedule[]>(initialSchedule);
 
   useEffect(() => {
     const loadSchedule = async () => {
-      const data = await fetchSchedule(); // firebaseService.ts
+      const data = await fetchSchedule(); // Fetch from Firestore
       if (data) setSchedule(data);
     };
     loadSchedule();
   }, []);
 
-  // Save to Firestore
   const handleSave = async () => {
-    await updateSchedule(schedule);
+    try {
+      await updateSchedule(schedule); // Save to Firestore
+      onUpdateSchedule(schedule); // Update parent state
+    } catch (error) {
+      console.error("Failed to save schedule:", error);
+    }
   };
 
   return (
@@ -37,7 +41,7 @@ export function ScheduleSection({
           <Button
             variant="secondary"
             onClick={() => {
-              onUpdateSchedule();
+              onUpdateSchedule(schedule); // Pass the current schedule to the dialog
               handleSave();
             }}
           >
