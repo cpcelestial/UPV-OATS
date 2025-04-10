@@ -1,7 +1,8 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
+import { updateSchedule } from "/app/firebaseService";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,34 +10,41 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
-} from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Trash2, Plus, AlertCircle } from "lucide-react"
-import type { DaySchedule } from "../data"
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Trash2, Plus, AlertCircle } from "lucide-react";
+import type { DaySchedule } from "../data";
 
 interface ScheduleDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  schedule: DaySchedule[]
-  onUpdateSchedule: (schedule: DaySchedule[]) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  schedule: DaySchedule[];
+  onUpdateSchedule: (schedule: DaySchedule[]) => void;
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => {
-  const hour = i % 12 || 12
-  const minutes = ["00", "30"]
-  const period = i < 12 ? "AM" : "PM"
-  return minutes.map((minute) => `${hour}:${minute} ${period}`)
-}).flat()
+  const hour = i % 12 || 12;
+  const minutes = ["00", "30"];
+  const period = i < 12 ? "AM" : "PM";
+  return minutes.map((minute) => `${hour}:${minute} ${period}`);
+}).flat();
 
-const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+const DAYS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
 
 const CLASS_COLORS = [
   { label: "Pink", value: "bg-pink-100 border-pink-200 text-pink-700" },
@@ -47,46 +55,61 @@ const CLASS_COLORS = [
   { label: "Blue", value: "bg-blue-100 border-blue-200 text-blue-700" },
   { label: "Indigo", value: "bg-indigo-100 border-indigo-200 text-indigo-700" },
   { label: "Purple", value: "bg-purple-100 border-purple-200 text-purple-700" },
-]
+];
 
 interface ClassFormData {
-  days: string[]
-  start: string
-  end: string
-  subject: string
-  room: string
-  professor: string
-  color: string
+  days: string[];
+  start: string;
+  end: string;
+  subject: string;
+  room: string;
+  professor: string;
+  color: string;
 }
 
-export function ScheduleDialog({ open, onOpenChange, schedule, onUpdateSchedule }: ScheduleDialogProps) {
-  const [classes, setClasses] = useState<ClassFormData[]>([])
-  const [invalidClasses, setInvalidClasses] = useState<number[]>([])
+export function ScheduleDialog({
+  open,
+  onOpenChange,
+  schedule,
+  onUpdateSchedule,
+}: ScheduleDialogProps) {
+  const [classes, setClasses] = useState<ClassFormData[]>([]);
+  const [invalidClasses, setInvalidClasses] = useState<number[]>([]);
 
-  const handleDayToggle = (classIndex: number, day: string, checked: boolean) => {
+  const handleDayToggle = (
+    classIndex: number,
+    day: string,
+    checked: boolean
+  ) => {
     setClasses((prev) => {
-      const newClasses = [...prev]
+      const newClasses = [...prev];
       if (checked) {
-        newClasses[classIndex].days.push(day)
+        newClasses[classIndex].days.push(day);
       } else {
-        newClasses[classIndex].days = newClasses[classIndex].days.filter((d) => d !== day)
+        newClasses[classIndex].days = newClasses[classIndex].days.filter(
+          (d) => d !== day
+        );
       }
-      return newClasses
-    })
+      return newClasses;
+    });
 
     // Remove from invalid classes if days are now selected
     if (checked) {
-      setInvalidClasses((prev) => prev.filter((idx) => idx !== classIndex))
+      setInvalidClasses((prev) => prev.filter((idx) => idx !== classIndex));
     }
-  }
+  };
 
-  const handleClassChange = (index: number, field: keyof ClassFormData, value: any) => {
+  const handleClassChange = (
+    index: number,
+    field: keyof ClassFormData,
+    value: any
+  ) => {
     setClasses((prev) => {
-      const newClasses = [...prev]
-      newClasses[index] = { ...newClasses[index], [field]: value }
-      return newClasses
-    })
-  }
+      const newClasses = [...prev];
+      newClasses[index] = { ...newClasses[index], [field]: value };
+      return newClasses;
+    });
+  };
 
   const handleAddClass = () => {
     setClasses((prev) => [
@@ -100,24 +123,26 @@ export function ScheduleDialog({ open, onOpenChange, schedule, onUpdateSchedule 
         professor: "",
         color: CLASS_COLORS[prev.length % CLASS_COLORS.length].value,
       },
-    ])
-  }
+    ]);
+  };
 
   const handleRemoveClass = (index: number) => {
-    setClasses((prev) => prev.filter((_, i) => i !== index))
-    setInvalidClasses((prev) => prev.filter((idx) => idx !== index).map((idx) => (idx > index ? idx - 1 : idx)))
-  }
+    setClasses((prev) => prev.filter((_, i) => i !== index));
+    setInvalidClasses((prev) =>
+      prev
+        .filter((idx) => idx !== index)
+        .map((idx) => (idx > index ? idx - 1 : idx))
+    );
+  };
 
-  const handleSave = () => {
-    // Find classes with no days selected
+  const handleSave = async () => {
     const classesWithNoDays = classes
       .map((cls, index) => (cls.days.length === 0 ? index : -1))
-      .filter((index) => index !== -1)
+      .filter((index) => index !== -1);
 
     if (classesWithNoDays.length > 0) {
-      // Set invalid classes to highlight them
-      setInvalidClasses(classesWithNoDays)
-      return
+      setInvalidClasses(classesWithNoDays);
+      return;
     }
 
     const newSchedule = DAYS.map((day) => ({
@@ -133,36 +158,41 @@ export function ScheduleDialog({ open, onOpenChange, schedule, onUpdateSchedule 
           color: cls.color,
           days: cls.days,
         })),
-    }))
+    }));
 
-    onUpdateSchedule(newSchedule)
-    onOpenChange(false)
-  }
+    try {
+      await updateSchedule(newSchedule); // Save to Firestore
+      onUpdateSchedule(newSchedule); // Update local state
+      onOpenChange(false); // Close the dialog
+    } catch (error) {
+      console.error("Failed to save schedule:", error);
+    }
+  };
 
   useEffect(() => {
     if (open) {
-      const existingClasses = new Map<string, ClassFormData>()
+      const existingClasses = new Map<string, ClassFormData>();
 
       schedule.forEach((day) => {
         day.slots.forEach((slot) => {
-          const key = `${slot.subject}-${slot.start}-${slot.end}`
+          const key = `${slot.subject}-${slot.start}-${slot.end}`;
           if (!existingClasses.has(key)) {
             existingClasses.set(key, {
               days: [day.day],
               ...slot,
               color: slot.color || CLASS_COLORS[0].value,
-            })
+            });
           } else {
-            const existing = existingClasses.get(key)!
-            existing.days.push(day.day)
+            const existing = existingClasses.get(key)!;
+            existing.days.push(day.day);
           }
-        })
-      })
+        });
+      });
 
-      setClasses(Array.from(existingClasses.values()))
-      setInvalidClasses([]) // Reset invalid classes when dialog opens
+      setClasses(Array.from(existingClasses.values()));
+      setInvalidClasses([]); // Reset invalid classes when dialog opens
     }
-  }, [open, schedule])
+  }, [open, schedule]);
 
   return (
     <Dialog
@@ -170,26 +200,22 @@ export function ScheduleDialog({ open, onOpenChange, schedule, onUpdateSchedule 
       onOpenChange={(newOpen) => {
         // Only allow closing if there are no invalid classes
         if (newOpen === false) {
-          // Check for classes with no days selected
           const classesWithNoDays = classes
             .map((cls, index) => (cls.days.length === 0 ? index : -1))
-            .filter((index) => index !== -1)
+            .filter((index) => index !== -1);
 
           if (classesWithNoDays.length > 0) {
-            // Set invalid classes to highlight them
-            setInvalidClasses(classesWithNoDays)
-            return // Prevent dialog from closing
+            setInvalidClasses(classesWithNoDays);
+            return;
           }
         }
-        onOpenChange(newOpen)
+        onOpenChange(newOpen);
       }}
     >
       <DialogContent className="max-w-3xl py-6 pl-6 pr-4">
         <DialogHeader>
           <DialogTitle className="font-bold">Edit Class Schedule</DialogTitle>
-          <DialogDescription>
-            Customize your class schedule
-          </DialogDescription>
+          <DialogDescription>Customize your class schedule</DialogDescription>
         </DialogHeader>
         <div className="max-h-[60vh] overflow-y-auto py-2 pr-4 space-y-6">
           {classes.map((cls, index) => (
@@ -199,11 +225,18 @@ export function ScheduleDialog({ open, onOpenChange, schedule, onUpdateSchedule 
                   <Input
                     placeholder="Subject"
                     value={cls.subject}
-                    onChange={(e) => handleClassChange(index, "subject", e.target.value)}
+                    onChange={(e) =>
+                      handleClassChange(index, "subject", e.target.value)
+                    }
                   />
 
                   <div className="flex items-center gap-2">
-                    <Select value={cls.start} onValueChange={(value) => handleClassChange(index, "start", value)}>
+                    <Select
+                      value={cls.start}
+                      onValueChange={(value) =>
+                        handleClassChange(index, "start", value)
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Start time" />
                       </SelectTrigger>
@@ -216,7 +249,12 @@ export function ScheduleDialog({ open, onOpenChange, schedule, onUpdateSchedule 
                       </SelectContent>
                     </Select>
                     <span>to</span>
-                    <Select value={cls.end} onValueChange={(value) => handleClassChange(index, "end", value)}>
+                    <Select
+                      value={cls.end}
+                      onValueChange={(value) =>
+                        handleClassChange(index, "end", value)
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="End time" />
                       </SelectTrigger>
@@ -233,17 +271,26 @@ export function ScheduleDialog({ open, onOpenChange, schedule, onUpdateSchedule 
                   <Input
                     placeholder="Room"
                     value={cls.room}
-                    onChange={(e) => handleClassChange(index, "room", e.target.value)}
+                    onChange={(e) =>
+                      handleClassChange(index, "room", e.target.value)
+                    }
                   />
 
                   <Input
                     placeholder="Professor"
                     value={cls.professor}
-                    onChange={(e) => handleClassChange(index, "professor", e.target.value)}
+                    onChange={(e) =>
+                      handleClassChange(index, "professor", e.target.value)
+                    }
                   />
                 </div>
                 <div className="space-y-4">
-                  <Select value={cls.color} onValueChange={(value) => handleClassChange(index, "color", value)}>
+                  <Select
+                    value={cls.color}
+                    onValueChange={(value) =>
+                      handleClassChange(index, "color", value)
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Choose color" />
                     </SelectTrigger>
@@ -251,7 +298,11 @@ export function ScheduleDialog({ open, onOpenChange, schedule, onUpdateSchedule 
                       {CLASS_COLORS.map((color) => (
                         <SelectItem key={color.value} value={color.value}>
                           <div className="flex items-center gap-2">
-                            <div className={`w-4 h-4 rounded ${color.value.split(" ")[0]}`} />
+                            <div
+                              className={`w-4 h-4 rounded ${
+                                color.value.split(" ")[0]
+                              }`}
+                            />
                             <span>{color.label}</span>
                           </div>
                         </SelectItem>
@@ -260,20 +311,30 @@ export function ScheduleDialog({ open, onOpenChange, schedule, onUpdateSchedule 
                   </Select>
                   <div>
                     <div
-                      className={`font-semibold mb-1 flex items-center ${invalidClasses.includes(index) ? "text-red-500" : ""}`}
+                      className={`font-semibold mb-1 flex items-center ${
+                        invalidClasses.includes(index) ? "text-red-500" : ""
+                      }`}
                     >
                       Choose the days:
-                      {invalidClasses.includes(index) && <AlertCircle className="h-4 w-4 ml-2" />}
+                      {invalidClasses.includes(index) && (
+                        <AlertCircle className="h-4 w-4 ml-2" />
+                      )}
                     </div>
                     <div
-                      className={`grid grid-cols-2 gap-2 p-2 rounded-md border ${invalidClasses.includes(index) ? "bg-red-50 border-red-200" : "border-transparent"}`}
+                      className={`grid grid-cols-2 gap-2 p-2 rounded-md border ${
+                        invalidClasses.includes(index)
+                          ? "bg-red-50 border-red-200"
+                          : "border-transparent"
+                      }`}
                     >
                       {DAYS.map((day) => (
                         <div key={day} className="flex items-center space-x-2">
                           <Checkbox
                             id={`${day}-${index}`}
                             checked={cls.days.includes(day)}
-                            onCheckedChange={(checked) => handleDayToggle(index, day, checked as boolean)}
+                            onCheckedChange={(checked) =>
+                              handleDayToggle(index, day, checked as boolean)
+                            }
                           />
                           <label
                             htmlFor={`${day}-${index}`}
@@ -301,7 +362,10 @@ export function ScheduleDialog({ open, onOpenChange, schedule, onUpdateSchedule 
         </div>
         <DialogFooter>
           <div className="w-full">
-            <Button className="float-left bg-[#2F5233] hover:bg-[#2F5233]/90" onClick={handleAddClass}>
+            <Button
+              className="float-left bg-[#2F5233] hover:bg-[#2F5233]/90"
+              onClick={handleAddClass}
+            >
               <Plus className="h-4 w-4" />
               Add Class
             </Button>
@@ -309,17 +373,15 @@ export function ScheduleDialog({ open, onOpenChange, schedule, onUpdateSchedule 
           <Button
             variant="outline"
             onClick={() => {
-              // Check for classes with no days selected
               const classesWithNoDays = classes
                 .map((cls, index) => (cls.days.length === 0 ? index : -1))
-                .filter((index) => index !== -1)
+                .filter((index) => index !== -1);
 
               if (classesWithNoDays.length > 0) {
-                // Set invalid classes to highlight them
-                setInvalidClasses(classesWithNoDays)
-                return // Prevent dialog from closing
+                setInvalidClasses(classesWithNoDays);
+                return;
               }
-              onOpenChange(false)
+              onOpenChange(false);
             }}
           >
             Cancel
@@ -328,5 +390,25 @@ export function ScheduleDialog({ open, onOpenChange, schedule, onUpdateSchedule 
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
+}
+
+export function ScheduleSection({ schedule }: { schedule: DaySchedule[] }) {
+  return (
+    <div>
+      {schedule.map((day) => (
+        <div key={day.day}>
+          <h3>{day.day}</h3>
+          {day.slots.map((slot, idx) => (
+            <div key={idx} className={`rounded px-2 py-1 border ${slot.color}`}>
+              <strong>{slot.subject}</strong> <br />
+              {slot.start} - {slot.end} <br />
+              Room: {slot.room} <br />
+              Prof: {slot.professor}
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
 }
