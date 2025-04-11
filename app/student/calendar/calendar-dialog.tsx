@@ -39,7 +39,7 @@ export function CalendarDialog({
               >
                 <div className="flex items-center gap-3">
                   <div>
-                    <h3 className="font-medium">{appointment.title}</h3>
+                    <h3 className="font-medium">{appointment.purpose}</h3>
                     <p className="text-sm text-muted-foreground">
                       with {appointment.facultyName}
                     </p>

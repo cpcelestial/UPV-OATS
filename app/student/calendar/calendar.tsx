@@ -10,7 +10,9 @@ import {
   endOfMonth,
   eachDayOfInterval,
   isSameMonth,
-  isSameDay
+  isSameDay,
+  parse,
+  getHours,
 } from "date-fns";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -114,6 +116,12 @@ export function Calendar() {
     setIsDialogOpen(true);
   };
 
+  const getStartTimeFromTimeSlot = (timeSlot: string): string => {
+    if (!timeSlot || typeof timeSlot !== "string") return "";
+    const [startTime] = timeSlot.split(" - ");
+    return startTime.trim();
+  };
+
   const navigatePrevious = () => {
     switch (viewType) {
       case "month":
@@ -204,6 +212,7 @@ export function Calendar() {
     const end = endOfWeek(currentDate, { weekStartsOn: 0 });
     const days = eachDayOfInterval({ start, end });
 
+    
     return (
       <div className="border rounded-lg overflow-hidden">
         <div className="grid grid-cols-7">
@@ -239,39 +248,61 @@ export function Calendar() {
   };
 
   const renderDayView = () => {
-    const dayAppointments = appointments.filter(appt => isSameDay(appt.date, currentDate));
+    const dayAppointments = appointments.filter((appt) => isSameDay(appt.date, currentDate));
     const hours = Array.from({ length: 24 }, (_, i) => i);
-
+  
     return (
       <div className="border rounded-lg overflow-hidden">
         <div className="grid grid-cols-[100px_1fr]">
           {hours.map((hour, index) => {
             const timeString = `${hour.toString().padStart(2, "0")}:00`;
-            const hourAppointments = dayAppointments.filter(appt =>
-              appt.startTime.includes(timeString)
-            );
+            const hourAppointments = dayAppointments.filter((appt) => {
+              const startTime = getStartTimeFromTimeSlot(appt.timeSlot); // e.g., "10:00 AM"
+              if (!startTime) return false;
+  
+              // Parse the startTime (e.g., "10:00 AM") into a Date object
+              // We need a base date for parsing; we'll use the appointment date
+              const baseDate = appt.date;
+              const parsedStartTime = parse(startTime, "h:mm a", baseDate);
+              const startHour = getHours(parsedStartTime); // Get the hour in 24-hour format
+  
+              return startHour === hour;
+            });
+  
             const isLast = index === hours.length - 1;
-
+  
             return (
               <React.Fragment key={hour}>
-                <div className={cn(
-                  "p-2 text-sm border-r border-b border-border",
-                  isLast && "border-b-0"
-                )}>
-                  {format(new Date().setHours(hour), "ha")}
+                <div
+                  className={cn(
+                    "p-2 text-sm border-r border-b border-border",
+                    isLast && "border-b-0"
+                  )}
+                >
+                  {format(new Date().setHours(hour), "ha")} {/* Display hour as 12-hour format */}
                 </div>
-                <div className={cn(
-                  "p-2 min-h-[60px] relative border-b border-border",
-                  isLast && "border-b-0"
-                )}>
-                  {hourAppointments.map(appointment => (
-                    <Card key={appointment.id} className="p-2 mb-2 bg-red-100 border-red-200 text-red-700 shadow-none">
-                      <div className="text-sm font-medium">
-                        {appointment.startTime} - {appointment.endTime}
-                      </div>
-                      <div className="text-sm">{appointment.purpose}</div>
-                    </Card>
-                  ))}
+                <div
+                  className={cn(
+                    "p-2 min-h-[60px] relative border-b border-border",
+                    isLast && "border-b-0"
+                  )}
+                >
+                  {hourAppointments.map((appointment) => {
+                    const startTime = getStartTimeFromTimeSlot(appointment.timeSlot);
+                    const [, endTime] = appointment.timeSlot.split(" - ");
+                    return (
+                      <Card
+                        key={appointment.id}
+                        className="p-2 mb-2 bg-red-100 border-red-200 text-red-700 shadow-none"
+                      >
+                        <div className="text-sm">{appointment.purpose}</div>
+                        <div className="text-sm font-medium">
+                          {startTime} - {endTime?.trim()}
+                        </div>
+
+                      </Card>
+                    );
+                  })}
                 </div>
               </React.Fragment>
             );
@@ -280,7 +311,6 @@ export function Calendar() {
       </div>
     );
   };
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
