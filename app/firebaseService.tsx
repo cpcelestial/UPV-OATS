@@ -1,8 +1,8 @@
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
-import { firebaseApp } from "/app/firebase-config";
+import { app } from "./firebase-config";
 import type { DaySchedule } from "./data";
 
-const db = getFirestore(firebaseApp);
+const db = getFirestore(app);
 const SCHEDULE_DOC = "schedules/userSchedule";
 
 export async function fetchSchedule(): Promise<DaySchedule[] | null> {

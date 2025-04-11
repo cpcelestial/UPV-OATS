@@ -39,7 +39,7 @@ export function CalendarDialog({
               >
                 <div className="flex items-center gap-3">
                   <div>
-                    <h3 className="font-medium">{appointment.title}</h3>
+                    <h3 className="font-medium">{appointment.purpose}</h3>
                     <p className="text-sm text-muted-foreground">
                       with {appointment.facultyName}
                     </p>
@@ -50,7 +50,7 @@ export function CalendarDialog({
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="px-4 py-1 rounded-full text-sm font-medium bg-primary/10">
-                    {appointment.startTime} - {appointment.endTime}
+                    {appointment.timeSlot}
                   </span>
                   <div className="flex gap-2">
                     <Button
