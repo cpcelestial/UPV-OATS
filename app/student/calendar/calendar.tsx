@@ -31,41 +31,83 @@ import { db, auth } from "../../firebase-config";
 type ViewType = "month" | "week" | "day";
 
 export interface Appointment {
+  purpose: string;
+  class: string;
   id: string;
-  title: string;
+  details?: string;
+  meetingType: string;
   facultyName: string;
   email: string;
-  startTime: string;
-  endTime: string;
   date: Date;
+  participants: string[];
+  status: string;
+  timeSlot: string;
+  userId: string;
 }
+
 
 export function Calendar() {
   const [currentDate, setCurrentDate] = React.useState<Date>(new Date());
   const [viewType, setViewType] = React.useState<ViewType>("month");
   const [selectedDate, setSelectedDate] = React.useState<Date | null>(null);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [currentUser, setCurrentUser] = React.useState<any>(null);
+  const [appointments, setAppointments] = React.useState<Appointment[]>([]);
 
-  const [appointments] = React.useState<Appointment[]>([
-    {
-      id: "1",
-      title: "Project Discussion",
-      facultyName: "Dr. Smith",
-      email: "smith@example.com",
-      startTime: "10:00 AM",
-      endTime: "11:00 AM",
-      date: new Date(2025, 3, 15)
-    },
-    {
-      id: "2",
-      title: "Thesis Review",
-      facultyName: "Dr. Johnson",
-      email: "johnson@example.com",
-      startTime: "02:00 PM",
-      endTime: "03:00 PM",
-      date: new Date(2025, 3, 16)
-    }
-  ]);
+  React.useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setCurrentUser(user);
+        const appointmentsRef = collection(db, "appointments");
+        const q = query(appointmentsRef, where("userId", "==", user.uid)); 
+        const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
+          const fetchedAppointments: Appointment[] = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+            date: doc.data().date instanceof Date ? doc.data().date : doc.data().date.toDate(),
+          } as Appointment));
+          setAppointments(fetchedAppointments);
+          console.log("Fetched Appointments:", fetchedAppointments);
+        });
+      } else {
+        setCurrentUser(null);
+        setAppointments([]); // Clear appointments if no user
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // const [appointments] = React.useState<Appointment[]>([
+  //   {
+  //     class: "1",
+  //     id: "1",
+  //     title: "Project Discussion",
+  //     facultyName: "Dr. Smith",
+  //     email: "smith@example.com",
+  //     timeSlot: "10:00 AM - 10:30 AM",
+  //     date: new Date(2025, 3, 15),
+  //     details: "Discuss project requirements and timeline.",
+  //     meetingType: "f2f",
+  //     participants: ["user123", "user456"],
+  //     status: "confirmed",
+  //     userId: "user123"
+  //   },
+  //   {
+  //     class: "2",
+  //     id: "2",
+  //     title: "Project Discussion CMSC56",
+  //     facultyName: "Dr. Smith",
+  //     email: "smith@example.com",
+  //     timeSlot: "10:00 AM - 10:30 AM",
+  //     date: new Date(2025, 3, 23),
+  //     details: "Discuss project requirements and timeline.",
+  //     meetingType: "f2f",
+  //     participants: ["user123", "user456"],
+  //     status: "pending",
+  //     userId: "user123"
+  //   }
+  // ]);
 
   const handleDayClick = (day: Date) => {
     setSelectedDate(day);
@@ -145,7 +187,7 @@ export function Calendar() {
                       key={appointment.id}
                       className="text-xs rounded p-1 truncate border bg-red-100 border-red-200 text-red-700"
                     >
-                      {appointment.startTime} - {appointment.title}
+                       {appointment.purpose} <br></br> {appointment.timeSlot} 
                     </div>
                   ))}
                 </div>
@@ -185,7 +227,7 @@ export function Calendar() {
                 {dayAppointments.map(appointment => (
                   <Card key={appointment.id} className="p-2 mb-2 bg-red-100 border-red-200 text-red-700 shadow-none">
                     <div className="text-sm font-medium">{appointment.startTime}</div>
-                    <div className="text-sm">{appointment.title}</div>
+                    <div className="text-sm">{appointment.purpose}</div>
                   </Card>
                 ))}
               </div>
@@ -227,7 +269,7 @@ export function Calendar() {
                       <div className="text-sm font-medium">
                         {appointment.startTime} - {appointment.endTime}
                       </div>
-                      <div className="text-sm">{appointment.title}</div>
+                      <div className="text-sm">{appointment.purpose}</div>
                     </Card>
                   ))}
                 </div>
