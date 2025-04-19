@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { ProfileSection } from "./profile-section";
-import { ScheduleSection } from "./schedule-section";
 import { ProfileDialog } from "./profile-dialog";
-import { ScheduleDialog } from "./schedule-dialog";
 import { PasswordDialog } from "./password-dialog";
+import { ScheduleDialog } from "./schedule-dialog";
+import { ScheduleSection } from "./schedule-section";
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "/app/firebase-config"; // Firestore instance
+import { db } from "@/app/firebase-config"; // Firestore instance
 import type { Student } from "../data";
 
 export default function Page() {
@@ -48,7 +48,7 @@ export default function Page() {
   };
 
   if (!profile) {
-    return <div>Loading...</div>; // Show a loading state while fetching the profile
+    return <div className="h-full py-[25%] text-center">Loading...</div>; // Show a loading state while fetching the profile
   }
 
   return (

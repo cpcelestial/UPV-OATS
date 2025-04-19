@@ -20,12 +20,11 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { CalendarDialog } from "./calendar-dialog";
-import { 
-  collection, 
-  query, 
+import {
+  collection,
+  query,
   where,
-  or,   
-  onSnapshot 
+  onSnapshot
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "../../firebase-config";
@@ -61,7 +60,7 @@ export function Calendar() {
       if (user) {
         setCurrentUser(user);
         const appointmentsRef = collection(db, "appointments");
-        const q = query(appointmentsRef, where("userId", "==", user.uid)); 
+        const q = query(appointmentsRef, where("userId", "==", user.uid));
         const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
           const fetchedAppointments: Appointment[] = snapshot.docs.map((doc) => ({
             id: doc.id,
@@ -191,12 +190,10 @@ export function Calendar() {
                 <span className="text-sm font-medium">{format(day, "d")}</span>
                 <div className="mt-1 space-y-1">
                   {dayAppointments.map(appointment => (
-                    <div
-                      key={appointment.id}
-                      className="text-xs rounded p-1 truncate border bg-red-100 border-red-200 text-red-700"
-                    >
-                       {appointment.purpose} <br></br> {appointment.timeSlot} 
-                    </div>
+                    <Card key={appointment.id} className="p-2 mb-2 bg-red-100 border-red-200 text-red-700 shadow-none">
+                      <div className="text-sm font-semibold">{appointment.purpose}</div>
+                      <div className="text-sm">{appointment.timeSlot}</div>
+                    </Card>
                   ))}
                 </div>
               </div>
@@ -212,7 +209,7 @@ export function Calendar() {
     const end = endOfWeek(currentDate, { weekStartsOn: 0 });
     const days = eachDayOfInterval({ start, end });
 
-    
+
     return (
       <div className="border rounded-lg overflow-hidden">
         <div className="grid grid-cols-7">
@@ -235,8 +232,8 @@ export function Calendar() {
                 </div>
                 {dayAppointments.map(appointment => (
                   <Card key={appointment.id} className="p-2 mb-2 bg-red-100 border-red-200 text-red-700 shadow-none">
-                    <div className="text-sm font-medium">{appointment.startTime}</div>
-                    <div className="text-sm">{appointment.purpose}</div>
+                    <div className="text-sm font-semibold">{appointment.purpose}</div>
+                    <div className="text-sm">{appointment.timeSlot}</div>
                   </Card>
                 ))}
               </div>
@@ -250,27 +247,26 @@ export function Calendar() {
   const renderDayView = () => {
     const dayAppointments = appointments.filter((appt) => isSameDay(appt.date, currentDate));
     const hours = Array.from({ length: 24 }, (_, i) => i);
-  
+
     return (
       <div className="border rounded-lg overflow-hidden">
         <div className="grid grid-cols-[100px_1fr]">
           {hours.map((hour, index) => {
-            const timeString = `${hour.toString().padStart(2, "0")}:00`;
             const hourAppointments = dayAppointments.filter((appt) => {
               const startTime = getStartTimeFromTimeSlot(appt.timeSlot); // e.g., "10:00 AM"
               if (!startTime) return false;
-  
+
               // Parse the startTime (e.g., "10:00 AM") into a Date object
               // We need a base date for parsing; we'll use the appointment date
               const baseDate = appt.date;
               const parsedStartTime = parse(startTime, "h:mm a", baseDate);
               const startHour = getHours(parsedStartTime); // Get the hour in 24-hour format
-  
+
               return startHour === hour;
             });
-  
+
             const isLast = index === hours.length - 1;
-  
+
             return (
               <React.Fragment key={hour}>
                 <div
@@ -295,8 +291,8 @@ export function Calendar() {
                         key={appointment.id}
                         className="p-2 mb-2 bg-red-100 border-red-200 text-red-700 shadow-none"
                       >
-                        <div className="text-sm">{appointment.purpose}</div>
-                        <div className="text-sm font-medium">
+                        <div className="text-sm font-semibold">{appointment.purpose}</div>
+                        <div className="text-sm">
                           {startTime} - {endTime?.trim()}
                         </div>
 

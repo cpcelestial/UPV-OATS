@@ -1,35 +1,43 @@
-"use client"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { CalendarIcon, Clock, MapPin, Users, Video } from "lucide-react"
-import { format } from "date-fns"
+"use client";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { CalendarIcon, Clock, MapPin, Users, Video } from "lucide-react";
+import { format } from "date-fns";
 
 type Appointment = {
-  id: string
-  purpose: string
-  class: string
-  section: string
-  facultyName: string
-  date: Date
-  timeSlot: string
-  meetingType: "f2f" | "online"
-  details?: string
-  status: "pending" | "approved" | "rejected"
-  participants?: { email: string; name?: string }[]
-}
+  id: string;
+  purpose: string;
+  class: string;
+  section: string;
+  facultyName: string;
+  date: Date;
+  timeSlot: string;
+  meetingType: "f2f" | "online";
+  details?: string;
+  status: "upcoming" | "pending" | "declined";
+  participants?: { email: string; name?: string }[];
+};
 
 interface AppointmentListProps {
-  appointments: Appointment[]
-  emptyMessage: string
+  appointments: Appointment[];
+  emptyMessage: string;
 }
 
-export function AppointmentList({ appointments, emptyMessage }: AppointmentListProps) {
+export function AppointmentList({
+  appointments,
+  emptyMessage,
+}: AppointmentListProps) {
   if (appointments.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center">
         <p className="text-muted-foreground">{emptyMessage}</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -44,17 +52,6 @@ export function AppointmentList({ appointments, emptyMessage }: AppointmentListP
                   {appointment.class} - Section {appointment.section}
                 </CardDescription>
               </div>
-              <Badge
-                variant={
-                  appointment.status === "approved"
-                    ? "success"
-                    : appointment.status === "rejected"
-                      ? "destructive"
-                      : "outline"
-                }
-              >
-                {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
-              </Badge>
             </div>
           </CardHeader>
           <CardContent>
@@ -73,7 +70,11 @@ export function AppointmentList({ appointments, emptyMessage }: AppointmentListP
                 ) : (
                   <Video className="mr-2 h-4 w-4 text-muted-foreground" />
                 )}
-                <span>{appointment.meetingType === "f2f" ? "Face-to-Face" : "Online"}</span>
+                <span>
+                  {appointment.meetingType === "f2f"
+                    ? "Face-to-Face"
+                    : "Online"}
+                </span>
               </div>
               <div className="flex items-center text-sm">
                 <Users className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -90,6 +91,5 @@ export function AppointmentList({ appointments, emptyMessage }: AppointmentListP
         </Card>
       ))}
     </div>
-  )
+  );
 }
-

@@ -15,8 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Camera } from "lucide-react";
-import { doc, setDoc } from "firebase/firestore"; // Import Firestore functions
-import { db } from "/app/firebase-config"; // Import Firestore instance
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "@/app/firebase-config";
 import type { Student } from "../data";
 
 interface ProfileDialogProps {

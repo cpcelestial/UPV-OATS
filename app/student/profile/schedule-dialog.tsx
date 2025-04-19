@@ -1,6 +1,6 @@
 "use client";
 
-import { updateSchedule } from "/app/firebaseService";
+import { updateSchedule } from "@/app/firebaseService";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -309,9 +309,8 @@ export function ScheduleDialog({
                         <SelectItem key={color.value} value={color.value}>
                           <div className="flex items-center gap-2">
                             <div
-                              className={`w-4 h-4 rounded ${
-                                color.value.split(" ")[0]
-                              }`}
+                              className={`w-4 h-4 rounded ${color.value.split(" ")[0]
+                                }`}
                             />
                             <span>{color.label}</span>
                           </div>
@@ -321,9 +320,8 @@ export function ScheduleDialog({
                   </Select>
                   <div>
                     <div
-                      className={`font-semibold mb-1 flex items-center ${
-                        invalidClasses.includes(index) ? "text-red-500" : ""
-                      }`}
+                      className={`font-semibold mb-1 flex items-center ${invalidClasses.includes(index) ? "text-red-500" : ""
+                        }`}
                     >
                       Choose the days:
                       {invalidClasses.includes(index) && (
@@ -331,11 +329,10 @@ export function ScheduleDialog({
                       )}
                     </div>
                     <div
-                      className={`grid grid-cols-2 gap-2 p-2 rounded-md border ${
-                        invalidClasses.includes(index)
+                      className={`grid grid-cols-2 gap-2 p-2 rounded-md border ${invalidClasses.includes(index)
                           ? "bg-red-50 border-red-200"
                           : "border-transparent"
-                      }`}
+                        }`}
                     >
                       {DAYS.map((day) => (
                         <div key={day} className="flex items-center space-x-2">

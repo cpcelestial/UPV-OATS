@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { auth } from "/app/firebase-config";
+import { auth } from "@/app/firebase-config";
 import {
   updatePassword,
   reauthenticateWithCredential,
@@ -72,8 +72,8 @@ export function PasswordDialog({ open, onOpenChange }: PasswordDialogProps) {
       } else {
         throw new Error("User not authenticated");
       }
-    } catch (err) {
-      setError(err.message || "Failed to change password. Please try again.");
+    } catch (error) {
+      setError(error.message || "Failed to change password. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
