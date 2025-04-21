@@ -60,7 +60,11 @@ export function Calendar() {
       if (user) {
         setCurrentUser(user);
         const appointmentsRef = collection(db, "appointments");
-        const q = query(appointmentsRef, where("userId", "==", user.uid));
+        const q = query(
+          appointmentsRef,
+          where("userId", "==", user.uid),
+          where("status", "==", "upcomming")
+        );
         const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
           const fetchedAppointments: Appointment[] = snapshot.docs.map((doc) => ({
             id: doc.id,
