@@ -4,6 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import type { Appointment } from "./calendar";
+import { updateDoc, doc } from "firebase/firestore"
+import { getFirestore } from "firebase/firestore"
 
 interface AppointmentsListDialogProps {
   isOpen: boolean;
@@ -18,6 +20,18 @@ export function CalendarDialog({
   date,
   appointments
 }: AppointmentsListDialogProps) {
+  const db = getFirestore()
+  const handleCancel = async (appointmentId: string) => {
+    try {
+      const appointmentRef = doc(db, "appointments", appointmentId)
+      await updateDoc(appointmentRef, {
+        status: "cancelled",
+      })
+      console.log(`Appointment ${appointmentId} cancelled successfully`);
+    } catch (error) {
+      console.error("Error declining appointment:", error)
+    }
+  }
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
@@ -64,9 +78,7 @@ export function CalendarDialog({
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => {
-                        // Handle delete
-                      }}
+                      onClick={() => handleCancel(appointment.id)}
                     >
                       Cancel
                     </Button>

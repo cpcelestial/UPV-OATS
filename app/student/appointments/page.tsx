@@ -7,187 +7,108 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus } from "lucide-react";
 import { AppointmentList } from "./appointment-list";
 import { db } from "@/app/firebase-config";
-import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { collection, query, where, orderBy, onSnapshot, Unsubscribe } from "firebase/firestore";
+import { getAuth, onAuthStateChanged, User } from "firebase/auth";
 
-const sampleAppointments = {
-  upcoming: [
-    {
-      id: "app-001",
-      purpose: "Thesis Consultation",
-      class: "Computer Science",
-      section: "CS-401",
-      facultyName: "Dr. Maria Santos",
-      date: new Date(2025, 4, 25, 10, 0), // May 25, 2025
-      timeSlot: "10:00 AM - 11:00 AM",
-      meetingType: "f2f" as const,
-      details: "Discussion about thesis proposal and methodology",
-      status: "approved" as const,
-      participants: [
-        { email: "student@example.com", name: "John Doe" },
-        { email: "faculty@example.com", name: "Dr. Maria Santos" },
-      ],
-    },
-    {
-      id: "app-002",
-      purpose: "Project Defense Preparation",
-      class: "Software Engineering",
-      section: "SE-302",
-      facultyName: "Engr. James Rodriguez",
-      date: new Date(2025, 4, 28, 14, 0), // May 28, 2025
-      timeSlot: "2:00 PM - 3:30 PM",
-      meetingType: "online" as const,
-      details: "Final review of project presentation slides",
-      status: "approved" as const,
-      participants: [
-        { email: "student@example.com", name: "John Doe" },
-        { email: "faculty@example.com", name: "Engr. James Rodriguez" },
-      ],
-    },
-  ],
-  pending: [
-    {
-      id: "app-003",
-      purpose: "Research Paper Review",
-      class: "Research Methods",
-      section: "RM-201",
-      facultyName: "Dr. Anna Lee",
-      date: new Date(2025, 5, 2, 13, 0), // June 2, 2025
-      timeSlot: "1:00 PM - 2:00 PM",
-      meetingType: "online" as const,
-      details: "Initial review of research paper draft",
-      status: "pending" as const,
-      participants: [
-        { email: "student@example.com", name: "John Doe" },
-        { email: "faculty@example.com", name: "Dr. Anna Lee" },
-      ],
-    },
-  ],
-  declined: [
-    {
-      id: "app-004",
-      purpose: "Laboratory Experiment Discussion",
-      class: "Physics",
-      section: "PHY-103",
-      facultyName: "Prof. Robert Chen",
-      date: new Date(2025, 4, 15, 9, 0), // May 15, 2025
-      timeSlot: "9:00 AM - 10:00 AM",
-      meetingType: "f2f" as const,
-      details: "Faculty unavailable on this date. Please reschedule.",
-      status: "rejected" as const,
-      participants: [
-        { email: "student@example.com", name: "John Doe" },
-        { email: "faculty@example.com", name: "Prof. Robert Chen" },
-      ],
-    },
-    {
-      id: "app-005",
-      purpose: "Midterm Exam Review",
-      class: "Calculus",
-      section: "MATH-201",
-      facultyName: "Dr. Emily Watson",
-      date: new Date(2025, 4, 18, 15, 0), // May 18, 2025
-      timeSlot: "3:00 PM - 4:00 PM",
-      meetingType: "online" as const,
-      details:
-        "Schedule conflict with department meeting. Please select another date.",
-      status: "rejected" as const,
-      participants: [
-        { email: "student@example.com", name: "John Doe" },
-        { email: "faculty@example.com", name: "Dr. Emily Watson" },
-      ],
-    },
-  ],
-  reschedule: [
-    {
-      id: "app-006",
-      purpose: "Capstone Project Consultation",
-      class: "Information Technology",
-      section: "IT-405",
-      facultyName: "Engr. Michael Brown",
-      date: new Date(2025, 4, 20, 11, 0), // May 20, 2025
-      timeSlot: "11:00 AM - 12:00 PM",
-      meetingType: "f2f" as const,
-      details:
-        "Faculty requested to reschedule due to emergency meeting. Please select a new date.",
-      status: "reschedule" as const,
-      participants: [
-        { email: "student@example.com", name: "John Doe" },
-        { email: "faculty@example.com", name: "Engr. Michael Brown" },
-      ],
-    },
-  ],
+
+type Appointment = {
+  id: string;
+  purpose: string;
+  class: string;
+  section: string;
+  facultyName: string;
+  date: Date;
+  timeSlot: string;
+  meetingType: "f2f" | "online";
+  details?: string;
+  status: "upcoming" | "pending" | "cancelled" | "reschedule";
+  participants?: { email: string; name?: string }[];
 };
 
 export default function Page() {
   const router = useRouter();
-  const [upcomingAppointments, setUpcomingAppointments] = React.useState([]);
-  const [pendingAppointments, setPendingAppointments] = React.useState([]);
-  const [declinedAppointments, setDeclinedAppointments] = React.useState([]);
-  const [rescheduleAppointments, setRescheduleAppointments] = React.useState(
-    []
-  );
+  const [user, setUser] = React.useState<User | null>(null); // Added user state
+  const [upcomingAppointments, setUpcomingAppointments] = React.useState<Appointment[]>([]);
+  const [pendingAppointments, setPendingAppointments] = React.useState<Appointment[]>([]);
+  const [cancelledAppointments, setCancelledAppointments] = React.useState<Appointment[]>([]);
+  const [rescheduleAppointments, setRescheduleAppointments] = React.useState<Appointment[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [activeTab, setActiveTab] = React.useState("pending");
 
-  React.useEffect(() => {
-    const fetchAppointments = async () => {
-      try {
-        const auth = getAuth();
-        const user = auth.currentUser;
+React.useEffect(() => {
+  const auth = getAuth();
+  let unsubscribeSnapshot: Unsubscribe | null = null;
 
-        if (!user) {
-          console.error("No user logged in");
-          setLoading(false);
-          return;
-        }
-
-        // Query for all user appointments
-        const appointmentsRef = collection(db, "appointments");
-        const userAppointmentsQuery = query(
-          appointmentsRef,
-          where("userId", "==", user.uid),
-          orderBy("date", "asc")
-        );
-
-        const querySnapshot = await getDocs(userAppointmentsQuery);
-
-        const upcoming = [];
-        const pending = [];
-        const declined = [];
-        const reschedule = [];
-
+  const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+    setUser(currentUser);
+    
+    if (currentUser) {
+      const appointmentsRef = collection(db, "appointments");
+      const userAppointmentsQuery = query(
+        appointmentsRef,
+        where("userId", "==", currentUser.uid),
+        orderBy("date", "asc")
+      );
+    
+      unsubscribeSnapshot = onSnapshot(userAppointmentsQuery, (querySnapshot) => {
+        const upcoming: Appointment[] = [];
+        const pending: Appointment[] = [];
+        const cancelled: Appointment[] = [];
+        const reschedule: Appointment[] = [];
+    
         querySnapshot.forEach((doc) => {
-          const data = {
+          const data: Appointment = {
             id: doc.id,
             ...doc.data(),
-            date: doc.data().date?.toDate() || new Date(), // Convert Firestore timestamp to Date
+            date: doc.data().date instanceof Date ? doc.data().date : doc.data().date.toDate(),
+            purpose: doc.data().purpose,
+            class: doc.data().class,
+            details: doc.data().details,
+            section: doc.data().section,
+            facultyName: doc.data().facultyName,
+            timeSlot: doc.data().timeSlot,
+            meetingType: doc.data().meetingType,
+            status: doc.data().status,
           };
-
-          if (data.status === "approved") {
+    
+          if (data.status === "upcoming") {
             upcoming.push(data);
           } else if (data.status === "pending") {
             pending.push(data);
+          } else if (data.status === "cancelled") {
+            cancelled.push(data);
           } else if (data.status === "reschedule") {
             reschedule.push(data);
-          } else {
-            declined.push(data);
           }
         });
+        
 
+        console.log("Upcoming Appointments:", upcoming);
+        console.log("Pending Appointments:", pending);
+        console.log("Cancelled Appointments:", cancelled);
+        console.log("Reschedule Appointments:", reschedule);
         setUpcomingAppointments(upcoming);
         setPendingAppointments(pending);
-        setDeclinedAppointments(declined);
+        setCancelledAppointments(cancelled);
         setRescheduleAppointments(reschedule);
-      } catch (error) {
-        console.error("Error fetching appointments:", error);
-      } finally {
         setLoading(false);
-      }
-    };
+      }, (error) => {
+        console.error("Error fetching appointments:", error);
+        setLoading(false);
+      });
+    } else {
+      setLoading(false);
+    }
+  });
 
-    fetchAppointments();
-  }, []);
+  // Cleanup function that unsubscribes from both listeners
+  return () => {
+    unsubscribeAuth();
+    if (unsubscribeSnapshot) {
+      unsubscribeSnapshot();
+    }
+  };
+}, []);
 
   return (
     <div className="px-8 py-4">
@@ -231,7 +152,7 @@ export default function Page() {
                 Upcoming Appointments
               </h1>
               <AppointmentList
-                appointments={sampleAppointments.upcoming}
+                appointments={upcomingAppointments}
                 emptyMessage="No upcoming appointments found"
               />
             </>
@@ -249,7 +170,7 @@ export default function Page() {
                 Pending Appointments
               </h1>
               <AppointmentList
-                appointments={sampleAppointments.pending}
+                appointments={pendingAppointments}
                 emptyMessage="No pending appointments found"
               />
             </>
@@ -267,7 +188,7 @@ export default function Page() {
                 Declined Appointments
               </h1>
               <AppointmentList
-                appointments={sampleAppointments.declined}
+                appointments={cancelledAppointments}
                 emptyMessage="No declined appointments found"
               />
             </>
@@ -289,7 +210,7 @@ export default function Page() {
                   Appointments For Reschedule
                 </h1>
                 <AppointmentList
-                  appointments={sampleAppointments.reschedule}
+                  appointments={rescheduleAppointments}
                   emptyMessage="No appointments for reschedule found"
                 />
               </>
