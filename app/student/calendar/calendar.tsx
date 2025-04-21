@@ -60,7 +60,11 @@ export function Calendar() {
       if (user) {
         setCurrentUser(user);
         const appointmentsRef = collection(db, "appointments");
-        const q = query(appointmentsRef, where("userId", "==", user.uid));
+        const q = query(
+          appointmentsRef,
+          where("userId", "==", user.uid),
+          where("status", "==", "upcoming")
+        );
         const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
           const fetchedAppointments: Appointment[] = snapshot.docs.map((doc) => ({
             id: doc.id,
@@ -68,7 +72,6 @@ export function Calendar() {
             date: doc.data().date instanceof Date ? doc.data().date : doc.data().date.toDate(),
           } as Appointment));
           setAppointments(fetchedAppointments);
-          console.log("Fetched Appointments:", fetchedAppointments);
         });
       } else {
         setCurrentUser(null);

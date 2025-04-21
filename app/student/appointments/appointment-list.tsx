@@ -19,7 +19,7 @@ type Appointment = {
   timeSlot: string;
   meetingType: "f2f" | "online";
   details?: string;
-  status: "upcoming" | "pending" | "declined";
+  status: "upcoming" | "pending" | "cancelled" | "reschedule";
   participants?: { email: string; name?: string }[];
 };
 

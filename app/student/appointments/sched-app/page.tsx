@@ -237,6 +237,8 @@ export function AddAppointmentForm() {
     } else {
       setAvailableSections([]);
     }
+
+    form.setValue("section", ""); // Reset to empty string to show placeholder
   }, [selectedSubject]);
 
   React.useEffect(() => {
@@ -352,7 +354,7 @@ export function AddAppointmentForm() {
                   </FormItem>
                 )}
               />
-              {selectedSubject !== "0" && (
+              {selectedSubject  && selectedSubject !== "0" && (
                 <FormField
                   control={form.control}
                   name="section"
@@ -364,7 +366,7 @@ export function AddAppointmentForm() {
                             setSelectedFIC(value);
                             field.onChange(value);
                           }}
-                          value={field.value}
+                          value={field.value || ""}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Section" />

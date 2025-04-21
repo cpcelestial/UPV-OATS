@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import type { Appointment } from "./appointment-calendar"
-import { deleteDoc, doc } from "firebase/firestore"
+import { updateDoc, doc } from "firebase/firestore"
 import { getFirestore } from "firebase/firestore"
 import {RescheduleDialog} from "../dashboard/reschedule-dialog"
 
@@ -35,12 +35,15 @@ export function AppointmentsListDialog({
 }: AppointmentsListDialogProps) {
   const db = getFirestore()
   const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
-  const handleDelete = async (appointmentId: string) => {
+  const handleDecline = async (appointmentId: string) => {
     try {
-      await deleteDoc(doc(db, "appointments", appointmentId))
-      onClose() 
+      const appointmentRef = doc(db, "appointments", appointmentId)
+      await updateDoc(appointmentRef, {
+        status: "declined",
+      })
+      console.log(`Appointment ${appointmentId} declined successfully`);
     } catch (error) {
-      console.error("Error deleting appointment:", error)
+      console.error("Error declining appointment:", error)
     }
   }
   return (
@@ -88,9 +91,9 @@ export function AppointmentsListDialog({
                     variant="destructive"
                     size="sm"
                     className="bg-[#8B0000] hover:bg-[#660000]"
-                    onClick={() => handleDelete(appointment.id)}
+                    onClick={() => handleDecline(appointment.id)}
                   >
-                    Delete
+                    Decline
                   </Button>
                   <RescheduleDialog
                           open={isRescheduleOpen}
