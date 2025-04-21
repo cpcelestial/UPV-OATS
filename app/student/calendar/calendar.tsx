@@ -80,37 +80,6 @@ export function Calendar() {
     return () => unsubscribe();
   }, []);
 
-  // const [appointments] = React.useState<Appointment[]>([
-  //   {
-  //     class: "1",
-  //     id: "1",
-  //     title: "Project Discussion",
-  //     facultyName: "Dr. Smith",
-  //     email: "smith@example.com",
-  //     timeSlot: "10:00 AM - 10:30 AM",
-  //     date: new Date(2025, 3, 15),
-  //     details: "Discuss project requirements and timeline.",
-  //     meetingType: "f2f",
-  //     participants: ["user123", "user456"],
-  //     status: "confirmed",
-  //     userId: "user123"
-  //   },
-  //   {
-  //     class: "2",
-  //     id: "2",
-  //     title: "Project Discussion CMSC56",
-  //     facultyName: "Dr. Smith",
-  //     email: "smith@example.com",
-  //     timeSlot: "10:00 AM - 10:30 AM",
-  //     date: new Date(2025, 3, 23),
-  //     details: "Discuss project requirements and timeline.",
-  //     meetingType: "f2f",
-  //     participants: ["user123", "user456"],
-  //     status: "pending",
-  //     userId: "user123"
-  //   }
-  // ]);
-
   const handleDayClick = (day: Date) => {
     setSelectedDate(day);
     setIsDialogOpen(true);
