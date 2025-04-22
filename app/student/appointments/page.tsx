@@ -1,129 +1,130 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus } from "lucide-react";
-import { AppointmentList } from "./appointment-list";
-import { db } from "@/app/firebase-config";
-import { collection, query, where, orderBy, onSnapshot, Unsubscribe } from "firebase/firestore";
-import { getAuth, onAuthStateChanged, User } from "firebase/auth";
+import * as React from "react"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Plus } from "lucide-react"
+import { AppointmentList } from "./appointment-list"
+import type { Appointment } from "./appointment-card"
 
-
-type Appointment = {
-  id: string;
-  purpose: string;
-  class: string;
-  section: string;
-  facultyName: string;
-  date: Date;
-  timeSlot: string;
-  meetingType: "f2f" | "online";
-  details?: string;
-  status: "upcoming" | "pending" | "cancelled" | "reschedule";
-  participants?: { email: string; name?: string }[];
-};
+// Mock appointments data
+const mockAppointments: Omit<Appointment, "id">[] = [
+  {
+    purpose: "Consultation Regarding CMSC 128 Grades",
+    class: "CMSC",
+    section: "128",
+    facultyName: "James Doe",
+    facultyEmail: "jdoe@up.edu.ph",
+    date: new Date(2024, 11, 1), // December 1, 2024
+    timeSlot: "11:30 AM to 1:00 PM",
+    meetingType: "f2f",
+    location: "Faculty room",
+    status: "upcoming",
+    details:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
+  },
+  {
+    purpose: "Project Review Meeting",
+    class: "CMSC",
+    section: "142",
+    facultyName: "Sarah Johnson",
+    facultyEmail: "sjohnson@up.edu.ph",
+    date: new Date(2024, 11, 5), // December 5, 2024
+    timeSlot: "2:00 PM to 3:30 PM",
+    meetingType: "online",
+    status: "pending",
+    details: "Discussion about the final project requirements and grading criteria",
+  },
+  {
+    purpose: "Thesis Defense Preparation",
+    class: "CMSC",
+    section: "190",
+    facultyName: "Robert Chen",
+    facultyEmail: "rchen@up.edu.ph",
+    date: new Date(2024, 11, 10), // December 10, 2024
+    timeSlot: "9:00 AM to 11:00 AM",
+    meetingType: "f2f",
+    location: "Conference Room A",
+    status: "cancelled",
+    details: "Preparation for the upcoming thesis defense presentation",
+  },
+  {
+    purpose: "Research Methodology Discussion",
+    class: "CMSC",
+    section: "198",
+    facultyName: "Maria Garcia",
+    facultyEmail: "mgarcia@up.edu.ph",
+    date: new Date(2024, 11, 15), // December 15, 2024
+    timeSlot: "1:00 PM to 2:30 PM",
+    meetingType: "online",
+    status: "reschedule",
+    details: "Discussion about research methodologies and data collection techniques",
+  },
+]
 
 export default function Page() {
-  const router = useRouter();
-  const [user, setUser] = React.useState<User | null>(null); // Added user state
-  const [upcomingAppointments, setUpcomingAppointments] = React.useState<Appointment[]>([]);
-  const [pendingAppointments, setPendingAppointments] = React.useState<Appointment[]>([]);
-  const [cancelledAppointments, setCancelledAppointments] = React.useState<Appointment[]>([]);
-  const [rescheduleAppointments, setRescheduleAppointments] = React.useState<Appointment[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [activeTab, setActiveTab] = React.useState("pending");
+  const router = useRouter()
+  const [upcomingAppointments, setUpcomingAppointments] = React.useState<Appointment[]>([])
+  const [pendingAppointments, setPendingAppointments] = React.useState<Appointment[]>([])
+  const [cancelledAppointments, setCancelledAppointments] = React.useState<Appointment[]>([])
+  const [rescheduleAppointments, setRescheduleAppointments] = React.useState<Appointment[]>([])
+  const [loading, setLoading] = React.useState(true)
+  const [activeTab, setActiveTab] = React.useState("pending")
 
-React.useEffect(() => {
-  const auth = getAuth();
-  let unsubscribeSnapshot: Unsubscribe | null = null;
+  React.useEffect(() => {
+    // Mock data fetching
+    setTimeout(() => {
+      const upcoming: Appointment[] = []
+      const pending: Appointment[] = []
+      const cancelled: Appointment[] = []
+      const reschedule: Appointment[] = []
 
-  const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
-    setUser(currentUser);
-    
-    if (currentUser) {
-      const appointmentsRef = collection(db, "appointments");
-      const userAppointmentsQuery = query(
-        appointmentsRef,
-        where("userId", "==", currentUser.uid),
-        orderBy("date", "asc")
-      );
-    
-      unsubscribeSnapshot = onSnapshot(userAppointmentsQuery, (querySnapshot) => {
-        const upcoming: Appointment[] = [];
-        const pending: Appointment[] = [];
-        const cancelled: Appointment[] = [];
-        const reschedule: Appointment[] = [];
-    
-        querySnapshot.forEach((doc) => {
-          const data: Appointment = {
-            id: doc.id,
-            ...doc.data(),
-            date: doc.data().date instanceof Date ? doc.data().date : doc.data().date.toDate(),
-            purpose: doc.data().purpose,
-            class: doc.data().class,
-            details: doc.data().details,
-            section: doc.data().section,
-            facultyName: doc.data().facultyName,
-            timeSlot: doc.data().timeSlot,
-            meetingType: doc.data().meetingType,
-            status: doc.data().status,
-          };
-    
-          if (data.status === "upcoming") {
-            upcoming.push(data);
-          } else if (data.status === "pending") {
-            pending.push(data);
-          } else if (data.status === "cancelled") {
-            cancelled.push(data);
-          } else if (data.status === "reschedule") {
-            reschedule.push(data);
-          }
-        });
-        
+      mockAppointments.forEach((appointment, index) => {
+        const data: Appointment = {
+          id: `appointment-${index}`,
+          ...appointment,
+        }
 
-        console.log("Upcoming Appointments:", upcoming);
-        console.log("Pending Appointments:", pending);
-        console.log("Cancelled Appointments:", cancelled);
-        console.log("Reschedule Appointments:", reschedule);
-        setUpcomingAppointments(upcoming);
-        setPendingAppointments(pending);
-        setCancelledAppointments(cancelled);
-        setRescheduleAppointments(reschedule);
-        setLoading(false);
-      }, (error) => {
-        console.error("Error fetching appointments:", error);
-        setLoading(false);
-      });
-    } else {
-      setLoading(false);
-    }
-  });
+        if (data.status === "upcoming") {
+          upcoming.push(data)
+        } else if (data.status === "pending") {
+          pending.push(data)
+        } else if (data.status === "cancelled") {
+          cancelled.push(data)
+        } else if (data.status === "reschedule") {
+          reschedule.push(data)
+        }
+      })
 
-  // Cleanup function that unsubscribes from both listeners
-  return () => {
-    unsubscribeAuth();
-    if (unsubscribeSnapshot) {
-      unsubscribeSnapshot();
-    }
-  };
-}, []);
+      setUpcomingAppointments(upcoming)
+      setPendingAppointments(pending)
+      setCancelledAppointments(cancelled)
+      setRescheduleAppointments(reschedule)
+      setLoading(false)
+    }, 1000)
+  }, [])
+
+  const handleReschedule = (id: string) => {
+    alert(`Reschedule appointment ${id}`)
+    // In a real app, navigate to reschedule page or open a modal
+  }
+
+  const handleDecline = (id: string) => {
+    alert(`Decline appointment ${id}`)
+    // In a real app, update the appointment status
+  }
 
   return (
     <div className="px-8 py-4">
       <Button
-        onClick={() => router.push("appointments/sched-app")}
+        onClick={() => router.push("/appointments/sched-app")}
         className="float-right bg-[#2F5233] hover:bg-[#2F5233]/90"
       >
-        <Plus className="h-4 w-4" />
+        <Plus className="h-4 w-4 mr-2" />
         Add Appointment
       </Button>
-      <Tabs
-        value={activeTab}
-        onValueChange={setActiveTab}
-        className="space-y-4"
-      >
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList>
           <TabsTrigger value="upcoming" className="px-6">
             Upcoming
@@ -141,77 +142,68 @@ React.useEffect(() => {
           )}
         </TabsList>
 
-        <TabsContent value="upcoming" className="mt-6 p-6 rounded-lg border">
+        <TabsContent value="upcoming" className="mt-6">
           {loading ? (
             <div className="flex justify-center py-10">
               <p>Loading appointments...</p>
             </div>
           ) : (
             <>
-              <h1 className="text-xl font-semibold mb-4">
-                Upcoming Appointments
-              </h1>
+              <h1 className="text-xl font-semibold mb-4">Upcoming Appointments</h1>
               <AppointmentList
                 appointments={upcomingAppointments}
                 emptyMessage="No upcoming appointments found"
+                onReschedule={handleReschedule}
+                onDecline={handleDecline}
               />
             </>
           )}
         </TabsContent>
 
-        <TabsContent value="pending" className="mt-6 p-6 rounded-lg border">
+        <TabsContent value="pending" className="mt-6">
           {loading ? (
             <div className="flex justify-center py-10">
               <p>Loading appointments...</p>
             </div>
           ) : (
             <>
-              <h1 className="text-xl font-semibold mb-4">
-                Pending Appointments
-              </h1>
+              <h1 className="text-xl font-semibold mb-4">Pending Appointments</h1>
               <AppointmentList
                 appointments={pendingAppointments}
                 emptyMessage="No pending appointments found"
+                onReschedule={handleReschedule}
+                onDecline={handleDecline}
               />
             </>
           )}
         </TabsContent>
 
-        <TabsContent value="declined" className="mt-6 p-6 rounded-lg border">
+        <TabsContent value="declined" className="mt-6">
           {loading ? (
             <div className="flex justify-center py-10">
               <p>Loading appointments...</p>
             </div>
           ) : (
             <>
-              <h1 className="text-xl font-semibold mb-4">
-                Declined Appointments
-              </h1>
-              <AppointmentList
-                appointments={cancelledAppointments}
-                emptyMessage="No declined appointments found"
-              />
+              <h1 className="text-xl font-semibold mb-4">Declined Appointments</h1>
+              <AppointmentList appointments={cancelledAppointments} emptyMessage="No declined appointments found" />
             </>
           )}
         </TabsContent>
 
         {rescheduleAppointments.length > 0 && (
-          <TabsContent
-            value="reschedule"
-            className="mt-6 p-6 rounded-lg border"
-          >
+          <TabsContent value="reschedule" className="mt-6">
             {loading ? (
               <div className="flex justify-center py-10">
                 <p>Loading appointments...</p>
               </div>
             ) : (
               <>
-                <h1 className="text-xl font-semibold mb-4">
-                  Appointments For Reschedule
-                </h1>
+                <h1 className="text-xl font-semibold mb-4">Appointments For Reschedule</h1>
                 <AppointmentList
                   appointments={rescheduleAppointments}
                   emptyMessage="No appointments for reschedule found"
+                  onDecline={handleDecline}
                 />
               </>
             )}
@@ -219,5 +211,5 @@ React.useEffect(() => {
         )}
       </Tabs>
     </div>
-  );
+  )
 }
