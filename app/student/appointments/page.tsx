@@ -3,10 +3,9 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus } from "lucide-react";
-import { AppointmentList } from "./appointment-list";
-import type { Appointment } from "./appointment-card";
+import { Appointment } from "../data";
+import { AppointmentsTabs } from "./appointment-tabs";
 
 // Mock appointments data
 const mockAppointments: Omit<Appointment, "id">[] = [
@@ -78,7 +77,6 @@ export default function Page() {
     Appointment[]
   >([]);
   const [loading, setLoading] = React.useState(true);
-  const [activeTab, setActiveTab] = React.useState("pending");
 
   React.useEffect(() => {
     // Mock data fetching
@@ -124,7 +122,7 @@ export default function Page() {
   };
 
   return (
-    <div className="px-8 py-4">
+    <div className="p-4">
       <Button
         onClick={() => router.push("appointments/sched-app")}
         className="float-right bg-[#2F5233] hover:bg-[#2F5233]/90"
@@ -132,90 +130,15 @@ export default function Page() {
         <Plus className="h-4 w-4 mr-2" />
         Add Appointment
       </Button>
-      <Tabs
-        value={activeTab}
-        onValueChange={setActiveTab}
-        className="space-y-4"
-      >
-        <TabsList>
-          <TabsTrigger value="upcoming" className="mr-2 px-6">
-            Upcoming
-          </TabsTrigger>
-          <TabsTrigger value="pending" className="mr-2 px-6">
-            Pending
-          </TabsTrigger>
-          <TabsTrigger value="declined" className="mr-2 px-6">
-            Declined
-          </TabsTrigger>
-          {rescheduleAppointments.length > 0 && (
-            <TabsTrigger
-              value="reschedule"
-              className="px-6 bg-red-100 text-red-500"
-            >
-              For Reschedule
-            </TabsTrigger>
-          )}
-        </TabsList>
-
-        <TabsContent value="upcoming" className="mt-6">
-          {loading ? (
-            <div className="flex justify-center py-10">
-              <p>Loading appointments...</p>
-            </div>
-          ) : (
-            <AppointmentList
-              appointments={upcomingAppointments}
-              emptyMessage="No upcoming appointments found"
-              onReschedule={handleReschedule}
-              onDecline={handleDecline}
-            />
-          )}
-        </TabsContent>
-
-        <TabsContent value="pending" className="mt-6">
-          {loading ? (
-            <div className="flex justify-center py-10">
-              <p>Loading appointments...</p>
-            </div>
-          ) : (
-            <AppointmentList
-              appointments={pendingAppointments}
-              emptyMessage="No pending appointments found"
-              onReschedule={handleReschedule}
-              onDecline={handleDecline}
-            />
-          )}
-        </TabsContent>
-
-        <TabsContent value="declined" className="mt-6">
-          {loading ? (
-            <div className="flex justify-center py-10">
-              <p>Loading appointments...</p>
-            </div>
-          ) : (
-            <AppointmentList
-              appointments={cancelledAppointments}
-              emptyMessage="No declined appointments found"
-            />
-          )}
-        </TabsContent>
-
-        {rescheduleAppointments.length > 0 && (
-          <TabsContent value="reschedule" className="mt-6">
-            {loading ? (
-              <div className="flex justify-center py-10">
-                <p>Loading appointments...</p>
-              </div>
-            ) : (
-              <AppointmentList
-                appointments={rescheduleAppointments}
-                emptyMessage="No appointments for reschedule found"
-                onDecline={handleDecline}
-              />
-            )}
-          </TabsContent>
-        )}
-      </Tabs>
+      <AppointmentsTabs
+        upcomingAppointments={upcomingAppointments}
+        pendingAppointments={pendingAppointments}
+        cancelledAppointments={cancelledAppointments}
+        rescheduleAppointments={rescheduleAppointments}
+        loading={loading}
+        onReschedule={handleReschedule}
+        onDecline={handleDecline}
+      />
     </div>
   );
 }
