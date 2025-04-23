@@ -17,7 +17,7 @@ export interface Appointment {
   timeSlot: string;
   meetingType: "f2f" | "online";
   details?: string;
-  participants?: { email: string; name?: string }[];
+  participants?: string[];
   status: "approved" | "pending" | "cancelled" | "reschedule";
 }
 
@@ -38,6 +38,13 @@ export function AppointmentCard({
     .join("")
     .toUpperCase();
 
+    const getNumber = (str: string | null | undefined): string | null => {
+      if (!str) return null;
+      const parts = str.split("_");
+      const last = parts.pop();
+      return last && /^\d+$/.test(last) ? last : null;
+    };
+
   return (
     <div className="rounded-lg border bg-white p-6">
       <div className="space-y-6">
@@ -46,7 +53,7 @@ export function AppointmentCard({
             <div className="flex items-center gap-2 mb-1">
               <h1 className="text-xl font-semibold">
                 {appointment.class === "Other" ? " " : appointment.class}{" "}
-                {appointment.section && `- ${appointment.section}`}{" "}
+                {appointment.section && getNumber(appointment.section) && `- ${getNumber(appointment.section)}`}{" "}
                 {appointment.purpose}
               </h1>
             </div>
@@ -109,7 +116,7 @@ export function AppointmentCard({
             <div className="flex flex-wrap gap-2">
               {appointment.participants.map((participant, index) => (
                 <Badge key={index} variant="outline" className="px-3 py-1">
-                  {participant.name || participant.email}
+                  {participant}
                 </Badge>
               ))}
             </div>

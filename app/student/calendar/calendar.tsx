@@ -76,11 +76,13 @@ export function Calendar() {
           or(
             and(
               where("userId", "==", user.uid),
-              where("status", "==", "upcoming")
+              where("status", "==", "approved")
             ),
-            where("participants", "array-contains", {email: user.email})
+            and(
+              where("participants", "array-contains", user.email),
+              where("status", "==", "approved")
+            )
           )
-
         );
         const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
           const fetchedAppointments: Appointment[] = snapshot.docs.map(
@@ -98,7 +100,7 @@ export function Calendar() {
         });
       } else {
         setCurrentUser(null);
-        setAppointments([]); // Clear appointments if no user
+        setAppointments([]); 
       }
     });
 
