@@ -21,6 +21,7 @@ export async function fetchSchedule(): Promise<DaySchedule[] | null> {
 export async function updateSchedule(newSchedule: DaySchedule[]) {
   try {
     const docRef = doc(db, SCHEDULE_DOC);
+    await setDoc(docRef, { schedule: newSchedule }, { merge: true });
 
     // Fetch the existing schedule
     const snapshot = await getDoc(docRef);
