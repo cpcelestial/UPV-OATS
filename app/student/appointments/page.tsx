@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Appointment } from "../data";
 import { AppointmentsTabs } from "./appointment-tabs";
-import { db } from "@/app/firebase-config";
-import { collection, query, where, orderBy, onSnapshot, Unsubscribe } from "firebase/firestore";
+import { auth, db } from "@/app/firebase-config";
+import { collection, query, where, orderBy, onSnapshot, Unsubscribe, or, and } from "firebase/firestore";
 import { getAuth, onAuthStateChanged, User } from "firebase/auth";
 
 export default function Page() {
   const router = useRouter();
-  const [user, setUser] = React.useState<User | null>(null);
+  const [currentUser, setCurrentUser] = React.useState<any>(null);
   const [upcomingAppointments, setUpcomingAppointments] = React.useState<
     Appointment[]
   >([]);
@@ -28,75 +28,90 @@ export default function Page() {
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
-    const auth = getAuth();
     let unsubscribeSnapshot: Unsubscribe | null = null;
-  
-    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      
-      if (currentUser) {
+
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+      setLoading(true);
+
+      if (user) {
         const appointmentsRef = collection(db, "appointments");
-        const userAppointmentsQuery = query(
+        const q = query(
           appointmentsRef,
-          where("userId", "==", currentUser.uid),
+          where("status", "in", ["approved", "pending", "cancelled", "reschedule"]),
+          where("userId", "==", user.uid),
           orderBy("date", "asc")
         );
-      
-        unsubscribeSnapshot = onSnapshot(userAppointmentsQuery, (querySnapshot) => {
-          const upcoming: Appointment[] = [];
-          const pending: Appointment[] = [];
-          const cancelled: Appointment[] = [];
-          const reschedule: Appointment[] = [];
 
-          querySnapshot.forEach((doc) => {
-            const data: Appointment = {
-              id: doc.id,
-              ...doc.data(),
-              date: doc.data().date instanceof Date ? doc.data().date : doc.data().date.toDate(),
-              purpose: doc.data().purpose,
-              class: doc.data().class,
-              details: doc.data().details,
-              section: doc.data().section,
-              facultyName: doc.data().facultyName,
-              timeSlot: doc.data().timeSlot,
-              meetingType: doc.data().meetingType,
-              status: doc.data().status,
-              facultyEmail: doc.data().facultyEmail,
-            };
+        unsubscribeSnapshot = onSnapshot(
+          q,
+          (querySnapshot) => {
+            const upcoming: Appointment[] = [];
+            const pending: Appointment[] = [];
+            const cancelled: Appointment[] = [];
+            const reschedule: Appointment[] = [];
 
-            if (data.status === "approved") {
-              upcoming.push(data);
-            } else if (data.status === "pending") {
-              pending.push(data);
-            } else if (data.status === "cancelled") {
-              cancelled.push(data);
-            } else if (data.status === "reschedule") {
-              reschedule.push(data);
-            }
+            querySnapshot.forEach((doc) => {
+              const data = doc.data();
+              const appointment: Appointment = {
+                id: doc.id,
+                ...data,
+                date: data.date instanceof Date ? data.date : data.date.toDate(),
+                purpose: data.purpose,
+                class: data.class,
+                details: data.details,
+                section: data.section,
+                facultyName: data.facultyName,
+                timeSlot: data.timeSlot,
+                meetingType: data.meetingType,
+                status: data.status,
+                facultyEmail: data.facultyEmail,
+              };
 
-            
-          });
-          setUpcomingAppointments(upcoming);
-          setPendingAppointments(pending);
-          setCancelledAppointments(cancelled);
-          setRescheduleAppointments(reschedule);
-          setLoading(false);
-        }, (error) => {
-          console.error("Error fetching appointments:", error);
-          setLoading(false);
-        });
-        } else {
-          setLoading(false);
-        }
-      });
-  
-      return () => {
-        unsubscribeAuth();
-        if (unsubscribeSnapshot) {
-          unsubscribeSnapshot();
-        }
-      };
-    }, []);
+              switch (appointment.status) {
+                case "approved":
+                  upcoming.push(appointment);
+                  break;
+                case "pending":
+                  pending.push(appointment);
+                  break;
+                case "cancelled":
+                  cancelled.push(appointment);
+                  break;
+                case "reschedule":
+                  reschedule.push(appointment);
+                  break;
+              }
+            });
+
+            setUpcomingAppointments(upcoming);
+            setPendingAppointments(pending);
+            setCancelledAppointments(cancelled);
+            setRescheduleAppointments(reschedule);
+            setLoading(false);
+          },
+        );
+
+        console.log(rescheduleAppointments);
+        console.log(upcomingAppointments);
+        console.log(pendingAppointments);
+        console.log(cancelledAppointments);
+      } else {
+        setUpcomingAppointments([]);
+        setPendingAppointments([]);
+        setCancelledAppointments([]);
+        setRescheduleAppointments([]);
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeSnapshot) {
+        unsubscribeSnapshot();
+      }
+    };
+  }, []);
 
   const handleReschedule = (id: string) => {
     alert(`Reschedule appointment ${id}`);

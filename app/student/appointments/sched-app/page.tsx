@@ -95,15 +95,7 @@ const formSchema = z.object({
   timeSlot: z.string().min(1, "Time slot is required"),
   meetingType: z.enum(["f2f", "online"]).default("f2f"),
   details: z.string().optional(),
-  participants: z
-    .array(
-      z.object({
-        email: z.string().email("Invalid email address"),
-        name: z.string().optional(),
-      })
-    )
-    .optional()
-    .default([]),
+  participants:z.array(z.string().email("Invalid email address")).optional().default([]),
   status: z.string().optional().default("pending"),
 });
 
@@ -232,7 +224,7 @@ export function AddAppointmentForm() {
   React.useEffect(() => {
     if (selectedSubject) {
       const subjectObj = subjectOptions.find(
-        (subject) => subject.sub_id === selectedSubject
+        (subject) => subject.subject === selectedSubject
       );
 
       if (subjectObj && subjectObj.sections) {
@@ -347,7 +339,7 @@ export function AddAppointmentForm() {
                             subjectOptions.map((subject) => (
                               <SelectItem
                                 key={subject.sub_id}
-                                value={subject.sub_id}
+                                value={subject.subject}
                               >
                                 {subject.subject}
                               </SelectItem>
@@ -360,7 +352,7 @@ export function AddAppointmentForm() {
                   </FormItem>
                 )}
               />
-              {selectedSubject  && selectedSubject !== "0" && (
+              {selectedSubject  && selectedSubject !== "Other" && (
                 <FormField
                   control={form.control}
                   name="section"
@@ -430,7 +422,7 @@ export function AddAppointmentForm() {
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
-                      disabled={selectedSubject !== "0"}
+                      disabled={selectedSubject !== "Other"}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select faculty" />
@@ -440,12 +432,7 @@ export function AddAppointmentForm() {
                           <SelectItem value="loading" disabled>
                             Loading...
                           </SelectItem>
-                        ) : selectedFIC.length === 0 &&
-                          selectedSubject !== "0" ? (
-                          <SelectItem value="no-faculty" disabled>
-                            Please select a class and section
-                          </SelectItem>
-                        ) : selectedSubject === "0" ? (
+                        ) : selectedSubject === "Other" ? (
                           facultyList
                             .filter((faculty) => faculty.id && faculty.name) // Filter out invalid entries
                             .map((faculty) => (
@@ -588,7 +575,7 @@ export function AddAppointmentForm() {
                       variant="secondary"
                       className="px-3 py-1.5"
                     >
-                      {participant.email}
+                      {participant}
                       <button
                         type="button"
                         onClick={() => {
@@ -622,15 +609,10 @@ export function AddAppointmentForm() {
                       if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
                         const currentParticipants =
                           form.getValues("participants") || [];
-                        if (
-                          !currentParticipants.some((p) => p.email === email)
-                        ) {
-                          form.setValue("participants", [
-                            ...currentParticipants,
-                            { email },
-                          ]);
-                          input.value = "";
-                        }
+                          if (!currentParticipants.includes(email)) {
+                            form.setValue("participants", [...currentParticipants, email]);
+                            input.value = "";
+                          }
                       }
                     }
                   }}
@@ -646,13 +628,10 @@ export function AddAppointmentForm() {
                     if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
                       const currentParticipants =
                         form.getValues("participants") || [];
-                      if (!currentParticipants.some((p) => p.email === email)) {
-                        form.setValue("participants", [
-                          ...currentParticipants,
-                          { email },
-                        ]);
-                        input.value = "";
-                      }
+                        if (!currentParticipants.includes(email)) {
+                          form.setValue("participants", [...currentParticipants, email]);
+                          input.value = "";
+                        }
                     }
                   }}
                 >

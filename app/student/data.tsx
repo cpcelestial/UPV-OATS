@@ -48,5 +48,5 @@ export interface Appointment {
   location?: string;
   details?: string;
   status: "approved" | "pending" | "cancelled" | "reschedule";
-  participants?: { email: string; name?: string }[];
+  participants?: string[];
 }
