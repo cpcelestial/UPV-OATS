@@ -30,7 +30,14 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { CalendarDialog } from "./calendar-dialog";
-import { collection, query, where, onSnapshot } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  and,
+  or
+} from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "../../firebase-config";
 
@@ -66,8 +73,14 @@ export function Calendar() {
         const appointmentsRef = collection(db, "appointments");
         const q = query(
           appointmentsRef,
-          where("userId", "==", user.uid),
-          where("status", "==", "approved")
+          or(
+            and(
+              where("userId", "==", user.uid),
+              where("status", "==", "upcoming")
+            ),
+            where("participants", "array-contains", {email: user.email})
+          )
+
         );
         const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
           const fetchedAppointments: Appointment[] = snapshot.docs.map(
