@@ -95,7 +95,10 @@ const formSchema = z.object({
   timeSlot: z.string().min(1, "Time slot is required"),
   meetingType: z.enum(["f2f", "online"]).default("f2f"),
   details: z.string().optional(),
-  participants:z.array(z.string().email("Invalid email address")).optional().default([]),
+  participants: z
+    .array(z.string().email("Invalid email address"))
+    .optional()
+    .default([]),
   status: z.string().optional().default("pending"),
 });
 
@@ -133,7 +136,7 @@ export function AddAppointmentForm() {
       class: "",
       section: "",
       department: "",
-      facultyEmail: "", 
+      facultyEmail: "",
       date: undefined,
       timeSlot: "",
       meetingType: "f2f",
@@ -172,7 +175,8 @@ export function AddAppointmentForm() {
         const q = query(collection(db, "Faculty_in_charge"));
         const querySnapshot = await getDocs(q);
         const facultySectionsData = querySnapshot.docs.map(
-          (doc) => doc.data() as { Faculty: string; sections: string[]; email: string }
+          (doc) =>
+            doc.data() as { Faculty: string; sections: string[]; email: string }
         );
         setFacultySections(facultySectionsData);
       } catch (error) {
@@ -183,8 +187,9 @@ export function AddAppointmentForm() {
   }, []);
   React.useEffect(() => {
     const selectedFacultyEmail =
-      facultySections.find((fs) => fs.sections.includes(selectedFIC))?.email || "";
-    form.setValue("facultyEmail", selectedFacultyEmail)
+      facultySections.find((fs) => fs.sections.includes(selectedFIC))?.email ||
+      "";
+    form.setValue("facultyEmail", selectedFacultyEmail);
   }, [selectedFIC, facultySections]);
 
   React.useEffect(() => {
@@ -236,14 +241,14 @@ export function AddAppointmentForm() {
       setAvailableSections([]);
     }
 
-    form.setValue("section", ""); 
+    form.setValue("section", "");
   }, [selectedSubject]);
 
   React.useEffect(() => {
     const singleFaculty =
       facultySections.filter((fs) => fs.sections.includes(selectedFIC))[0]
         ?.Faculty || "";
-    form.setValue("facultyName", singleFaculty); 
+    form.setValue("facultyName", singleFaculty);
   }, [selectedFIC]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -269,7 +274,7 @@ export function AddAppointmentForm() {
 
       console.log("Appointment added with ID: ", docRef.id);
       setFormChanged(false);
-      router.push("/student/calendar");
+      window.history.back();
     } catch (error) {
       console.error("Error adding appointment: ", error);
     }
@@ -314,7 +319,7 @@ export function AddAppointmentForm() {
                 control={form.control}
                 name="class"
                 render={({ field }) => (
-                  <FormItem className="w-[120px]">
+                  <FormItem className="flex-shrink-0 w-auto">
                     <FormControl>
                       <Select
                         onValueChange={(value) => {
@@ -323,8 +328,10 @@ export function AddAppointmentForm() {
                         }}
                         value={field.value}
                       >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Class" />
+                        <SelectTrigger className="w-auto">
+                          <div className="flex items-center justify-between w-full">
+                            <SelectValue placeholder="Class" />
+                          </div>
                         </SelectTrigger>
                         <SelectContent>
                           {loading ? (
@@ -352,12 +359,12 @@ export function AddAppointmentForm() {
                   </FormItem>
                 )}
               />
-              {selectedSubject  && selectedSubject !== "Other" && (
+              {selectedSubject && selectedSubject !== "Other" && (
                 <FormField
                   control={form.control}
                   name="section"
                   render={({ field }) => (
-                    <FormItem className="w-[140px]">
+                    <FormItem className="flex-shrink-0 w-auto">
                       <FormControl>
                         <Select
                           onValueChange={(value) => {
@@ -366,8 +373,10 @@ export function AddAppointmentForm() {
                           }}
                           value={field.value || ""}
                         >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Section" />
+                          <SelectTrigger className="w-auto">
+                            <div className="flex items-center justify-between w-full">
+                              <SelectValue placeholder="Section" />
+                            </div>
                           </SelectTrigger>
                           <SelectContent>
                             {loading ? (
@@ -425,7 +434,9 @@ export function AddAppointmentForm() {
                       disabled={selectedSubject !== "Other"}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select faculty" />
+                        <div className="flex items-center justify-between w-full">
+                          <SelectValue placeholder="Select faculty" />
+                        </div>
                       </SelectTrigger>
                       <SelectContent>
                         {loading ? (
@@ -529,7 +540,9 @@ export function AddAppointmentForm() {
                   <FormControl>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select time slot" />
+                        <div className="flex items-center justify-between w-full">
+                          <SelectValue placeholder="Select time slot" />
+                        </div>
                       </SelectTrigger>
                       <SelectContent>
                         {generateTimeSlots().map((slot) => (
@@ -609,10 +622,13 @@ export function AddAppointmentForm() {
                       if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
                         const currentParticipants =
                           form.getValues("participants") || [];
-                          if (!currentParticipants.includes(email)) {
-                            form.setValue("participants", [...currentParticipants, email]);
-                            input.value = "";
-                          }
+                        if (!currentParticipants.includes(email)) {
+                          form.setValue("participants", [
+                            ...currentParticipants,
+                            email,
+                          ]);
+                          input.value = "";
+                        }
                       }
                     }
                   }}
@@ -628,10 +644,13 @@ export function AddAppointmentForm() {
                     if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
                       const currentParticipants =
                         form.getValues("participants") || [];
-                        if (!currentParticipants.includes(email)) {
-                          form.setValue("participants", [...currentParticipants, email]);
-                          input.value = "";
-                        }
+                      if (!currentParticipants.includes(email)) {
+                        form.setValue("participants", [
+                          ...currentParticipants,
+                          email,
+                        ]);
+                        input.value = "";
+                      }
                     }
                   }}
                 >
