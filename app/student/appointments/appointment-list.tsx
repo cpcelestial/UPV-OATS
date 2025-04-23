@@ -46,7 +46,7 @@ export function AppointmentList({
   return (
     <div
       ref={containerRef}
-      className={`space-y-6 max-h-[500px] overflow-y-auto ${
+      className={`space-y-6 max-h-[530px] overflow-y-auto ${
         hasScrollbar ? "pr-4" : ""
       }`}
     >
