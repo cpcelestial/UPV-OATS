@@ -92,10 +92,6 @@ export default function Page() {
           },
         );
 
-        console.log(rescheduleAppointments);
-        console.log(upcomingAppointments);
-        console.log(pendingAppointments);
-        console.log(cancelledAppointments);
       } else {
         setUpcomingAppointments([]);
         setPendingAppointments([]);
