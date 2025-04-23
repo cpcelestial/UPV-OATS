@@ -1,252 +1,379 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
-import { X } from 'lucide-react'
-import type { DaySchedule } from './types/profile'
+import { updateSchedule } from "@/app/firebaseService";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Trash2, Plus, AlertCircle } from "lucide-react";
+import type { DaySchedule } from "../data";
 
 interface ScheduleDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  schedule: DaySchedule[]
-  onUpdateSchedule: (schedule: DaySchedule[]) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  schedule: DaySchedule[];
+  onUpdateSchedule: (schedule: DaySchedule[]) => void;
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => {
-  const hour = i % 12 || 12
-  const period = i < 12 ? 'AM' : 'PM'
-  return `${hour}:00 ${period}`
-})
+  const hour = i % 12 || 12;
+  const minutes = ["00", "30"];
+  const period = i < 12 ? "AM" : "PM";
+  return minutes.map((minute) => `${hour}:${minute} ${period}`);
+}).flat();
 
-export function ScheduleDialog({ open, onOpenChange, schedule, onUpdateSchedule }: ScheduleDialogProps) {
-  const [editedSchedule, setEditedSchedule] = useState(schedule)
-  const [isSpecificHoursOpen, setIsSpecificHoursOpen] = useState(false)
+const DAYS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
 
-  const handleDayToggle = (day: string, enabled: boolean) => {
-    setEditedSchedule(prev => 
-      prev.map(d => d.day === day ? { ...d, enabled, slots: d.slots || [] } : d)
-    )
-  }
+const CLASS_COLORS = [
+  { label: "Pink", value: "bg-pink-100 border-pink-200 text-pink-700" },
+  { label: "Red", value: "bg-red-100 border-red-200 text-red-700" },
+  { label: "Orange", value: "bg-orange-100 border-orange-200 text-orange-700" },
+  { label: "Yellow", value: "bg-yellow-100 border-yellow-200 text-yellow-700" },
+  { label: "Green", value: "bg-green-100 border-green-200 text-green-700" },
+  { label: "Blue", value: "bg-blue-100 border-blue-200 text-blue-700" },
+  { label: "Indigo", value: "bg-indigo-100 border-indigo-200 text-indigo-700" },
+  { label: "Purple", value: "bg-purple-100 border-purple-200 text-purple-700" },
+];
 
-  const handleTimeChange = (day: string, index: number, field: 'start' | 'end', value: string) => {
-    setEditedSchedule(prev =>
-      prev.map(d => {
-        if (d.day === day) {
-          const slots = [...(d.slots || [])]
-          if (slots[index]) {
-            slots[index] = { ...slots[index], [field]: value }
+interface ClassFormData {
+  days: string[];
+  start: string;
+  end: string;
+  subject: string;
+  room: string;
+  professor: string;
+  color: string;
+}
+
+export function ScheduleDialog({
+  open,
+  onOpenChange,
+  schedule,
+  onUpdateSchedule,
+}: ScheduleDialogProps) {
+  const [classes, setClasses] = useState<ClassFormData[]>([]);
+  const [invalidClasses, setInvalidClasses] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (open) {
+      // Map existing schedule to editable classes
+      const existingClasses: ClassFormData[] = [];
+
+      schedule.forEach((day) => {
+        day.slots.forEach((slot) => {
+          const existingClass = existingClasses.find(
+            (cls) =>
+              cls.start === slot.start &&
+              cls.end === slot.end &&
+              cls.subject === slot.subject &&
+              cls.room === slot.room &&
+              cls.professor === slot.professor
+          );
+
+          if (existingClass) {
+            existingClass.days.push(day.day);
+          } else {
+            existingClasses.push({
+              days: [day.day],
+              start: slot.start,
+              end: slot.end,
+              subject: slot.subject,
+              room: slot.room,
+              professor: slot.professor,
+              color: slot.color || CLASS_COLORS[0].value,
+            });
           }
-          return { ...d, slots }
-        }
-        return d
-      })
-    )
-  }
+        });
+      });
 
-  const handleAddSlot = (day: string) => {
-    setEditedSchedule(prev =>
-      prev.map(d => {
-        if (d.day === day) {
-          return {
-            ...d,
-            slots: [...(d.slots || []), { start: '9:00 AM', end: '10:00 AM' }]
-          }
-        }
-        return d
-      })
-    )
-  }
+      setClasses(existingClasses); // Initialize classes with all existing slots
+      setInvalidClasses([]); // Reset invalid classes when dialog opens
+    }
+  }, [open, schedule]);
 
-  const handleRemoveSlot = (day: string, index: number) => {
-    setEditedSchedule(prev =>
-      prev.map(d => {
-        if (d.day === day && d.slots) {
-          const slots = d.slots.filter((_, i) => i !== index)
-          return { ...d, slots }
-        }
-        return d
-      })
-    )
-  }
+  const handleDayToggle = (
+    classIndex: number,
+    day: string,
+    checked: boolean
+  ) => {
+    setClasses((prev) => {
+      const newClasses = [...prev];
+      if (checked) {
+        newClasses[classIndex].days.push(day);
+      } else {
+        newClasses[classIndex].days = newClasses[classIndex].days.filter(
+          (d) => d !== day
+        );
+      }
+      return newClasses;
+    });
 
-  const handleAddSpecificHours = (day: string, start: string, end: string) => {
-    setEditedSchedule(prev =>
-      prev.map(d => {
-        if (d.day === day) {
-          return {
-            ...d,
-            enabled: true,
-            slots: [...(d.slots || []), { start, end }]
-          }
-        }
-        return d
-      })
-    )
-  }
+    // Remove from invalid classes if days are now selected
+    if (checked) {
+      setInvalidClasses((prev) => prev.filter((idx) => idx !== classIndex));
+    }
+  };
+
+  const handleClassChange = <K extends keyof ClassFormData>(
+    index: number,
+    field: K,
+    value: ClassFormData[K]
+  ) => {
+    setClasses((prev) => {
+      const newClasses = [...prev];
+      newClasses[index] = { ...newClasses[index], [field]: value };
+      return newClasses;
+    });
+  };
+
+  const handleAddClass = () => {
+    setClasses((prev) => [
+      ...prev,
+      {
+        days: [],
+        start: "8:00 AM",
+        end: "9:30 AM",
+        subject: "",
+        room: "",
+        professor: "",
+        color: CLASS_COLORS[prev.length % CLASS_COLORS.length].value,
+      },
+    ]);
+  };
+
+  const handleRemoveClass = (index: number) => {
+    setClasses((prev) => prev.filter((_, i) => i !== index));
+    setInvalidClasses((prev) =>
+      prev
+        .filter((idx) => idx !== index)
+        .map((idx) => (idx > index ? idx - 1 : idx))
+    );
+  };
+
+  const handleSave = async () => {
+    // Merge new classes with the existing schedule
+    const newSchedule = DAYS.map((day) => {
+      const slots = classes
+        .filter((cls) => cls.days.includes(day))
+        .map((cls) => ({
+          start: cls.start,
+          end: cls.end,
+          subject: cls.subject,
+          room: cls.room,
+          professor: cls.professor,
+          color: cls.color,
+        }));
+
+      return { day, slots };
+    });
+
+    try {
+      await updateSchedule(newSchedule); // Save to Firestore
+      onUpdateSchedule(newSchedule); // Update local state
+      onOpenChange(false); // Close the dialog
+    } catch (error) {
+      console.error("Failed to save schedule:", error);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl py-6 pl-6 pr-4">
         <DialogHeader>
-          <DialogTitle>Update Schedule Availability</DialogTitle>
+          <DialogTitle className="font-bold">Edit Class Schedule</DialogTitle>
+          <DialogDescription>Customize your class schedule</DialogDescription>
         </DialogHeader>
-        <div className="space-y-6">
-          <div className="flex justify-end">
-            <Sheet open={isSpecificHoursOpen} onOpenChange={setIsSpecificHoursOpen}>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="sm">
-                  Add specific hours
-                </Button>
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>Add Specific Hours</SheetTitle>
-                </SheetHeader>
-                <div className="space-y-6 mt-6">
-                  {editedSchedule.map((day) => (
-                    <div key={day.day} className="space-y-4">
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          checked={day.enabled}
-                          onCheckedChange={(checked) => handleDayToggle(day.day, checked as boolean)}
-                        />
-                        <span className="font-medium">{day.day}</span>
-                      </div>
-                      {day.enabled && (
-                        <div className="space-y-2">
+        <div className="max-h-[60vh] overflow-y-auto py-2 pr-4 space-y-6">
+          {classes.map((cls, index) => (
+            <div key={index} className="space-y-4 p-4 border rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-4">
+                  <Input
+                    placeholder="Subject"
+                    value={cls.subject}
+                    onChange={(e) =>
+                      handleClassChange(index, "subject", e.target.value)
+                    }
+                  />
+                  <div className="flex items-center gap-2">
+                    <Select
+                      value={cls.start}
+                      onValueChange={(value) =>
+                        handleClassChange(index, "start", value)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Start time" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {HOURS.map((hour) => (
+                          <SelectItem key={hour} value={hour}>
+                            {hour}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <span>to</span>
+                    <Select
+                      value={cls.end}
+                      onValueChange={(value) =>
+                        handleClassChange(index, "end", value)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="End time" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {HOURS.map((hour) => (
+                          <SelectItem key={hour} value={hour}>
+                            {hour}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Input
+                    placeholder="Room"
+                    value={cls.room}
+                    onChange={(e) =>
+                      handleClassChange(index, "room", e.target.value)
+                    }
+                  />
+                  <Input
+                    placeholder="Professor"
+                    value={cls.professor}
+                    onChange={(e) =>
+                      handleClassChange(index, "professor", e.target.value)
+                    }
+                  />
+                </div>
+                <div className="space-y-4">
+                  <Select
+                    value={cls.color}
+                    onValueChange={(value) =>
+                      handleClassChange(index, "color", value)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose color" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CLASS_COLORS.map((color) => (
+                        <SelectItem key={color.value} value={color.value}>
                           <div className="flex items-center gap-2">
-                            <Select defaultValue="9:00 AM" onValueChange={(value) => {
-                              handleAddSpecificHours(day.day, value, '10:00 AM')
-                            }}>
-                              <SelectTrigger className="w-[140px]">
-                                <SelectValue placeholder="Start time" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {HOURS.map((hour) => (
-                                  <SelectItem key={hour} value={hour}>
-                                    {hour}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <span>to</span>
-                            <Select defaultValue="10:00 AM" onValueChange={(value) => {
-                              handleAddSpecificHours(day.day, '9:00 AM', value)
-                            }}>
-                              <SelectTrigger className="w-[140px]">
-                                <SelectValue placeholder="End time" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {HOURS.map((hour) => (
-                                  <SelectItem key={hour} value={hour}>
-                                    {hour}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleAddSpecificHours(day.day, '9:00 AM', '10:00 AM')}
-                            >
-                              Add
-                            </Button>
+                            <div
+                              className={`w-4 h-4 rounded ${
+                                color.value.split(" ")[0]
+                              }`}
+                            />
+                            <span>{color.label}</span>
                           </div>
-                        </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <div>
+                    <div
+                      className={`font-semibold mb-1 flex items-center ${
+                        invalidClasses.includes(index) ? "text-red-500" : ""
+                      }`}
+                    >
+                      Choose the days:
+                      {invalidClasses.includes(index) && (
+                        <AlertCircle className="h-4 w-4 ml-2" />
                       )}
                     </div>
-                  ))}
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
-          <div className="space-y-4">
-            {editedSchedule.map((day) => (
-              <div key={day.day} className="space-y-4 p-4 border rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    checked={day.enabled}
-                    onCheckedChange={(checked) => handleDayToggle(day.day, checked as boolean)}
-                  />
-                  <span className="font-medium">{day.day}</span>
-                </div>
-                {day.enabled && (
-                  <div className="space-y-2 pl-6">
-                    {day.slots?.map((slot, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <Select
-                          value={slot.start}
-                          onValueChange={(value) => handleTimeChange(day.day, index, 'start', value)}
-                        >
-                          <SelectTrigger className="w-[140px]">
-                            <SelectValue placeholder="Start time" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {HOURS.map((hour) => (
-                              <SelectItem key={hour} value={hour}>
-                                {hour}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <span>to</span>
-                        <Select
-                          value={slot.end}
-                          onValueChange={(value) => handleTimeChange(day.day, index, 'end', value)}
-                        >
-                          <SelectTrigger className="w-[140px]">
-                            <SelectValue placeholder="End time" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {HOURS.map((hour) => (
-                              <SelectItem key={hour} value={hour}>
-                                {hour}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleRemoveSlot(day.day, index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleAddSlot(day.day)}
+                    <div
+                      className={`grid grid-cols-2 gap-2 p-2 rounded-md border ${
+                        invalidClasses.includes(index)
+                          ? "bg-red-50 border-red-200"
+                          : "border-transparent"
+                      }`}
                     >
-                      Add time slot
-                    </Button>
+                      {DAYS.map((day) => (
+                        <div key={day} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`${day}-${index}`}
+                            checked={cls.days.includes(day)}
+                            onCheckedChange={(checked) =>
+                              handleDayToggle(index, day, checked as boolean)
+                            }
+                          />
+                          <label
+                            htmlFor={`${day}-${index}`}
+                            className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            {day}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                )}
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="w-full mt-4"
+                    onClick={() => handleRemoveClass(index)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Remove Class
+                  </Button>
+                </div>
               </div>
-            ))}
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button 
-              className="bg-[#2F5233] hover:bg-[#2F5233]/90"
-              onClick={() => {
-                onUpdateSchedule(editedSchedule)
-                onOpenChange(false)
-              }}
-            >
-              Update
-            </Button>
-          </div>
+            </div>
+          ))}
         </div>
+        <DialogFooter>
+          <div className="w-full">
+            <Button
+              className="float-left bg-[#2F5233] hover:bg-[#2F5233]/90"
+              onClick={handleAddClass}
+            >
+              <Plus className="h-4 w-4" />
+              Add Class
+            </Button>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => {
+              const classesWithNoDays = classes
+                .map((cls, index) => (cls.days.length === 0 ? index : -1))
+                .filter((index) => index !== -1);
+
+              if (classesWithNoDays.length > 0) {
+                setInvalidClasses(classesWithNoDays);
+                return;
+              }
+              onOpenChange(false);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleSave}>Save</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-

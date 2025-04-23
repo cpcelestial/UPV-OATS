@@ -1,93 +1,98 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import type { DaySchedule } from './types/profile'
+import { useState, useEffect } from "react";
+import { fetchSchedule, updateSchedule } from "@/app/firebaseService";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Clock, MapPin, User } from "lucide-react";
+import type { DaySchedule } from "../data";
 
-interface ScheduleSectionProps {
-  schedule: DaySchedule[]
-  onUpdateSchedule: (schedule: DaySchedule[]) => void
-}
+export function ScheduleSection({
+  schedule: initialSchedule,
+  onUpdateSchedule,
+}: {
+  schedule: DaySchedule[];
+  onUpdateSchedule: (updatedSchedule: DaySchedule[]) => void;
+}) {
+  const [schedule, setSchedule] = useState<DaySchedule[]>(initialSchedule);
 
-export function ScheduleSection({ schedule, onUpdateSchedule }: ScheduleSectionProps) {
-  const [isEditing, setIsEditing] = useState(false)
-  const [editedSchedule, setEditedSchedule] = useState(schedule)
+  useEffect(() => {
+    const loadSchedule = async () => {
+      const data = await fetchSchedule(); // Fetch from Firestore
+      if (data) setSchedule(data);
+    };
+    loadSchedule();
+  }, []);
 
-  const handleSaveSchedule = () => {
-    onUpdateSchedule(editedSchedule)
-    setIsEditing(false)
-  }
+  const handleSave = async () => {
+    try {
+      await updateSchedule(schedule); // Save to Firestore
+      onUpdateSchedule(schedule); // Update parent state
+    } catch (error) {
+      console.error("Failed to save schedule:", error);
+    }
+  };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Personal Schedule</h2>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline">Update schedule</Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Update Schedule</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4">
-              {editedSchedule.map((day, dayIndex) => (
-                <div key={day.day} className="space-y-2">
-                  <Label>{day.day}</Label>
-                  {day.slots.map((slot, slotIndex) => (
-                    <div key={slotIndex} className="flex gap-2">
-                      <Input
-                        value={slot.start}
-                        onChange={(e) => {
-                          const newSchedule = [...editedSchedule]
-                          newSchedule[dayIndex].slots[slotIndex].start = e.target.value
-                          setEditedSchedule(newSchedule)
-                        }}
-                        placeholder="Start time"
-                      />
-                      <Input
-                        value={slot.end}
-                        onChange={(e) => {
-                          const newSchedule = [...editedSchedule]
-                          newSchedule[dayIndex].slots[slotIndex].end = e.target.value
-                          setEditedSchedule(newSchedule)
-                        }}
-                        placeholder="End time"
-                      />
-                    </div>
-                  ))}
-                </div>
-              ))}
-              <Button onClick={handleSaveSchedule}>Save Changes</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-      <div className="grid gap-4">
-        {schedule.map((day) => (
-          <div key={day.day} className="space-y-2">
-            <h3 className="font-medium">{day.day}</h3>
-            <div className="flex flex-wrap gap-2">
-              {day.slots.map((slot, idx) => (
-                <span
-                  key={idx}
-                  className={`inline-flex px-3 py-1 text-sm rounded-full
-                    ${idx % 2 === 0 
-                      ? 'bg-orange-100 text-orange-800' 
-                      : 'bg-green-100 text-green-800'
-                    }`}
-                >
-                  {slot.start} - {slot.end}
-                </span>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">Class Schedule</h1>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              onUpdateSchedule(schedule); // Pass the current schedule to the dialog
+              handleSave();
+            }}
+          >
+            Edit schedule
+          </Button>
+        </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 pt-4">
+          {schedule.map((day) => (
+            <div key={day.day} className="space-y-3">
+              <h3 className="font-bold text-gray-900 text-center">{day.day}</h3>
+              <div className="space-y-2">
+                {day.slots.length > 0 ? (
+                  day.slots.map((slot, index) => (
+                    <div
+                      key={index}
+                      className={`p-3 rounded-lg border ${slot.color} space-y-2`}
+                    >
+                      {slot.subject && (
+                        <div className="font-semibold">{slot.subject}</div>
+                      )}
+                      <div className="flex items-center gap-2 text-sm">
+                        <Clock className="h-4 w-4" />
+                        <span>
+                          {slot.start} - {slot.end}
+                        </span>
+                      </div>
+                      {slot.room && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <MapPin className="h-4 w-4" />
+                          <span>{slot.room}</span>
+                        </div>
+                      )}
+                      {slot.professor && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <User className="h-4 w-4" />
+                          <span>{slot.professor}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <div className="h-20 flex items-center justify-center text-sm text-gray-500">
+                    No classes
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
