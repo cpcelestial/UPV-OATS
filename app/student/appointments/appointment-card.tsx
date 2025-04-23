@@ -5,21 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CalendarIcon, MapPinIcon, VideoIcon } from "lucide-react";
 import { format } from "date-fns";
-
-export interface Appointment {
-  id: string;
-  class: string;
-  section?: string;
-  purpose: string;
-  facultyName: string;
-  facultyEmail: string;
-  date: Date;
-  timeSlot: string;
-  meetingType: "f2f" | "online";
-  details?: string;
-  participants?: string[];
-  status: "approved" | "pending" | "cancelled" | "reschedule";
-}
+import type { Appointment } from "../data";
 
 interface AppointmentCardProps {
   appointment: Appointment;

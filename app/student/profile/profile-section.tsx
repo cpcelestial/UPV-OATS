@@ -23,7 +23,7 @@ export function ProfileSection({
           <div className="flex flex-col items-center gap-3">
             <div className="relative h-48 w-48">
               <Image
-                src={profile.avatarUrl || "/placeholder.svg"}
+                src={profile.avatarUrl}
                 alt={`${profile.firstName} ${profile.lastName}`}
                 fill
                 sizes="(max-width: 768px) 100vw, 192px"

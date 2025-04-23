@@ -87,7 +87,6 @@ export default function Background({
         unsubscribeSnapshot = onSnapshot(q, (querySnapshot) => {
           const upcoming: Appointment[] = [];
           const pending: Appointment[] = [];
-          const cancelled: Appointment[] = [];
           const reschedule: Appointment[] = [];
 
           querySnapshot.forEach((doc) => {

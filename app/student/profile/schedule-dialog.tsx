@@ -99,9 +99,9 @@ export function ScheduleDialog({
               days: [day.day],
               start: slot.start,
               end: slot.end,
-              subject: slot.subject,
-              room: slot.room,
-              professor: slot.professor,
+              subject: slot.subject || "",
+              room: slot.room || "",
+              professor: slot.professor || "",
               color: slot.color || CLASS_COLORS[0].value,
             });
           }

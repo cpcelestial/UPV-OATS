@@ -22,6 +22,11 @@ export default function AppNavbar() {
     : "Loading...";
 
   const [userName, setUserName] = useState("User");
+  const userInitials = userName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -64,11 +69,13 @@ export default function AppNavbar() {
         <div className="flex items-center gap-4 flex-1 justify-end">
           <Avatar className="h-12 w-12">
             <AvatarImage
-              src="/profile2.jpg"
+              src="placeholder.svg"
               alt="Profile"
               className="object-cover"
             />
-            <AvatarFallback>ST</AvatarFallback>
+            <AvatarFallback className="bg-primary/10 text-primary">
+              {userInitials}
+            </AvatarFallback>
           </Avatar>
         </div>
       </div>

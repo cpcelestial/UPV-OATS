@@ -7,10 +7,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { format } from "date-fns";
-import type { Appointment } from "./calendar";
 import { AppointmentCard } from "../appointments/appointment-card";
-import { updateDoc, doc } from "firebase/firestore";
-import { getFirestore } from "firebase/firestore";
+import type { Appointment } from "../data";
 
 interface AppointmentsListDialogProps {
   isOpen: boolean;
@@ -29,8 +27,6 @@ export function CalendarDialog({
   onReschedule,
   onDecline,
 }: AppointmentsListDialogProps) {
-  const db = getFirestore();
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl">

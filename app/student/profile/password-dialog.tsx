@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import type React from "react";
+
+import { useState, useEffect } from "react";
 import { auth } from "@/app/firebase-config";
 import {
   updatePassword,
@@ -32,6 +34,23 @@ export function PasswordDialog({ open, onOpenChange }: PasswordDialogProps) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!open) {
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setError(null);
+    }
+  }, [open]);
+
+  const validateConfirmPassword = () => {
+    if (confirmPassword && newPassword !== confirmPassword) {
+      setError("New passwords do not match");
+    } else if (error === "New passwords do not match") {
+      setError(null);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,8 +91,23 @@ export function PasswordDialog({ open, onOpenChange }: PasswordDialogProps) {
       } else {
         throw new Error("User not authenticated");
       }
-    } catch (error) {
-      setError(error.message || "Failed to change password. Please try again.");
+    } catch (error: any) {
+      console.error("Password change error:", error);
+
+      // Check for Firebase auth error codes
+      if (error.code === "auth/invalid-credential") {
+        setError("Current password is incorrect. Please try again.");
+      } else if (error.code === "auth/too-many-requests") {
+        setError("Too many failed attempts. Please try again later.");
+      } else if (error.code === "auth/requires-recent-login") {
+        setError(
+          "For security reasons, please log out and log back in before changing your password."
+        );
+      } else {
+        setError(
+          error.message || "Failed to change password. Please try again."
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -112,7 +146,12 @@ export function PasswordDialog({ open, onOpenChange }: PasswordDialogProps) {
                 id="new-password"
                 type="password"
                 value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
+                onChange={(e) => {
+                  setNewPassword(e.target.value);
+                  if (confirmPassword) {
+                    validateConfirmPassword();
+                  }
+                }}
                 autoComplete="new-password"
               />
             </div>
@@ -122,7 +161,13 @@ export function PasswordDialog({ open, onOpenChange }: PasswordDialogProps) {
                 id="confirm-password"
                 type="password"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  if (newPassword) {
+                    validateConfirmPassword();
+                  }
+                }}
+                onBlur={validateConfirmPassword}
                 autoComplete="new-password"
               />
             </div>

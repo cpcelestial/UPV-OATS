@@ -1,4 +1,5 @@
-import { AppointmentCard, type Appointment } from "./appointment-card";
+import { AppointmentCard } from "./appointment-card";
+import type { Appointment } from "../data";
 
 interface AppointmentListProps {
   appointments: Appointment[];

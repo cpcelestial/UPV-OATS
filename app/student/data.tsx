@@ -20,7 +20,6 @@ export interface TimeSlot {
   subject?: string;
   room?: string;
   professor?: string;
-  days: string[];
   color?: string;
 }
 
