@@ -92,9 +92,7 @@ export default function Page() {
         open={isScheduleDialogOpen}
         onOpenChange={setIsScheduleDialogOpen}
         schedule={schedule}
-        onUpdateSchedule={(newSchedule) => {
-          handleUpdateSchedule(newSchedule); // Update schedule
-        }}
+        onUpdateSchedule={handleUpdateSchedule}
       />
 
       <PasswordDialog

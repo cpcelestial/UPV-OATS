@@ -173,15 +173,6 @@ export function ScheduleDialog({
   };
 
   const handleSave = async () => {
-    const classesWithNoDays = classes
-      .map((cls, index) => (cls.days.length === 0 ? index : -1))
-      .filter((index) => index !== -1);
-
-    if (classesWithNoDays.length > 0) {
-      setInvalidClasses(classesWithNoDays);
-      return;
-    }
-
     // Merge new classes with the existing schedule
     const newSchedule = DAYS.map((day) => {
       const slots = classes
