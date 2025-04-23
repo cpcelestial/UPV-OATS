@@ -1,17 +1,17 @@
 export interface Student {
-  id: string
-  firstName: string
-  lastName: string
-  email: string
-  emailVisibility: boolean
-  studentNumber: string
-  college: string
-  degreeProgram: string
-  country: string
-  cityTown: string
-  description: string
-  avatarUrl: string
-  schedule: DaySchedule[]
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  emailVisibility: boolean;
+  studentNumber: string;
+  college: string;
+  degreeProgram: string;
+  country: string;
+  cityTown: string;
+  description: string;
+  avatarUrl: string;
+  schedule: DaySchedule[];
 }
 
 export interface TimeSlot {
@@ -33,4 +33,20 @@ export interface ClassSchedule {
   id: string;
   name: string;
   schedule: DaySchedule[];
+}
+
+export interface Appointment {
+  id: string;
+  purpose: string;
+  class: string;
+  section: string;
+  facultyName: string;
+  facultyEmail: string;
+  date: Date;
+  timeSlot: string;
+  meetingType: "f2f" | "online";
+  location?: string;
+  details?: string;
+  status: "approved" | "pending" | "cancelled" | "reschedule";
+  participants?: { email: string; name?: string }[];
 }

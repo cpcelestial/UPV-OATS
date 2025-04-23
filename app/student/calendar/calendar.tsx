@@ -14,10 +14,20 @@ import {
   parse,
   getHours,
 } from "date-fns";
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Calendar as CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { CalendarDialog } from "./calendar-dialog";
 import {
@@ -48,7 +58,6 @@ export interface Appointment {
   userId: string;
 }
 
-
 export function Calendar() {
   const [currentDate, setCurrentDate] = React.useState<Date>(new Date());
   const [viewType, setViewType] = React.useState<ViewType>("month");
@@ -71,13 +80,20 @@ export function Calendar() {
             ),
             where("participants", "array-contains", {email: user.email})
           )
+
         );
         const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
-          const fetchedAppointments: Appointment[] = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-            date: doc.data().date instanceof Date ? doc.data().date : doc.data().date.toDate(),
-          } as Appointment));
+          const fetchedAppointments: Appointment[] = snapshot.docs.map(
+            (doc) =>
+              ({
+                id: doc.id,
+                ...doc.data(),
+                date:
+                  doc.data().date instanceof Date
+                    ? doc.data().date
+                    : doc.data().date.toDate(),
+              } as Appointment)
+          );
           setAppointments(fetchedAppointments);
         });
       } else {
@@ -103,13 +119,15 @@ export function Calendar() {
   const navigatePrevious = () => {
     switch (viewType) {
       case "month":
-        setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1));
+        setCurrentDate(
+          (prev) => new Date(prev.getFullYear(), prev.getMonth() - 1)
+        );
         break;
       case "week":
-        setCurrentDate(prev => addDays(prev, -7));
+        setCurrentDate((prev) => addDays(prev, -7));
         break;
       case "day":
-        setCurrentDate(prev => addDays(prev, -1));
+        setCurrentDate((prev) => addDays(prev, -1));
         break;
     }
   };
@@ -117,13 +135,15 @@ export function Calendar() {
   const navigateNext = () => {
     switch (viewType) {
       case "month":
-        setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1));
+        setCurrentDate(
+          (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1)
+        );
         break;
       case "week":
-        setCurrentDate(prev => addDays(prev, 7));
+        setCurrentDate((prev) => addDays(prev, 7));
         break;
       case "day":
-        setCurrentDate(prev => addDays(prev, 1));
+        setCurrentDate((prev) => addDays(prev, 1));
         break;
     }
   };
@@ -131,26 +151,33 @@ export function Calendar() {
   const renderMonthView = () => {
     const firstDayOfMonth = startOfMonth(currentDate);
     const lastDayOfMonth = endOfMonth(currentDate);
-    const firstDayOfFirstWeek = startOfWeek(firstDayOfMonth, { weekStartsOn: 0 });
+    const firstDayOfFirstWeek = startOfWeek(firstDayOfMonth, {
+      weekStartsOn: 0,
+    });
     const lastDayOfLastWeek = endOfWeek(lastDayOfMonth, { weekStartsOn: 0 });
 
     const days = eachDayOfInterval({
       start: firstDayOfFirstWeek,
-      end: lastDayOfLastWeek
+      end: lastDayOfLastWeek,
     });
 
     return (
       <div className="border rounded-lg overflow-hidden">
         <div className="grid grid-cols-7">
           {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-            <div key={day} className="p-2 text-center text-sm font-medium border-b border-r last:border-r-0">
+            <div
+              key={day}
+              className="p-2 text-center text-sm font-medium border-b border-r last:border-r-0"
+            >
               {day}
             </div>
           ))}
         </div>
         <div className="grid grid-cols-7">
           {days.map((day, index) => {
-            const dayAppointments = appointments.filter(appt => isSameDay(appt.date, day));
+            const dayAppointments = appointments.filter((appt) =>
+              isSameDay(appt.date, day)
+            );
             const isLastInRow = (index + 1) % 7 === 0;
             const isLastRow = index >= days.length - 7;
 
@@ -160,7 +187,8 @@ export function Calendar() {
                 onClick={() => handleDayClick(day)}
                 className={cn(
                   "min-h-[100px] p-2 border-r border-b border-border",
-                  !isSameMonth(day, currentDate) && "bg-muted/70 text-muted-foreground",
+                  !isSameMonth(day, currentDate) &&
+                    "bg-muted/70 text-muted-foreground",
                   "hover:bg-accent cursor-pointer transition-colors",
                   isLastInRow && "border-r-0",
                   isLastRow && "border-b-0"
@@ -168,9 +196,14 @@ export function Calendar() {
               >
                 <span className="text-sm font-medium">{format(day, "d")}</span>
                 <div className="mt-1 space-y-1">
-                  {dayAppointments.map(appointment => (
-                    <Card key={appointment.id} className="p-2 mb-2 bg-red-100 border-red-200 text-red-700 shadow-none">
-                      <div className="text-sm font-semibold">{appointment.purpose}</div>
+                  {dayAppointments.map((appointment) => (
+                    <Card
+                      key={appointment.id}
+                      className="p-2 mb-2 bg-red-100 border-red-200 text-red-700 shadow-none"
+                    >
+                      <div className="text-sm font-semibold">
+                        {appointment.purpose}
+                      </div>
                       <div className="text-sm">{appointment.timeSlot}</div>
                     </Card>
                   ))}
@@ -188,12 +221,13 @@ export function Calendar() {
     const end = endOfWeek(currentDate, { weekStartsOn: 0 });
     const days = eachDayOfInterval({ start, end });
 
-
     return (
       <div className="border rounded-lg overflow-hidden">
         <div className="grid grid-cols-7">
           {days.map((day, index) => {
-            const dayAppointments = appointments.filter(appt => isSameDay(appt.date, day));
+            const dayAppointments = appointments.filter((appt) =>
+              isSameDay(appt.date, day)
+            );
             const isLast = index === days.length - 1;
 
             return (
@@ -209,9 +243,14 @@ export function Calendar() {
                 <div className="text-sm font-medium mb-2">
                   {format(day, "EEE MMM d")}
                 </div>
-                {dayAppointments.map(appointment => (
-                  <Card key={appointment.id} className="p-2 mb-2 bg-red-100 border-red-200 text-red-700 shadow-none">
-                    <div className="text-sm font-semibold">{appointment.purpose}</div>
+                {dayAppointments.map((appointment) => (
+                  <Card
+                    key={appointment.id}
+                    className="p-2 mb-2 bg-red-100 border-red-200 text-red-700 shadow-none"
+                  >
+                    <div className="text-sm font-semibold">
+                      {appointment.purpose}
+                    </div>
                     <div className="text-sm">{appointment.timeSlot}</div>
                   </Card>
                 ))}
@@ -224,7 +263,9 @@ export function Calendar() {
   };
 
   const renderDayView = () => {
-    const dayAppointments = appointments.filter((appt) => isSameDay(appt.date, currentDate));
+    const dayAppointments = appointments.filter((appt) =>
+      isSameDay(appt.date, currentDate)
+    );
     const hours = Array.from({ length: 24 }, (_, i) => i);
 
     return (
@@ -254,7 +295,8 @@ export function Calendar() {
                     isLast && "border-b-0"
                   )}
                 >
-                  {format(new Date().setHours(hour), "ha")} {/* Display hour as 12-hour format */}
+                  {format(new Date().setHours(hour), "ha")}{" "}
+                  {/* Display hour as 12-hour format */}
                 </div>
                 <div
                   className={cn(
@@ -263,18 +305,21 @@ export function Calendar() {
                   )}
                 >
                   {hourAppointments.map((appointment) => {
-                    const startTime = getStartTimeFromTimeSlot(appointment.timeSlot);
+                    const startTime = getStartTimeFromTimeSlot(
+                      appointment.timeSlot
+                    );
                     const [, endTime] = appointment.timeSlot.split(" - ");
                     return (
                       <Card
                         key={appointment.id}
                         className="p-2 mb-2 bg-red-100 border-red-200 text-red-700 shadow-none"
                       >
-                        <div className="text-sm font-semibold">{appointment.purpose}</div>
+                        <div className="text-sm font-semibold">
+                          {appointment.purpose}
+                        </div>
                         <div className="text-sm">
                           {startTime} - {endTime?.trim()}
                         </div>
-
                       </Card>
                     );
                   })}
@@ -292,11 +337,17 @@ export function Calendar() {
         <div className="flex items-center space-x-4">
           <CalendarIcon className="h-6 w-6" />
           <h2 className="text-2xl font-bold tracking-tight">
-            {format(currentDate, viewType === "day" ? "MMMM d, yyyy" : "MMMM yyyy")}
+            {format(
+              currentDate,
+              viewType === "day" ? "MMMM d, yyyy" : "MMMM yyyy"
+            )}
           </h2>
         </div>
         <div className="flex items-center space-x-4">
-          <Select value={viewType} onValueChange={(value: ViewType) => setViewType(value)}>
+          <Select
+            value={viewType}
+            onValueChange={(value: ViewType) => setViewType(value)}
+          >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Select view" />
             </SelectTrigger>
@@ -326,7 +377,9 @@ export function Calendar() {
           isOpen={isDialogOpen}
           onClose={() => setIsDialogOpen(false)}
           date={selectedDate}
-          appointments={appointments.filter(appt => isSameDay(appt.date, selectedDate))}
+          appointments={appointments.filter((appt) =>
+            isSameDay(appt.date, selectedDate)
+          )}
         />
       )}
     </div>
