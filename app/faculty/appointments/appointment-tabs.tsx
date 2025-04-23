@@ -14,6 +14,7 @@ interface AppointmentsTabsProps {
   loading: boolean;
   onReschedule: (id: string) => void;
   onDecline: (id: string) => void;
+  onAccept: (id: string) => void;
 }
 
 export function AppointmentsTabs({
@@ -31,6 +32,17 @@ export function AppointmentsTabs({
       const appointmentRef = doc(db, "appointments", appointmentId);
       await updateDoc(appointmentRef, {
         status: "cancelled",
+      });
+      console.log(`Appointment ${appointmentId} declined successfully`);
+    } catch (error) {
+      console.error("Error declining appointment:", error);
+    }
+  };
+  const handleAccept = async (appointmentId: string) => {
+    try {
+      const appointmentRef = doc(db, "appointments", appointmentId);
+      await updateDoc(appointmentRef, {
+        status: "approved",
       });
       console.log(`Appointment ${appointmentId} declined successfully`);
     } catch (error) {
@@ -98,8 +110,8 @@ export function AppointmentsTabs({
           <AppointmentList
             appointments={pendingAppointments}
             emptyMessage="No pending appointments found"
-            onReschedule={onReschedule}
             onDecline={handleDecline}
+            onAccept={handleAccept}
           />
         )}
       </TabsContent>

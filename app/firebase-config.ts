@@ -6,7 +6,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyCECy-aZ_k_f7_MRZYasrezbDVBPsLKE7M",
   authDomain: "oats-38392.firebaseapp.com",
   databaseURL:
-    "https://oats-38392-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "https://oats-38392-default-rtdb.asia-southeast1.firebasedatabase.app",//unused rtdb
   projectId: "oats-38392",
   storageBucket: "oats-38392.appspot.com",
   messagingSenderId: "490235160932",

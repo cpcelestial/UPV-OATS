@@ -73,16 +73,8 @@ export function Calendar() {
         const appointmentsRef = collection(db, "appointments");
         const q = query(
           appointmentsRef,
-          or(
-            and(
-              where("userId", "==", user.uid),
-              where("status", "==", "approved")
-            ),
-            and(
-              where("participants", "array-contains", user.email),
-              where("status", "==", "approved")
-            )
-          )
+          where("facultyEmail", "==", user.email),
+          where("status", "==", "approved"),
         );
         const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
           const fetchedAppointments: Appointment[] = snapshot.docs.map(
