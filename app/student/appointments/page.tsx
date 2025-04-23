@@ -6,64 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Appointment } from "../data";
 import { AppointmentsTabs } from "./appointment-tabs";
-
-// Mock appointments data
-const mockAppointments: Omit<Appointment, "id">[] = [
-  {
-    purpose: "Consultation Regarding Grades",
-    class: "CMSC 128",
-    section: "1",
-    facultyName: "James Doe",
-    facultyEmail: "jdoe@up.edu.ph",
-    date: new Date(2024, 11, 1), // December 1, 2024
-    timeSlot: "11:30 AM to 1:00 PM",
-    meetingType: "f2f",
-    status: "approved",
-    details:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
-  },
-  {
-    purpose: "Project Review Meeting",
-    class: "CMSC 142",
-    section: "2",
-    facultyName: "Sarah Johnson",
-    facultyEmail: "sjohnson@up.edu.ph",
-    date: new Date(2024, 11, 5), // December 5, 2024
-    timeSlot: "2:00 PM to 3:30 PM",
-    meetingType: "online",
-    status: "pending",
-    details:
-      "Discussion about the final project requirements and grading criteria",
-  },
-  {
-    purpose: "Thesis Defense Preparation",
-    class: "CMSC 190",
-    section: "2",
-    facultyName: "Robert Chen",
-    facultyEmail: "rchen@up.edu.ph",
-    date: new Date(2024, 11, 10), // December 10, 2024
-    timeSlot: "9:00 AM to 11:00 AM",
-    meetingType: "f2f",
-    status: "cancelled",
-    details: "Preparation for the upcoming thesis defense presentation",
-  },
-  {
-    purpose: "Research Methodology Discussion",
-    class: "CMSC 198",
-    section: "1",
-    facultyName: "Maria Garcia",
-    facultyEmail: "mgarcia@up.edu.ph",
-    date: new Date(2024, 11, 15), // December 15, 2024
-    timeSlot: "1:00 PM to 2:30 PM",
-    meetingType: "online",
-    status: "reschedule",
-    details:
-      "Discussion about research methodologies and data collection techniques",
-  },
-];
+import { db } from "@/app/firebase-config";
+import { collection, query, where, orderBy, onSnapshot, Unsubscribe } from "firebase/firestore";
+import { getAuth, onAuthStateChanged, User } from "firebase/auth";
 
 export default function Page() {
   const router = useRouter();
+  const [user, setUser] = React.useState<User | null>(null);
   const [upcomingAppointments, setUpcomingAppointments] = React.useState<
     Appointment[]
   >([]);
@@ -79,37 +28,75 @@ export default function Page() {
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
-    // Mock data fetching
-    setTimeout(() => {
-      const upcoming: Appointment[] = [];
-      const pending: Appointment[] = [];
-      const cancelled: Appointment[] = [];
-      const reschedule: Appointment[] = [];
+    const auth = getAuth();
+    let unsubscribeSnapshot: Unsubscribe | null = null;
+  
+    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      
+      if (currentUser) {
+        const appointmentsRef = collection(db, "appointments");
+        const userAppointmentsQuery = query(
+          appointmentsRef,
+          where("userId", "==", currentUser.uid),
+          orderBy("date", "asc")
+        );
+      
+        unsubscribeSnapshot = onSnapshot(userAppointmentsQuery, (querySnapshot) => {
+          const upcoming: Appointment[] = [];
+          const pending: Appointment[] = [];
+          const cancelled: Appointment[] = [];
+          const reschedule: Appointment[] = [];
 
-      mockAppointments.forEach((appointment, index) => {
-        const data: Appointment = {
-          id: `appointment-${index}`,
-          ...appointment,
-        };
+          querySnapshot.forEach((doc) => {
+            const data: Appointment = {
+              id: doc.id,
+              ...doc.data(),
+              date: doc.data().date instanceof Date ? doc.data().date : doc.data().date.toDate(),
+              purpose: doc.data().purpose,
+              class: doc.data().class,
+              details: doc.data().details,
+              section: doc.data().section,
+              facultyName: doc.data().facultyName,
+              timeSlot: doc.data().timeSlot,
+              meetingType: doc.data().meetingType,
+              status: doc.data().status,
+              facultyEmail: doc.data().facultyEmail,
+            };
 
-        if (data.status === "approved") {
-          upcoming.push(data);
-        } else if (data.status === "pending") {
-          pending.push(data);
-        } else if (data.status === "cancelled") {
-          cancelled.push(data);
-        } else if (data.status === "reschedule") {
-          reschedule.push(data);
+            if (data.status === "approved") {
+              upcoming.push(data);
+            } else if (data.status === "pending") {
+              pending.push(data);
+            } else if (data.status === "cancelled") {
+              cancelled.push(data);
+            } else if (data.status === "reschedule") {
+              reschedule.push(data);
+            }
+
+            
+          });
+          setUpcomingAppointments(upcoming);
+          setPendingAppointments(pending);
+          setCancelledAppointments(cancelled);
+          setRescheduleAppointments(reschedule);
+          setLoading(false);
+        }, (error) => {
+          console.error("Error fetching appointments:", error);
+          setLoading(false);
+        });
+        } else {
+          setLoading(false);
         }
       });
-
-      setUpcomingAppointments(upcoming);
-      setPendingAppointments(pending);
-      setCancelledAppointments(cancelled);
-      setRescheduleAppointments(reschedule);
-      setLoading(false);
-    }, 1000);
-  }, []);
+  
+      return () => {
+        unsubscribeAuth();
+        if (unsubscribeSnapshot) {
+          unsubscribeSnapshot();
+        }
+      };
+    }, []);
 
   const handleReschedule = (id: string) => {
     alert(`Reschedule appointment ${id}`);
@@ -142,3 +129,5 @@ export default function Page() {
     </div>
   );
 }
+
+

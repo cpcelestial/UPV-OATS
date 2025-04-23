@@ -88,6 +88,7 @@ const formSchema = z.object({
   section: z.string().min(1, "Section is required"),
   department: z.string().min(1, "Department is required"),
   facultyName: z.string().min(1, "Faculty name is required"),
+  facultyEmail: z.string().email("Invalid email address").optional(),
   date: z.date({
     required_error: "Date is required",
   }),
@@ -130,7 +131,7 @@ export function AddAppointmentForm() {
     []
   );
   const [facultySections, setFacultySections] = React.useState<
-    { Faculty: string; sections: string[] }[]
+    { Faculty: string; sections: string[]; email: string }[]
   >([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -140,7 +141,7 @@ export function AddAppointmentForm() {
       class: "",
       section: "",
       department: "",
-      facultyName: "",
+      facultyEmail: "", 
       date: undefined,
       timeSlot: "",
       meetingType: "f2f",
@@ -179,7 +180,7 @@ export function AddAppointmentForm() {
         const q = query(collection(db, "Faculty_in_charge"));
         const querySnapshot = await getDocs(q);
         const facultySectionsData = querySnapshot.docs.map(
-          (doc) => doc.data() as { Faculty: string; sections: string[] }
+          (doc) => doc.data() as { Faculty: string; sections: string[]; email: string }
         );
         setFacultySections(facultySectionsData);
       } catch (error) {
@@ -188,6 +189,11 @@ export function AddAppointmentForm() {
     };
     fetchFacultySections();
   }, []);
+  React.useEffect(() => {
+    const selectedFacultyEmail =
+      facultySections.find((fs) => fs.sections.includes(selectedFIC))?.email || "";
+    form.setValue("facultyEmail", selectedFacultyEmail)
+  }, [selectedFIC, facultySections]);
 
   React.useEffect(() => {
     const fetchSections = async () => {
@@ -238,14 +244,14 @@ export function AddAppointmentForm() {
       setAvailableSections([]);
     }
 
-    form.setValue("section", ""); // Reset to empty string to show placeholder
+    form.setValue("section", ""); 
   }, [selectedSubject]);
 
   React.useEffect(() => {
     const singleFaculty =
       facultySections.filter((fs) => fs.sections.includes(selectedFIC))[0]
         ?.Faculty || "";
-    form.setValue("facultyName", singleFaculty); // Use form.setValue to update the field
+    form.setValue("facultyName", singleFaculty); 
   }, [selectedFIC]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
