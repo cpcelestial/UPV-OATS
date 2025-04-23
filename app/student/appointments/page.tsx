@@ -7,7 +7,16 @@ import { Plus } from "lucide-react";
 import { Appointment } from "../data";
 import { AppointmentsTabs } from "./appointment-tabs";
 import { auth, db } from "@/app/firebase-config";
-import { collection, query, where, orderBy, onSnapshot, Unsubscribe, or, and } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  onSnapshot,
+  Unsubscribe,
+  or,
+  and,
+} from "firebase/firestore";
 import { getAuth, onAuthStateChanged, User } from "firebase/auth";
 
 export default function Page() {
@@ -39,61 +48,57 @@ export default function Page() {
         const q = query(
           appointmentsRef,
           or(
-              where("userId", "==", user.uid),
-              where("participants", "array-contains", user.email)
+            where("userId", "==", user.uid),
+            where("participants", "array-contains", user.email)
           ),
           orderBy("date", "asc")
         );
 
-        unsubscribeSnapshot = onSnapshot(
-          q,
-          (querySnapshot) => {
-            const upcoming: Appointment[] = [];
-            const pending: Appointment[] = [];
-            const cancelled: Appointment[] = [];
-            const reschedule: Appointment[] = [];
+        unsubscribeSnapshot = onSnapshot(q, (querySnapshot) => {
+          const upcoming: Appointment[] = [];
+          const pending: Appointment[] = [];
+          const cancelled: Appointment[] = [];
+          const reschedule: Appointment[] = [];
 
-            querySnapshot.forEach((doc) => {
-              const data = doc.data();
-              const appointment: Appointment = {
-                id: doc.id,
-                ...data,
-                date: data.date instanceof Date ? data.date : data.date.toDate(),
-                purpose: data.purpose,
-                class: data.class,
-                details: data.details,
-                section: data.section,
-                facultyName: data.facultyName,
-                timeSlot: data.timeSlot,
-                meetingType: data.meetingType,
-                status: data.status,
-                facultyEmail: data.facultyEmail,
-              };
+          querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            const appointment: Appointment = {
+              id: doc.id,
+              ...data,
+              date: data.date instanceof Date ? data.date : data.date.toDate(),
+              purpose: data.purpose,
+              class: data.class,
+              details: data.details,
+              section: data.section,
+              facultyName: data.facultyName,
+              timeSlot: data.timeSlot,
+              meetingType: data.meetingType,
+              status: data.status,
+              facultyEmail: data.facultyEmail,
+            };
 
-              switch (appointment.status) {
-                case "approved":
-                  upcoming.push(appointment);
-                  break;
-                case "pending":
-                  pending.push(appointment);
-                  break;
-                case "cancelled":
-                  cancelled.push(appointment);
-                  break;
-                case "reschedule":
-                  reschedule.push(appointment);
-                  break;
-              }
-            });
+            switch (appointment.status) {
+              case "approved":
+                upcoming.push(appointment);
+                break;
+              case "pending":
+                pending.push(appointment);
+                break;
+              case "cancelled":
+                cancelled.push(appointment);
+                break;
+              case "reschedule":
+                reschedule.push(appointment);
+                break;
+            }
+          });
 
-            setUpcomingAppointments(upcoming);
-            setPendingAppointments(pending);
-            setCancelledAppointments(cancelled);
-            setRescheduleAppointments(reschedule);
-            setLoading(false);
-          },
-        );
-
+          setUpcomingAppointments(upcoming);
+          setPendingAppointments(pending);
+          setCancelledAppointments(cancelled);
+          setRescheduleAppointments(reschedule);
+          setLoading(false);
+        });
       } else {
         setUpcomingAppointments([]);
         setPendingAppointments([]);
@@ -142,5 +147,3 @@ export default function Page() {
     </div>
   );
 }
-
-

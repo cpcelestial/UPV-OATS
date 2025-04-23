@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useEffect } from "react";
 import Image from "next/image";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -34,6 +36,43 @@ export function ProfileDialog({
 }: ProfileDialogProps) {
   const [editedProfile, setEditedProfile] = useState(profile);
   const [isSaving, setIsSaving] = useState(false); // Track saving state
+  const [isUploading, setIsUploading] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setEditedProfile(profile);
+    }
+  }, [open, profile]);
+
+  const handleImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      console.log("No file selected.");
+      return;
+    }
+    console.log("File selected:", file.name);
+
+    setIsUploading(true);
+    try {
+      const storage = getStorage();
+      const storageRef = ref(storage, `profile-pictures/${profile.id}`);
+      await uploadBytes(storageRef, file);
+
+      const downloadURL = await getDownloadURL(storageRef);
+      setEditedProfile((prev) => ({
+        ...prev,
+        avatarUrl: downloadURL,
+      }));
+      console.log("Image uploaded successfully:", downloadURL);
+    } catch (error) {
+      console.error("Failed to upload image:", error);
+      alert("Failed to upload image. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -65,18 +104,35 @@ export function ProfileDialog({
           <div className="flex justify-center mb-4">
             <div className="relative">
               <Image
-                src={profile.avatarUrl || "/placeholder.svg"}
+                src={editedProfile.avatarUrl || "/placeholder.svg"}
                 alt="Profile"
                 width={96}
                 height={96}
                 className="rounded-full object-cover"
               />
+
               <Button
-                variant="secondary"
+                variant="ghost"
                 size="icon"
                 className="absolute bottom-0 right-0 rounded-full"
               >
+                <label
+                  htmlFor="file-input"
+                  className="absolute bottom-0 right-0 bg-gray-200 p-2 rounded-full  bg-transparent cursor-pointer flex items-center justify-center"
+                  style={{
+                    width: "32px", // Adjust the size to match the small icon
+                    height: "32px",
+                    borderRadius: "50%",
+                  }}
+                />
                 <Camera className="h-4 w-4" />
+                <input
+                  id="file-input"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                />
               </Button>
             </div>
           </div>
@@ -180,8 +236,8 @@ export function ProfileDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? "Saving..." : "Save"}
+          <Button onClick={handleSave} disabled={isSaving || isUploading}>
+            {isSaving ? "Saving..." : isUploading ? "Uploading..." : "Save"}
           </Button>
         </DialogFooter>
       </DialogContent>

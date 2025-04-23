@@ -23,34 +23,42 @@ export function AppointmentsTabs({
   rescheduleAppointments,
   loading,
   onReschedule,
-  onDecline,
 }: AppointmentsTabsProps) {
   const [activeTab, setActiveTab] = React.useState("pending");
-  const db = getFirestore()
+  const db = getFirestore();
   const handleDecline = async (appointmentId: string) => {
     try {
-      const appointmentRef = doc(db, "appointments", appointmentId)
+      const appointmentRef = doc(db, "appointments", appointmentId);
       await updateDoc(appointmentRef, {
         status: "cancelled",
-      })
+      });
       console.log(`Appointment ${appointmentId} declined successfully`);
     } catch (error) {
-        console.error("Error declining appointment:", error)
+      console.error("Error declining appointment:", error);
     }
-  }
+  };
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
       <TabsList>
         <TabsTrigger value="upcoming" className="mr-2 px-6">
-          Upcoming
+          Upcoming{" "}
+          <span className="ml-2 opacity-50">
+            [ {upcomingAppointments.length} ]
+          </span>
         </TabsTrigger>
         <TabsTrigger value="pending" className="mr-2 px-6">
-          Pending
+          Pending{" "}
+          <span className="ml-2 opacity-50">
+            [ {pendingAppointments.length} ]
+          </span>
         </TabsTrigger>
         {cancelledAppointments != undefined && (
           <TabsTrigger value="declined" className="mr-2 px-6">
-            Declined
+            Cancelled{" "}
+            <span className="ml-2 opacity-50">
+              [ {cancelledAppointments.length} ]
+            </span>
           </TabsTrigger>
         )}
         {rescheduleAppointments.length > 0 && (
@@ -58,7 +66,10 @@ export function AppointmentsTabs({
             value="reschedule"
             className="px-6 bg-red-100 text-red-500"
           >
-            For Reschedule
+            For Reschedule{" "}
+            <span className="ml-2 opacity-50">
+              [ {rescheduleAppointments.length} ]
+            </span>
           </TabsTrigger>
         )}
       </TabsList>

@@ -38,12 +38,12 @@ export function AppointmentCard({
     .join("")
     .toUpperCase();
 
-    const getNumber = (str: string | null | undefined): string | null => {
-      if (!str) return null;
-      const parts = str.split("_");
-      const last = parts.pop();
-      return last && /^\d+$/.test(last) ? last : null;
-    };
+  const getNumber = (str: string | null | undefined): string | null => {
+    if (!str) return null;
+    const parts = str.split("_");
+    const last = parts.pop();
+    return last && /^\d+$/.test(last) ? last : null;
+  };
 
   return (
     <div className="rounded-lg border bg-white p-6">
@@ -53,7 +53,9 @@ export function AppointmentCard({
             <div className="flex items-center gap-2 mb-1">
               <h1 className="text-xl font-semibold">
                 {appointment.class === "Other" ? " " : appointment.class}{" "}
-                {appointment.section && getNumber(appointment.section) && `- ${getNumber(appointment.section)}`}{" "}
+                {appointment.section &&
+                  getNumber(appointment.section) &&
+                  `- ${getNumber(appointment.section)}`}{" "}
                 {appointment.purpose}
               </h1>
             </div>
@@ -130,7 +132,7 @@ export function AppointmentCard({
                 variant="destructive"
                 onClick={() => onDecline(appointment.id)}
               >
-                Decline
+                Cancel
               </Button>
             )}
             {onReschedule && (
