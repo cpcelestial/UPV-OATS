@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import type { Appointment } from "../data";
 import { CalendarDialog } from "./calendar-dialog";
 import {
   collection,
@@ -36,27 +37,12 @@ import {
   where,
   onSnapshot,
   and,
-  or
+  or,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "../../firebase-config";
 
 type ViewType = "month" | "week" | "day";
-
-export interface Appointment {
-  purpose: string;
-  class: string;
-  id: string;
-  details?: string;
-  meetingType: string;
-  facultyName: string;
-  email: string;
-  date: Date;
-  participants: string[];
-  status: string;
-  timeSlot: string;
-  userId: string;
-}
 
 export function Calendar() {
   const [currentDate, setCurrentDate] = React.useState<Date>(new Date());
@@ -65,6 +51,13 @@ export function Calendar() {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [currentUser, setCurrentUser] = React.useState<any>(null);
   const [appointments, setAppointments] = React.useState<Appointment[]>([]);
+
+  const getNumber = (str: string | null | undefined): string | null => {
+    if (!str) return null;
+    const parts = str.split("_");
+    const last = parts.pop();
+    return last && /^\d+$/.test(last) ? last : null;
+  };
 
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -100,7 +93,7 @@ export function Calendar() {
         });
       } else {
         setCurrentUser(null);
-        setAppointments([]); 
+        setAppointments([]);
       }
     });
 
@@ -204,6 +197,12 @@ export function Calendar() {
                       className="p-2 mb-2 bg-red-100 border-red-200 text-red-700 shadow-none"
                     >
                       <div className="text-sm font-semibold">
+                        {appointment.class === "Other"
+                          ? " "
+                          : appointment.class}{" "}
+                        {appointment.section &&
+                          getNumber(appointment.section) &&
+                          `- ${getNumber(appointment.section)}`}{" "}
                         {appointment.purpose}
                       </div>
                       <div className="text-sm">{appointment.timeSlot}</div>
