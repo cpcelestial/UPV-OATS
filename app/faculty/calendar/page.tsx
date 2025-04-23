@@ -1,14 +1,18 @@
 "use client";
 
 import React from "react";
-import { AppointmentCalendar } from "./appointment-calendar"
+import { Calendar } from "./calendar";
 
-export default function Background({ children }: { children: React.ReactNode }) {
+export default function Background({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <main className="flex-grow px-6 py-6 overflow-auto">
+    <main className="flex-grow px-8 py-2">
       {children}
-      <div className="container mx-auto py-4">
-        <AppointmentCalendar />
+      <div className="container mx-auto pb-4">
+        <Calendar />
       </div>
     </main>
   );
