@@ -76,6 +76,43 @@ export function ScheduleDialog({
   const [classes, setClasses] = useState<ClassFormData[]>([]);
   const [invalidClasses, setInvalidClasses] = useState<number[]>([]);
 
+  useEffect(() => {
+    if (open) {
+      // Map existing schedule to editable classes
+      const existingClasses: ClassFormData[] = [];
+
+      schedule.forEach((day) => {
+        day.slots.forEach((slot) => {
+          const existingClass = existingClasses.find(
+            (cls) =>
+              cls.start === slot.start &&
+              cls.end === slot.end &&
+              cls.subject === slot.subject &&
+              cls.room === slot.room &&
+              cls.professor === slot.professor
+          );
+
+          if (existingClass) {
+            existingClass.days.push(day.day);
+          } else {
+            existingClasses.push({
+              days: [day.day],
+              start: slot.start,
+              end: slot.end,
+              subject: slot.subject,
+              room: slot.room,
+              professor: slot.professor,
+              color: slot.color || CLASS_COLORS[0].value,
+            });
+          }
+        });
+      });
+
+      setClasses(existingClasses); // Initialize classes with all existing slots
+      setInvalidClasses([]); // Reset invalid classes when dialog opens
+    }
+  }, [open, schedule]);
+
   const handleDayToggle = (
     classIndex: number,
     day: string,
@@ -147,8 +184,7 @@ export function ScheduleDialog({
 
     // Merge new classes with the existing schedule
     const newSchedule = DAYS.map((day) => {
-      const existingSlots = schedule.find((d) => d.day === day)?.slots || [];
-      const newSlots = classes
+      const slots = classes
         .filter((cls) => cls.days.includes(day))
         .map((cls) => ({
           start: cls.start,
@@ -159,24 +195,7 @@ export function ScheduleDialog({
           color: cls.color,
         }));
 
-      // Prevent duplicate slots
-      const mergedSlots = [
-        ...existingSlots,
-        ...newSlots.filter(
-          (newSlot) =>
-            !existingSlots.some(
-              (existingSlot) =>
-                existingSlot.start === newSlot.start &&
-                existingSlot.end === newSlot.end &&
-                existingSlot.subject === newSlot.subject
-            )
-        ),
-      ];
-
-      return {
-        day,
-        slots: mergedSlots,
-      };
+      return { day, slots };
     });
 
     try {
@@ -187,41 +206,6 @@ export function ScheduleDialog({
       console.error("Failed to save schedule:", error);
     }
   };
-
-  useEffect(() => {
-    if (open) {
-      // Map existing schedule to editable classes
-      const existingClasses: ClassFormData[] = [];
-
-      schedule.forEach((day) => {
-        day.slots.forEach((slot) => {
-          const existingClass = existingClasses.find(
-            (cls) =>
-              cls.start === slot.start &&
-              cls.end === slot.end &&
-              cls.subject === slot.subject
-          );
-
-          if (existingClass) {
-            existingClass.days.push(day.day);
-          } else {
-            existingClasses.push({
-              days: [day.day],
-              start: slot.start,
-              end: slot.end,
-              subject: slot.subject,
-              room: slot.room,
-              professor: slot.professor,
-              color: slot.color || CLASS_COLORS[0].value,
-            });
-          }
-        });
-      });
-
-      setClasses(existingClasses); // Initialize classes with all existing slots
-      setInvalidClasses([]); // Reset invalid classes when dialog opens
-    }
-  }, [open, schedule]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -309,8 +293,9 @@ export function ScheduleDialog({
                         <SelectItem key={color.value} value={color.value}>
                           <div className="flex items-center gap-2">
                             <div
-                              className={`w-4 h-4 rounded ${color.value.split(" ")[0]
-                                }`}
+                              className={`w-4 h-4 rounded ${
+                                color.value.split(" ")[0]
+                              }`}
                             />
                             <span>{color.label}</span>
                           </div>
@@ -320,8 +305,9 @@ export function ScheduleDialog({
                   </Select>
                   <div>
                     <div
-                      className={`font-semibold mb-1 flex items-center ${invalidClasses.includes(index) ? "text-red-500" : ""
-                        }`}
+                      className={`font-semibold mb-1 flex items-center ${
+                        invalidClasses.includes(index) ? "text-red-500" : ""
+                      }`}
                     >
                       Choose the days:
                       {invalidClasses.includes(index) && (
@@ -329,10 +315,11 @@ export function ScheduleDialog({
                       )}
                     </div>
                     <div
-                      className={`grid grid-cols-2 gap-2 p-2 rounded-md border ${invalidClasses.includes(index)
+                      className={`grid grid-cols-2 gap-2 p-2 rounded-md border ${
+                        invalidClasses.includes(index)
                           ? "bg-red-50 border-red-200"
                           : "border-transparent"
-                        }`}
+                      }`}
                     >
                       {DAYS.map((day) => (
                         <div key={day} className="flex items-center space-x-2">

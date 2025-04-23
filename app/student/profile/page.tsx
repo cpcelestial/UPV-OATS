@@ -12,6 +12,7 @@ import type { Student } from "../data";
 
 export default function Page() {
   const [profile, setProfile] = useState<Student | null>(null); // Start with null
+  const [schedule, setSchedule] = useState<DaySchedule[]>([]);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
@@ -33,7 +34,23 @@ export default function Page() {
       }
     };
 
+    const fetchSchedule = async () => {
+      try {
+        const scheduleDocRef = doc(db, "schedules", "userSchedule");
+        const scheduleSnapshot = await getDoc(scheduleDocRef);
+
+        if (scheduleSnapshot.exists()) {
+          setSchedule(scheduleSnapshot.data().schedule as DaySchedule[]);
+        } else {
+          console.error("Schedule document does not exist.");
+        }
+      } catch (error) {
+        console.error("Failed to fetch schedule:", error);
+      }
+    };
+
     fetchProfile();
+    fetchSchedule();
   }, []);
 
   const handleUpdateProfile = (updatedProfile: Partial<Student>) => {
@@ -41,10 +58,8 @@ export default function Page() {
     console.log("Updated Profile:", updatedProfile);
   };
 
-  const handleUpdateSchedule = (newSchedule: Student["schedule"]) => {
-    if (profile) {
-      handleUpdateProfile({ schedule: newSchedule });
-    }
+  const handleUpdateSchedule = (newSchedule: DaySchedule[]) => {
+    setSchedule(newSchedule);
   };
 
   if (!profile) {
@@ -61,7 +76,7 @@ export default function Page() {
         />
 
         <ScheduleSection
-          schedule={profile.schedule}
+          schedule={schedule}
           onUpdateSchedule={() => setIsScheduleDialogOpen(true)}
         />
       </div>
@@ -76,7 +91,7 @@ export default function Page() {
       <ScheduleDialog
         open={isScheduleDialogOpen}
         onOpenChange={setIsScheduleDialogOpen}
-        schedule={profile.schedule}
+        schedule={schedule}
         onUpdateSchedule={(newSchedule) => {
           handleUpdateSchedule(newSchedule); // Update schedule
         }}
