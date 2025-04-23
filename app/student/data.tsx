@@ -45,7 +45,6 @@ export interface Appointment {
   date: Date;
   timeSlot: string;
   meetingType: "f2f" | "online";
-  location?: string;
   details?: string;
   status: "approved" | "pending" | "cancelled" | "reschedule";
   participants?: string[];
