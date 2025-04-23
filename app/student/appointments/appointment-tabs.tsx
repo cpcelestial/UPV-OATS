@@ -26,18 +26,18 @@ export function AppointmentsTabs({
   onDecline,
 }: AppointmentsTabsProps) {
   const [activeTab, setActiveTab] = React.useState("pending");
-    const db = getFirestore()
-    const handleDecline = async (appointmentId: string) => {
-      try {
-        const appointmentRef = doc(db, "appointments", appointmentId)
-        await updateDoc(appointmentRef, {
-          status: "cancelled",
-        })
-        console.log(`Appointment ${appointmentId} declined successfully`);
-      } catch (error) {
+  const db = getFirestore()
+  const handleDecline = async (appointmentId: string) => {
+    try {
+      const appointmentRef = doc(db, "appointments", appointmentId)
+      await updateDoc(appointmentRef, {
+        status: "cancelled",
+      })
+      console.log(`Appointment ${appointmentId} declined successfully`);
+    } catch (error) {
         console.error("Error declining appointment:", error)
-      }
     }
+  }
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
