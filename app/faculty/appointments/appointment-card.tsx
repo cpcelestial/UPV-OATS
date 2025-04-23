@@ -25,12 +25,14 @@ interface AppointmentCardProps {
   appointment: Appointment;
   onReschedule?: (id: string) => void;
   onDecline?: (id: string) => void;
+  onAccept?: (id: string) => void;
 }
 
 export function AppointmentCard({
   appointment,
   onReschedule,
   onDecline,
+  onAccept
 }: AppointmentCardProps) {
   const facultyInitials = appointment.facultyName
     .split(" ")
@@ -138,6 +140,11 @@ export function AppointmentCard({
             {onReschedule && (
               <Button onClick={() => onReschedule(appointment.id)}>
                 Reschedule
+              </Button>
+            )}
+           {onAccept && (
+              <Button onClick={() => onAccept(appointment.id)} className="bg-green-500 hover:bg-green-600">
+                Accept
               </Button>
             )}
           </div>

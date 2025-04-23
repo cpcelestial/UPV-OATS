@@ -5,6 +5,7 @@ interface AppointmentListProps {
   emptyMessage: string;
   onReschedule?: (id: string) => void;
   onDecline?: (id: string) => void;
+  onAccept?: (id: string) => void;
 }
 
 export function AppointmentList({
@@ -12,6 +13,7 @@ export function AppointmentList({
   emptyMessage,
   onReschedule,
   onDecline,
+  onAccept,
 }: AppointmentListProps) {
   if (appointments.length === 0) {
     return (
@@ -29,6 +31,7 @@ export function AppointmentList({
           appointment={appointment}
           onReschedule={onReschedule}
           onDecline={onDecline}
+          onAccept={onAccept}
         />
       ))}
     </div>
