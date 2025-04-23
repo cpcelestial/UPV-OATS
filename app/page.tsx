@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FloatingInput } from "@/components/ui/floating-input";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "./firebase-config";
+import { auth, db } from "./firebase-config";
+import { doc, getDoc } from "firebase/firestore";
 
 const App: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -20,14 +21,30 @@ const App: React.FC = () => {
     setIsClient(true);
   }, []);
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     console.log("Starting user authentication...");
 
     signInWithEmailAndPassword(auth, email, password)
-      .then(() => {
-        // User authentication successful
-        router.push("/student/dashboard");
+      .then(async (userCredential) => {
+        const user = userCredential.user;
+        const userDocRef = doc(db, "Users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists()) { 
+          const userData = userDoc.data();
+          const role = userData?.role;
+
+          if (role === "admin") {
+            router.push("/admin/dashboard");
+          }
+          else if (role === "faculty") {
+            router.push("/faculty/dashboard");
+          }
+          else if (role === "student") {
+            router.push("/student/dashboard");
+          }
+        }
       })
       .catch((error) => {
         console.error("Error:", error.message);
@@ -38,6 +55,7 @@ const App: React.FC = () => {
   if (!isClient) {
     return null; // or a loading spinner
   }
+
 
   return (
     <div className="flex min-h-screen">
