@@ -76,9 +76,12 @@ export function Calendar() {
           or(
             and(
               where("userId", "==", user.uid),
-              where("status", "==", "upcoming")
+              where("status", "==", "approved")
             ),
-            where("participants", "array-contains", {email: user.email})
+            and(
+              where("participants", "array-contains", {email: user.email}),
+              where("status", "==", "approved")
+            )
           )
 
         );
