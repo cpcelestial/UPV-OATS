@@ -13,6 +13,8 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar"
 import { BookUser, Calendar, LayoutDashboard, LogOut, NotebookTabs, UserRound } from "lucide-react"
+import { signOut } from "firebase/auth"
+import { auth } from "../firebase-config"
 
 export default function AppSidebar() {
   const pathname = usePathname()
@@ -30,6 +32,16 @@ export default function AppSidebar() {
     if (!mounted) return false
     return pathname === route
   }
+
+    const handleLogout = async () => {
+      try {
+        await signOut(auth);
+        localStorage.clear();
+        window.location.href = "/"; 
+      } catch (error) {
+        console.error("Logout error:", error);
+      }
+    };
 
   const menuItems = [
     { name: "Dashboard", icon: LayoutDashboard, route: "/student/dashboard" },
@@ -84,11 +96,12 @@ export default function AppSidebar() {
 
         <div className="mt-auto px-2 py-10">
           <SidebarMenuButton
+            onClick={handleLogout}
             tooltip="Logout"
             className="flex items-center gap-2 w-full px-6 py-8 font-medium text-tertiary
             transition duration-200 hover:text-[#7B1113] hover:bg-[#F3D2D3]"
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className="h-4 w-4"/>
             <span>Logout</span>
           </SidebarMenuButton>
         </div>

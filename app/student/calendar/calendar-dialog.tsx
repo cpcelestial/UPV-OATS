@@ -7,6 +7,7 @@ import type { Appointment } from "./calendar";
 import { updateDoc, doc } from "firebase/firestore"
 import { getFirestore } from "firebase/firestore"
 
+
 interface AppointmentsListDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -21,13 +22,13 @@ export function CalendarDialog({
   appointments
 }: AppointmentsListDialogProps) {
   const db = getFirestore()
-  const handleCancel = async (appointmentId: string) => {
+  const handleDecline = async (appointmentId: string) => {
     try {
       const appointmentRef = doc(db, "appointments", appointmentId)
       await updateDoc(appointmentRef, {
         status: "cancelled",
       })
-      console.log(`Appointment ${appointmentId} cancelled successfully`);
+      console.log(`Appointment ${appointmentId} declined successfully`);
     } catch (error) {
       console.error("Error declining appointment:", error)
     }
@@ -78,7 +79,7 @@ export function CalendarDialog({
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => handleCancel(appointment.id)}
+                      onClick={() => handleDecline(appointment.id)}
                     >
                       Cancel
                     </Button>
