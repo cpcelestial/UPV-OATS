@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useEffect } from "react";
 import Image from "next/image";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,12 @@ export function ProfileDialog({
   const [editedProfile, setEditedProfile] = useState(profile);
   const [isSaving, setIsSaving] = useState(false); // Track saving state
   const [isUploading, setIsUploading] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setEditedProfile(profile);
+    }
+  }, [open, profile]);
 
   const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
