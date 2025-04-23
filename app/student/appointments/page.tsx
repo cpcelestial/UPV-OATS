@@ -38,8 +38,10 @@ export default function Page() {
         const appointmentsRef = collection(db, "appointments");
         const q = query(
           appointmentsRef,
-          where("status", "in", ["approved", "pending", "cancelled", "reschedule"]),
-          where("userId", "==", user.uid),
+          or(
+              where("userId", "==", user.uid),
+              where("participants", "array-contains", user.email)
+          ),
           orderBy("date", "asc")
         );
 

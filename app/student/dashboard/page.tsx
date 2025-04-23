@@ -7,50 +7,7 @@ import { AppointmentsTabs } from "../appointments/appointment-tabs";
 import MonthCalendar from "./month-calendar";
 import { auth, db } from "@/app/firebase-config";
 import { onAuthStateChanged } from "firebase/auth";
-import { Unsubscribe, collection, query, where, orderBy, onSnapshot, doc, getFirestore, updateDoc } from "firebase/firestore";
-
-// // Mock appointments data
-// const mockAppointments: Omit<Appointment, "id">[] = [
-//   {
-//     purpose: "Consultation Regarding Grades",
-//     class: "CMSC 128",
-//     section: "1",
-//     facultyName: "James Doe",
-//     facultyEmail: "jdoe@up.edu.ph",
-//     date: new Date(2024, 11, 1), // December 1, 2024
-//     timeSlot: "11:30 AM to 1:00 PM",
-//     meetingType: "f2f",
-//     status: "approved",
-//     details:
-//       "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
-//   },
-//   {
-//     purpose: "Project Review Meeting",
-//     class: "CMSC 142",
-//     section: "2",
-//     facultyName: "Sarah Johnson",
-//     facultyEmail: "sjohnson@up.edu.ph",
-//     date: new Date(2024, 11, 5), // December 5, 2024
-//     timeSlot: "2:00 PM to 3:30 PM",
-//     meetingType: "online",
-//     status: "pending",
-//     details:
-//       "Discussion about the final project requirements and grading criteria",
-//   },
-//   {
-//     purpose: "Research Methodology Discussion",
-//     class: "CMSC 198",
-//     section: "1",
-//     facultyName: "Maria Garcia",
-//     facultyEmail: "mgarcia@up.edu.ph",
-//     date: new Date(2024, 11, 15), // December 15, 2024
-//     timeSlot: "1:00 PM to 2:30 PM",
-//     meetingType: "online",
-//     status: "reschedule",
-//     details:
-//       "Discussion about research methodologies and data collection techniques",
-//   },
-// ];
+import { Unsubscribe, collection, query, where, orderBy, onSnapshot, doc, getFirestore, updateDoc, and, or } from "firebase/firestore";
 
 export default function Background({
   children,
@@ -96,8 +53,16 @@ export default function Background({
         const appointmentsRef = collection(db, "appointments");
         const q = query(
           appointmentsRef,
-          where("status", "in", ["approved", "pending",  "reschedule"]),
-          where("userId", "==", user.uid),
+          or(
+            and(
+              where("status", "in", ["approved", "pending",  "reschedule"]),
+              where("userId", "==", user.uid),
+            ),
+            and(
+              where("status", "in", ["approved", "pending",  "reschedule"]),
+              where("participants", "array-contains", user.email)
+            )
+          ),
           orderBy("date", "asc")
         );
 
