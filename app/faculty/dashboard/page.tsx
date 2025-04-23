@@ -54,6 +54,17 @@ export default function Background({
       console.error("Error declining appointment:", error);
     }
   };
+  const handleAccept = async (appointmentId: string) => {
+    try {
+      const appointmentRef = doc(db, "appointments", appointmentId);
+      await updateDoc(appointmentRef, {
+        status: "approved",
+      });
+      console.log(`Appointment ${appointmentId} declined successfully`);
+    } catch (error) {
+      console.error("Error declining appointment:", error);
+    }
+  };
 
   const handleReschedule = (id: string) => {
     alert(`Reschedule appointment ${id}`);
@@ -154,6 +165,7 @@ export default function Background({
           loading={loading}
           onReschedule={handleReschedule}
           onDecline={handleDecline}
+          onAccept={handleAccept}
         />
       </div>
 
