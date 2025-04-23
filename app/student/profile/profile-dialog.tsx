@@ -112,7 +112,6 @@ export function ProfileDialog({
               />
 
               <Button
-                as="label"
                 variant="ghost"
                 size="icon"
                 className="absolute bottom-0 right-0 rounded-full"

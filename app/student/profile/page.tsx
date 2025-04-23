@@ -8,7 +8,7 @@ import { ScheduleDialog } from "./schedule-dialog";
 import { ScheduleSection } from "./schedule-section";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/app/firebase-config"; // Firestore instance
-import type { Student } from "../data";
+import type { Student, DaySchedule } from "../data";
 
 export default function Page() {
   const [profile, setProfile] = useState<Student | null>(null); // Start with null
