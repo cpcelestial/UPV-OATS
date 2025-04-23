@@ -47,10 +47,7 @@ export default function Page() {
         const appointmentsRef = collection(db, "appointments");
         const q = query(
           appointmentsRef,
-          or(
-            where("userId", "==", user.uid),
-            where("participants", "array-contains", user.email)
-          ),
+          where("facultyEmail", "==", user.email),
           orderBy("date", "asc")
         );
 
@@ -116,6 +113,11 @@ export default function Page() {
     };
   }, []);
 
+  console.log(upcomingAppointments); 
+  console.log(pendingAppointments);
+  console.log(cancelledAppointments);
+  console.log(rescheduleAppointments);
+
   const handleReschedule = (id: string) => {
     alert(`Reschedule appointment ${id}`);
     // In a real app, navigate to reschedule page or open a modal
@@ -123,6 +125,11 @@ export default function Page() {
 
   const handleDecline = (id: string) => {
     alert(`Decline appointment ${id}`);
+    // In a real app, update the appointment status
+  };
+
+  const handleAccept = (id: string) => {
+    alert(`Accept appointment ${id}`);
     // In a real app, update the appointment status
   };
 
@@ -143,6 +150,7 @@ export default function Page() {
         loading={loading}
         onReschedule={handleReschedule}
         onDecline={handleDecline}
+        onAccept={handleAccept}
       />
     </div>
   );

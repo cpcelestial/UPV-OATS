@@ -71,16 +71,7 @@ export default function Background({
         const appointmentsRef = collection(db, "appointments");
         const q = query(
           appointmentsRef,
-          or(
-            and(
-              where("status", "in", ["approved", "pending", "reschedule"]),
-              where("userId", "==", user.uid)
-            ),
-            and(
-              where("status", "in", ["approved", "pending", "reschedule"]),
-              where("participants", "array-contains", user.email)
-            )
-          ),
+          where("facultyEmail", "==", user.email),
           orderBy("date", "asc")
         );
 
