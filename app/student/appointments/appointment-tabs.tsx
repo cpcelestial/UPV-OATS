@@ -4,6 +4,7 @@ import * as React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppointmentList } from "./appointment-list";
 import type { Appointment } from "./appointment-card";
+import { getFirestore, doc, updateDoc } from "firebase/firestore";
 
 interface AppointmentsTabsProps {
   upcomingAppointments: Appointment[];
@@ -25,6 +26,18 @@ export function AppointmentsTabs({
   onDecline,
 }: AppointmentsTabsProps) {
   const [activeTab, setActiveTab] = React.useState("pending");
+    const db = getFirestore()
+    const handleDecline = async (appointmentId: string) => {
+      try {
+        const appointmentRef = doc(db, "appointments", appointmentId)
+        await updateDoc(appointmentRef, {
+          status: "cancelled",
+        })
+        console.log(`Appointment ${appointmentId} declined successfully`);
+      } catch (error) {
+        console.error("Error declining appointment:", error)
+      }
+    }
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
@@ -60,7 +73,7 @@ export function AppointmentsTabs({
             appointments={upcomingAppointments}
             emptyMessage="No upcoming appointments found"
             onReschedule={onReschedule}
-            onDecline={onDecline}
+            onDecline={handleDecline}
           />
         )}
       </TabsContent>
@@ -75,7 +88,7 @@ export function AppointmentsTabs({
             appointments={pendingAppointments}
             emptyMessage="No pending appointments found"
             onReschedule={onReschedule}
-            onDecline={onDecline}
+            onDecline={handleDecline}
           />
         )}
       </TabsContent>
@@ -105,7 +118,7 @@ export function AppointmentsTabs({
             <AppointmentList
               appointments={rescheduleAppointments}
               emptyMessage="No appointments for reschedule found"
-              onDecline={onDecline}
+              onDecline={handleDecline}
             />
           )}
         </TabsContent>
