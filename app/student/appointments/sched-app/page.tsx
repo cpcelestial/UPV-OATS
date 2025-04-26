@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -83,27 +82,26 @@ function generateTimeSlots() {
 }
 
 const formSchema = z.object({
-  purpose: z.string().min(1, "Purpose is required"),
-  class: z.string().min(1, "Class is required"),
-  section: z.string().min(1, "Section is required"),
-  department: z.string().min(1, "Department is required"),
-  facultyName: z.string().min(1, "Faculty name is required"),
-  facultyEmail: z.string().email("Invalid email address").optional(),
+  purpose: z.string().min(1, "Required"),
+  class: z.string().min(1, "Required"),
+  section: z.string().min(1, "Required"),
+  department: z.string().min(1, "Required"),
+  facultyName: z.string().min(1, "Required"),
+  facultyEmail: z.string().email("Invalid email").optional(),
   date: z.date({
-    required_error: "Date is required",
+    required_error: "Required",
   }),
-  timeSlot: z.string().min(1, "Time slot is required"),
+  timeSlot: z.string().min(1, "Required"),
   meetingType: z.enum(["f2f", "online"]).default("f2f"),
   details: z.string().optional(),
   participants: z
-    .array(z.string().email("Invalid email address"))
+    .array(z.string().email("Invalid email"))
     .optional()
     .default([]),
   status: z.string().optional().default("pending"),
 });
 
 export function AddAppointmentForm() {
-  const router = useRouter();
   const [showDialog, setShowDialog] = React.useState(false);
   const [formChanged, setFormChanged] = React.useState(false);
   const [facultyList, setFacultyList] = React.useState<
@@ -114,19 +112,18 @@ export function AddAppointmentForm() {
       subject: string;
       id: string;
       sections: string[];
-      Prof: string[];
+      prof: string[];
       sub_id: string;
     }[]
   >([]);
   const [loading, setLoading] = React.useState(true);
-
   const [selectedSubject, setSelectedSubject] = React.useState("");
   const [selectedFIC, setSelectedFIC] = React.useState("");
   const [availableSections, setAvailableSections] = React.useState<string[]>(
     []
   );
   const [facultySections, setFacultySections] = React.useState<
-    { Faculty: string; sections: string[]; email: string }[]
+    { faculty: string; sections: string[]; email: string }[]
   >([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -176,7 +173,7 @@ export function AddAppointmentForm() {
         const querySnapshot = await getDocs(q);
         const facultySectionsData = querySnapshot.docs.map(
           (doc) =>
-            doc.data() as { Faculty: string; sections: string[]; email: string }
+            doc.data() as { faculty: string; sections: string[]; email: string }
         );
         setFacultySections(facultySectionsData);
       } catch (error) {
@@ -185,6 +182,7 @@ export function AddAppointmentForm() {
     };
     fetchFacultySections();
   }, []);
+
   React.useEffect(() => {
     const selectedFacultyEmail =
       facultySections.find((fs) => fs.sections.includes(selectedFIC))?.email ||
@@ -201,14 +199,14 @@ export function AddAppointmentForm() {
           id: doc.id,
           ...(doc.data() as {
             sections: string[];
-            Prof: string[];
+            prof: string[];
             subject: string;
             sub_id: string;
           }), // Explicitly define the expected structure
         }));
 
         if (subjectsData.length > 0) {
-          console.log("Prof list:", subjectsData[0].Prof);
+          console.log("Prof list:", subjectsData[0].prof);
           console.log("Sections:", subjectsData[0].sections);
         }
         setSubjectOptions(subjectsData);
@@ -247,7 +245,7 @@ export function AddAppointmentForm() {
   React.useEffect(() => {
     const singleFaculty =
       facultySections.filter((fs) => fs.sections.includes(selectedFIC))[0]
-        ?.Faculty || "";
+        ?.faculty || "";
     form.setValue("facultyName", singleFaculty);
   }, [selectedFIC]);
 
@@ -445,18 +443,18 @@ export function AddAppointmentForm() {
                           </SelectItem>
                         ) : selectedSubject === "Other" ? (
                           facultyList
-                            .filter((faculty) => faculty.id && faculty.name) // Filter out invalid entries
-                            .map((faculty) => (
-                              <SelectItem key={faculty.id} value={faculty.name}>
-                                {faculty.name}
+                            .filter((value) => value.id && value.name) // Filter out invalid entries
+                            .map((value) => (
+                              <SelectItem key={value.id} value={value.name}>
+                                {value.name}
                               </SelectItem>
                             ))
                         ) : (
                           facultySections
                             .filter((fs) => fs.sections.includes(selectedFIC))
                             .map((fs) => (
-                              <SelectItem key={fs.Faculty} value={fs.Faculty}>
-                                {fs.Faculty}
+                              <SelectItem key={fs.faculty} value={fs.faculty}>
+                                {fs.faculty}
                               </SelectItem>
                             ))
                         )}
@@ -485,7 +483,7 @@ export function AddAppointmentForm() {
                       </TabsList>
                     </Tabs>
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-xs" />
                 </FormItem>
               )}
             />
@@ -527,7 +525,7 @@ export function AddAppointmentForm() {
                       />
                     </PopoverContent>
                   </Popover>
-                  <FormMessage />
+                  <FormMessage className="text-xs" />
                 </FormItem>
               )}
             />
@@ -553,7 +551,7 @@ export function AddAppointmentForm() {
                       </SelectContent>
                     </Select>
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-xs" />
                 </FormItem>
               )}
             />
@@ -572,7 +570,7 @@ export function AddAppointmentForm() {
                     {...field}
                   />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-xs" />
               </FormItem>
             )}
           />
@@ -668,16 +666,7 @@ export function AddAppointmentForm() {
             <Button variant="outline" onClick={handleBack} className="mr-2">
               Cancel
             </Button>
-            <Button
-              onClick={() => {
-                console.log("Direct submit attempt");
-                const values = form.getValues();
-                console.log("Values:", values);
-                onSubmit(values);
-              }}
-            >
-              Schedule
-            </Button>
+            <Button type="submit">Schedule</Button>
           </div>
         </form>
       </Form>
