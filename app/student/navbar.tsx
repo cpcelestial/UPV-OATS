@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { usePathname } from "next/navigation";
 import { auth, db } from "../firebase-config"; // Firebase auth and Firestore db
 import { onAuthStateChanged } from "firebase/auth"; // Firebase auth state listener
-import { doc, getDoc } from "firebase/firestore"; // Firestore methods to fetch user data
+import { collection, doc, getDoc, getDocs, onSnapshot, query, where } from "firebase/firestore"; // Firestore methods to fetch user data
 
 const routeTitles: { [key: string]: string } = {
   "/student/dashboard": "Dashboard",
@@ -28,31 +28,39 @@ export default function AppNavbar() {
     .join("")
     .toUpperCase();
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        try {
-          // Fetch user document from Firestore
-          const userDocRef = doc(db, "Users", user.uid);
-          const userDocSnap = await getDoc(userDocRef);
+    useEffect(() => {
+      const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          try {
+            // Fetch user document from Firestore
+            const userDocRef = doc(db, "Users", user.uid);
+            const userDocSnap = await getDoc(userDocRef);
+            console.log(userDocSnap);
+            console.log(user.uid)
+  
+            if (userDocSnap.exists()) {
+              const studentDocRef = collection(db, "students");
+              const studentQuery = query(
+                studentDocRef,
+                where("uid", "==", user.uid)
+              );
 
-          if (userDocSnap.exists()) {
-            const userData = userDocSnap.data();
-            // Assuming the user document has a 'name' field
-            setUserName(userData.name || userData.firstName || "User");
-          } else {
-            // Fallback to email or display name if no Firestore doc
-            setUserName(
-              user.displayName || user.email?.split("@")[0] || "User"
-            );
+              const unsubscribeStudent = onSnapshot(studentQuery, (snapshot) => {
+                const studentData = snapshot.docs[0]?.data();
+                setUserName(studentData?.firstName || "User");
+              });
+            } else {
+              // Fallback to email or display name if no Firestore doc
+              setUserName(
+                user.displayName || user.email?.split("@")[0] || "User"
+              );
+            }
+          } catch (error) {
+            console.error("Error fetching user data:", error);
+            setUserName("User");
           }
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-          setUserName("User");
         }
-      }
-    });
-
+      });
     // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []);

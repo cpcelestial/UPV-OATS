@@ -5,6 +5,32 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CalendarIcon, MapPinIcon, VideoIcon } from "lucide-react";
 import { format } from "date-fns";
+import { getFirestore, doc, updateDoc } from "firebase/firestore";
+
+const db = getFirestore();
+export const handleDecline = async (appointmentId: string) => {
+  try {
+    const appointmentRef = doc(db, "appointments", appointmentId);
+    await updateDoc(appointmentRef, {
+      status: "cancelled",
+    });
+    console.log(`Appointment ${appointmentId} declined successfully`);
+  } catch (error) {
+    console.error("Error declining appointment:", error);
+  }
+};
+export const handleAccept = async (appointmentId: string) => {
+  try {
+    const appointmentRef = doc(db, "appointments", appointmentId);
+    await updateDoc(appointmentRef, {
+      status: "approved",
+    });
+    console.log(`Appointment ${appointmentId} declined successfully`);
+  } catch (error) {
+    console.error("Error declining appointment:", error);
+  }
+};
+
 
 export interface Appointment {
   id: string;
