@@ -311,7 +311,17 @@ export function AddAppointmentForm() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div>
-            <FormLabel className="block w-full mb-2">Purpose</FormLabel>
+            <FormLabel
+              className={cn(
+                "block w-full mb-2",
+                (form.formState.errors.class ||
+                  form.formState.errors.section ||
+                  form.formState.errors.purpose) &&
+                  "text-destructive"
+              )}
+            >
+              Purpose
+            </FormLabel>
             <div className="flex gap-2">
               <FormField
                 control={form.control}
