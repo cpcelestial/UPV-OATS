@@ -32,9 +32,11 @@ export default function AppNavbar() {
           const userDocSnap = await getDoc(userDocRef);
 
           if (userDocSnap.exists()) {
-            const userData = userDocSnap.data();
+            const  studentDocRef = doc(db, "Students", user.uid);
+            const studentDocSnap = await getDoc(studentDocRef);
+            const studentData = studentDocSnap.data();
             // Assuming the user document has a 'name' field
-            setUserName(userData.name || userData.firstName || "User");
+            setUserName(studentData?.name || studentData?.firstName || "User");
           } else {
             // Fallback to email or display name if no Firestore doc
             setUserName(
