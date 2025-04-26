@@ -8,7 +8,8 @@ import {
 } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { AppointmentCard } from "../appointments/appointment-card";
-import type { Appointment } from "../../data";
+import type { Appointment } from "@/app/data";
+import { getFirestore, doc, updateDoc } from "firebase/firestore";
 
 interface AppointmentsListDialogProps {
   isOpen: boolean;
@@ -24,9 +25,24 @@ export function CalendarDialog({
   onClose,
   date,
   appointments,
-  onReschedule,
-  onDecline,
 }: AppointmentsListDialogProps) {
+  const db = getFirestore();
+  const handleDecline = async (appointmentId: string) => {
+    try {
+      const appointmentRef = doc(db, "appointments", appointmentId);
+      await updateDoc(appointmentRef, {
+        status: "cancelled",
+      });
+      console.log(`Appointment ${appointmentId} declined successfully`);
+    } catch (error) {
+      console.error("Error declining appointment:", error);
+    }
+  };
+  const handleReschedule = (id: string) => {
+    alert(`Reschedule appointment ${id}`);
+    // In a real app, navigate to reschedule page or open a modal
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl">
@@ -45,8 +61,8 @@ export function CalendarDialog({
               <AppointmentCard
                 key={appointment.id}
                 appointment={appointment}
-                onReschedule={onReschedule}
-                onDecline={onDecline}
+                onReschedule={handleReschedule}
+                onDecline={handleDecline}
               />
             ))
           )}
