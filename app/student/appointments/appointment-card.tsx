@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CalendarIcon, MapPinIcon, VideoIcon } from "lucide-react";
 import { format } from "date-fns";
-import type { Appointment } from "../data";
+import type { Appointment } from "../../data";
 
 interface AppointmentCardProps {
   appointment: Appointment;

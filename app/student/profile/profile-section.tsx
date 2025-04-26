@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import type { Student } from "../data";
+import type { Student } from "../../data";
 
 interface ProfileSectionProps {
   profile: Student;

@@ -19,7 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Camera } from "lucide-react";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "@/app/firebase-config";
-import type { Student } from "../data";
+import type { Student } from "../../data";
 
 interface ProfileDialogProps {
   open: boolean;

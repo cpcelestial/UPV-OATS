@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, Plus, AlertCircle } from "lucide-react";
-import type { DaySchedule } from "../data";
+import type { DaySchedule } from "../../data";
 
 interface ScheduleDialogProps {
   open: boolean;

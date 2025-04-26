@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppointmentList } from "./appointment-list";
-import type { Appointment } from "../data";
+import type { Appointment } from "../../data";
 
 interface AppointmentsTabsProps {
   upcomingAppointments: Appointment[];

@@ -5,7 +5,7 @@ import { fetchSchedule, updateSchedule } from "@/app/firebaseService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, MapPin, User } from "lucide-react";
-import type { DaySchedule } from "../data";
+import type { DaySchedule } from "../../data";
 
 export function ScheduleSection({
   schedule: initialSchedule,

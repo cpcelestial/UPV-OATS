@@ -4,7 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { Appointment } from "../data";
+import { Appointment } from "../../data";
 import { AppointmentsTabs } from "./appointment-tabs";
 import { auth, db } from "@/app/firebase-config";
 import {

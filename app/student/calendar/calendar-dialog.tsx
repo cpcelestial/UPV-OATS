@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { AppointmentCard } from "../appointments/appointment-card";
-import type { Appointment } from "../data";
+import type { Appointment } from "../../data";
 
 interface AppointmentsListDialogProps {
   isOpen: boolean;

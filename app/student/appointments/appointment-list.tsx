@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState } from "react";
 import { AppointmentCard } from "./appointment-card";
-import type { Appointment } from "../data";
+import type { Appointment } from "../../data";
 
 interface AppointmentListProps {
   appointments: Appointment[];

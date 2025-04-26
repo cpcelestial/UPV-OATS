@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import type { Appointment } from "../data";
+import type { Appointment } from "../../data";
 import { AppointmentCard } from "../appointments/appointment-card";
 import { CalendarDialog } from "./calendar-dialog";
 import {
