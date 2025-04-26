@@ -7,12 +7,13 @@ import { onAuthStateChanged } from "firebase/auth"; // Firebase auth state liste
 import { doc, getDoc } from "firebase/firestore"; // Firestore methods to fetch user data
 
 const routeTitles: { [key: string]: string } = {
-  "/student/dashboard": "Dashboard",
-  "/student/calendar": "Calendar",
-  "/student/appointments": "Appointments",
-  "/student/appointments/sched-app": "Appointments",
-  "/student/faculty": "Faculty",
-  "/student/profile": "Profile",
+  "/admin/dashboard": "Dashboard",
+  "/admin/calendar": "Calendar",
+  "/admin/appointments": "Appointments",
+  "/admin/appointments/sched-app": "Appointments",
+  "/admin/users": "Users",
+  "/admin/users/add-user": "Users",
+  "/admin/profile": "Profile",
 };
 
 export default function AppNavbar() {

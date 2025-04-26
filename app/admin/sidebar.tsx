@@ -51,15 +51,15 @@ export default function AppSidebar() {
   };
 
   const menuItems = [
-    { name: "Dashboard", icon: LayoutDashboard, route: "/student/dashboard" },
-    { name: "Calendar", icon: Calendar, route: "/student/calendar" },
+    { name: "Dashboard", icon: LayoutDashboard, route: "/admin/dashboard" },
+    { name: "Calendar", icon: Calendar, route: "/admin/calendar" },
     {
       name: "Appointments",
       icon: NotebookTabs,
-      route: "/student/appointments",
+      route: "/admin/appointments",
     },
-    { name: "Faculty", icon: BookUser, route: "/student/faculty" },
-    { name: "Profile", icon: UserRound, route: "/student/profile" },
+    { name: "Users", icon: BookUser, route: "/admin/users" },
+    { name: "Profile", icon: UserRound, route: "/admin/profile" },
   ];
 
   return (
@@ -79,7 +79,7 @@ export default function AppSidebar() {
                 <span className="text-primary">UPV</span>{" "}
                 <span className="text-secondary">OATS</span>
               </span>
-              <span className="text-primary font-bold">Student</span>
+              <span className="text-primary font-bold">Admin</span>
             </div>
           </SidebarHeader>
 

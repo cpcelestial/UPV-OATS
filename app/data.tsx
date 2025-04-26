@@ -3,10 +3,24 @@ export interface Student {
   firstName: string;
   lastName: string;
   email: string;
-  emailVisibility: boolean;
   studentNumber: string;
   college: string;
   degreeProgram: string;
+  country: string;
+  cityTown: string;
+  description: string;
+  avatarUrl: string;
+  schedule: DaySchedule[];
+}
+
+export interface Faculty {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  facultyNumber: string;
+  college: string;
+  department: string;
   country: string;
   cityTown: string;
   description: string;
@@ -34,6 +48,13 @@ export interface ClassSchedule {
   schedule: DaySchedule[];
 }
 
+export interface Participant {
+  id: string;
+  name?: string;
+  email: string;
+  avatarUrl?: string;
+}
+
 export interface Appointment {
   id: string;
   purpose: string;
@@ -46,5 +67,5 @@ export interface Appointment {
   meetingType: "f2f" | "online";
   details?: string;
   status: "approved" | "pending" | "cancelled" | "reschedule";
-  participants?: string[];
+  participants?: Participant[];
 }
