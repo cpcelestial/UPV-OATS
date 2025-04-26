@@ -2,7 +2,6 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { CalendarIcon, MapPinIcon, VideoIcon } from "lucide-react";
 import { format } from "date-fns";
 import type { Appointment } from "../../data";
@@ -69,7 +68,7 @@ export function AppointmentCard({
             <div>
               <p className="font-medium">{appointment.facultyName}</p>
               <p className="text-muted-foreground text-sm">
-                {appointment.facultyEmail || `faculty@example.com`}
+                {appointment.facultyEmail}
               </p>
             </div>
           </div>
@@ -99,13 +98,29 @@ export function AppointmentCard({
         )}
 
         {appointment.participants && appointment.participants.length > 0 && (
-          <div className="border-t pt-4">
+          <div className="">
             <p className="font-medium mb-2">Participants</p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-4 bg-[#F7F7F7] p-4 rounded-md">
               {appointment.participants.map((participant, index) => (
-                <Badge key={index} variant="outline" className="px-3 py-1">
-                  {participant}
-                </Badge>
+                <div key={index} className="flex items-center gap-2">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage
+                      src={participant.avatarUrl}
+                      alt={participant.name}
+                    />
+                    <AvatarFallback className="bg-secondary text-secondary-foreground text-xs">
+                      {"US"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="text-sm font-medium">{participant.name}</p>
+                    {participant.email && (
+                      <p className="text-xs text-muted-foreground">
+                        {participant.email}
+                      </p>
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
           </div>

@@ -16,9 +16,6 @@ import {
   Unsubscribe,
   or,
   and,
-  doc,
-  getFirestore,
-  updateDoc,
 } from "firebase/firestore";
 import { getAuth, onAuthStateChanged, User } from "firebase/auth";
 
@@ -38,25 +35,6 @@ export default function Page() {
     Appointment[]
   >([]);
   const [loading, setLoading] = React.useState(true);
-  const db = getFirestore();
-
-    const handleDecline = async (appointmentId: string) => {
-      try {
-        const appointmentRef = doc(db, "appointments", appointmentId);
-        await updateDoc(appointmentRef, {
-          status: "cancelled",
-        });
-        console.log(`Appointment ${appointmentId} declined successfully`);
-      } catch (error) {
-        console.error("Error declining appointment:", error);
-      }
-    };
-  
-    const handleReschedule = (id: string) => {
-      alert(`Reschedule appointment ${id}`);
-      // In a real app, navigate to reschedule page or open a modal
-    };
-  
 
   React.useEffect(() => {
     let unsubscribeSnapshot: Unsubscribe | null = null;
@@ -137,6 +115,16 @@ export default function Page() {
       }
     };
   }, []);
+
+  const handleReschedule = (id: string) => {
+    alert(`Reschedule appointment ${id}`);
+    // In a real app, navigate to reschedule page or open a modal
+  };
+
+  const handleDecline = (id: string) => {
+    alert(`Decline appointment ${id}`);
+    // In a real app, update the appointment status
+  };
 
   return (
     <div className="p-4">

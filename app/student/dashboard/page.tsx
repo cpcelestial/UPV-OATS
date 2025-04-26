@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
-import { Appointment } from "../data";
+import { Appointment } from "../../data";
 import { AppointmentsTabs } from "../appointments/appointment-tabs";
 import MonthCalendar from "./month-calendar";
 import { auth, db } from "@/app/firebase-config";
