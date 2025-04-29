@@ -29,62 +29,51 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, UserPlus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { db } from "@/app/firebase-config";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { useRouter } from "next/navigation";
 
 const studentSchema = z.object({
-  userType: z.literal("student"),
+  role: z.literal("student"),
   firstName: z.string().min(1, "Required"),
   lastName: z.string().min(1, "Required"),
   email: z.string().email("Invalid email"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
   studentNumber: z.string().min(1, "Required"),
   college: z.string().min(1, "Required"),
   degreeProgram: z.string().min(1, "Required"),
-  country: z.string().min(1, "Required"),
-  cityTown: z.string().min(1, "Required"),
-  description: z.string().optional(),
 });
 
 const facultySchema = z.object({
-  userType: z.literal("faculty"),
+  role: z.literal("faculty"),
   firstName: z.string().min(1, "Required"),
   lastName: z.string().min(1, "Required"),
   email: z.string().email("Invalid email"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
   facultyNumber: z.string().min(1, "Required"),
   college: z.string().min(1, "Required"),
   department: z.string().min(1, "Required"),
-  country: z.string().min(1, "Required"),
-  cityTown: z.string().min(1, "Required"),
-  description: z.string().optional(),
 });
 
-const formSchema = z.discriminatedUnion("userType", [
-  studentSchema,
-  facultySchema,
-]);
+const formSchema = z.discriminatedUnion("role", [studentSchema, facultySchema]);
 
 export function AddUserForm() {
   const [showDialog, setShowDialog] = React.useState(false);
   const [formChanged, setFormChanged] = React.useState(false);
-  const [userType, setUserType] = React.useState<"student" | "faculty">(
-    "student"
-  );
+  const [role, setRole] = React.useState<"student" | "faculty">("student");
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      userType: "student",
+      role: "student",
       firstName: "",
       lastName: "",
       email: "",
-      country: "",
-      cityTown: "",
-      description: "",
+      password: "",
     },
   });
 
@@ -94,26 +83,27 @@ export function AddUserForm() {
   }, [form]);
 
   React.useEffect(() => {
-    form.setValue("userType", userType);
-  }, [userType, form]);
+    form.setValue("role", role);
+  }, [role, form]);
+
+  const router = useRouter();
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       const userData = {
         ...values,
-        createdAt: serverTimestamp(),
+        dateAdded: serverTimestamp(),
       };
 
-      const collectionName =
-        values.userType === "student" ? "Students" : "Faculty";
+      const collectionName = values.role === "student" ? "Student" : "Faculty";
 
       const docRef = await addDoc(collection(db, collectionName), userData);
 
-      console.log(`${values.userType} added with ID: `, docRef.id);
+      console.log(`${values.role} added with ID: `, docRef.id);
       setFormChanged(false);
-      window.history.back();
+      router.push("/admin/users");
     } catch (error) {
-      console.error(`Error adding ${userType}: `, error);
+      console.error(`Error adding ${role}: `, error);
     }
   };
 
@@ -121,17 +111,17 @@ export function AddUserForm() {
     if (formChanged) {
       setShowDialog(true);
     } else {
-      window.history.back();
+      router.push("/admin/users");
     }
   };
 
   const handleConfirmBack = () => {
     setShowDialog(false);
-    window.history.back();
+    router.push("/admin/users");
   };
 
   return (
-    <div className="mb-4 p-6 space-y-6 max-w-2xl mx-auto bg-white rounded-lg">
+    <div className="mb-2 p-6 space-y-6 max-w-2xl mx-auto bg-white rounded-lg">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-2">
           <UserPlus className="h-7 w-7" />
@@ -152,10 +142,10 @@ export function AddUserForm() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="mb-6">
             <Tabs
-              defaultValue={userType}
+              defaultValue={role}
               onValueChange={(value) => {
-                setUserType(value as "student" | "faculty");
-                form.setValue("userType", value as "student" | "faculty");
+                setRole(value as "student" | "faculty");
+                form.setValue("role", value as "student" | "faculty");
               }}
               className="w-full"
             >
@@ -174,7 +164,7 @@ export function AddUserForm() {
                 <FormItem>
                   <FormLabel>First Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="First name" {...field} />
+                    <Input placeholder="Juan" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -187,7 +177,7 @@ export function AddUserForm() {
                 <FormItem>
                   <FormLabel>Last Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Last name" {...field} />
+                    <Input placeholder="Dela Cruz" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -195,7 +185,7 @@ export function AddUserForm() {
             />
           </div>
 
-          {userType === "student" ? (
+          {role === "student" ? (
             <>
               <div className="grid grid-cols-2 gap-4">
                 <FormField
@@ -207,7 +197,7 @@ export function AddUserForm() {
                       <FormControl>
                         <Input
                           type="email"
-                          placeholder="Email address"
+                          placeholder="email@up.edu.ph"
                           {...field}
                         />
                       </FormControl>
@@ -217,12 +207,16 @@ export function AddUserForm() {
                 />
                 <FormField
                   control={form.control}
-                  name="studentNumber"
+                  name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Student Number</FormLabel>
+                      <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input placeholder="Student number" {...field} />
+                        <Input
+                          type="password"
+                          placeholder="••••••••"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -230,6 +224,19 @@ export function AddUserForm() {
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="studentNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Student Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="20XX-XXXXX" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={form.control}
                   name="college"
@@ -245,20 +252,17 @@ export function AddUserForm() {
                             <SelectValue placeholder="Select college" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="CCS">
-                              College of Computer Studies
+                            <SelectItem value="CAS">
+                              College of Arts and Sciences
                             </SelectItem>
-                            <SelectItem value="COE">
-                              College of Engineering
+                            <SelectItem value="CFOS">
+                              College of Fisheries and Ocean Sciences
                             </SelectItem>
-                            <SelectItem value="CLA">
-                              College of Liberal Arts
+                            <SelectItem value="CM">
+                              College of Management
                             </SelectItem>
-                            <SelectItem value="COB">
-                              College of Business
-                            </SelectItem>
-                            <SelectItem value="COS">
-                              College of Science
+                            <SelectItem value="SOTECH">
+                              School of Technology
                             </SelectItem>
                           </SelectContent>
                         </Select>
@@ -267,6 +271,8 @@ export function AddUserForm() {
                     </FormItem>
                   )}
                 />
+              </div>
+              <div className="grid grid-cols-1 gap-4">
                 <FormField
                   control={form.control}
                   name="degreeProgram"
@@ -274,7 +280,7 @@ export function AddUserForm() {
                     <FormItem>
                       <FormLabel>Degree Program</FormLabel>
                       <FormControl>
-                        <Input placeholder="Degree program" {...field} />
+                        <Input placeholder="BS Computer Science" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -294,7 +300,7 @@ export function AddUserForm() {
                       <FormControl>
                         <Input
                           type="email"
-                          placeholder="Email address"
+                          placeholder="email@up.edu.ph"
                           {...field}
                         />
                       </FormControl>
@@ -304,12 +310,16 @@ export function AddUserForm() {
                 />
                 <FormField
                   control={form.control}
-                  name="facultyNumber"
+                  name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Faculty Number</FormLabel>
+                      <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input placeholder="Faculty number" {...field} />
+                        <Input
+                          type="password"
+                          placeholder="••••••••"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -317,6 +327,19 @@ export function AddUserForm() {
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="facultyNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Faculty Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="20XX-XXXXX" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={form.control}
                   name="college"
@@ -332,20 +355,17 @@ export function AddUserForm() {
                             <SelectValue placeholder="Select college" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="CCS">
-                              College of Computer Studies
+                            <SelectItem value="CAS">
+                              College of Arts and Sciences
                             </SelectItem>
-                            <SelectItem value="COE">
-                              College of Engineering
+                            <SelectItem value="CFOS">
+                              College of Fisheries and Ocean Sciences
                             </SelectItem>
-                            <SelectItem value="CLA">
-                              College of Liberal Arts
+                            <SelectItem value="CM">
+                              College of Management
                             </SelectItem>
-                            <SelectItem value="COB">
-                              College of Business
-                            </SelectItem>
-                            <SelectItem value="COS">
-                              College of Science
+                            <SelectItem value="SOTECH">
+                              School of Technology
                             </SelectItem>
                           </SelectContent>
                         </Select>
@@ -354,6 +374,8 @@ export function AddUserForm() {
                     </FormItem>
                   )}
                 />
+              </div>
+              <div className="grid grid-cols-1 gap-4">
                 <FormField
                   control={form.control}
                   name="department"
@@ -361,7 +383,10 @@ export function AddUserForm() {
                     <FormItem>
                       <FormLabel>Department</FormLabel>
                       <FormControl>
-                        <Input placeholder="Department" {...field} />
+                        <Input
+                          placeholder="Division of Physical Sciences and Mathematics"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -370,53 +395,6 @@ export function AddUserForm() {
               </div>
             </>
           )}
-
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="country"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Country</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Country" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="cityTown"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>City/Town</FormLabel>
-                  <FormControl>
-                    <Input placeholder="City or town" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Description</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Brief description or bio..."
-                    className="resize-none"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage className="text-xs" />
-              </FormItem>
-            )}
-          />
 
           <div className="flex justify-end">
             <Button variant="outline" onClick={handleBack} className="mr-2">

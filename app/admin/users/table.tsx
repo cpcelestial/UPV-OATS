@@ -1,22 +1,27 @@
-'use client'
+"use client";
 
-import { useState } from "react"
+import { useState } from "react";
 import {
-  ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState,
+  type ColumnDef,
+  type ColumnFiltersState,
+  type SortingState,
+  type VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table"
-import { ChevronDown, MoreHorizontal, Plus, Filter } from 'lucide-react'
-import Link from "next/link"
-
-import { Button } from "@/components/ui/button"
+} from "@tanstack/react-table";
+import {
+  ChevronDown,
+  MoreHorizontal,
+  Plus,
+  Filter,
+  ArrowUpDown,
+} from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,8 +29,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -33,22 +38,43 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import type { User } from "./types/user"
+} from "@/components/ui/table";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const data: User[] = [
   {
     id: "1",
     name: "Jane Doe",
     email: "janed@up.edu.ph",
-    role: "Admin",
-    lastActive: "2 hours ago",
+    role: "Faculty",
     dateAdded: "Dec 20, 2023",
-    avatarUrl: "/placeholder.svg"
+    avatarUrl: "/placeholder.svg",
   },
-  // Add more sample data as needed
-]
+  {
+    id: "2",
+    name: "John Smith",
+    email: "johns@up.edu.ph",
+    role: "Student",
+    dateAdded: "Jan 15, 2024",
+    avatarUrl: "/placeholder.svg",
+  },
+  {
+    id: "3",
+    name: "Alice Johnson",
+    email: "alicej@up.edu.ph",
+    role: "Faculty",
+    dateAdded: "Nov 5, 2023",
+    avatarUrl: "/placeholder.svg",
+  },
+  {
+    id: "4",
+    name: "Bob Williams",
+    email: "bobw@up.edu.ph",
+    role: "Student",
+    dateAdded: "Feb 10, 2024",
+    avatarUrl: "/placeholder.svg",
+  },
+];
 
 export const columns: ColumnDef<User>[] = [
   {
@@ -58,7 +84,9 @@ export const columns: ColumnDef<User>[] = [
         type="checkbox"
         className="translate-y-[2px]"
         checked={table.getIsAllPageRowsSelected()}
-        onChange={(value) => table.toggleAllPageRowsSelected(!!value.target.checked)}
+        onChange={(value) =>
+          table.toggleAllPageRowsSelected(!!value.target.checked)
+        }
       />
     ),
     cell: ({ row }) => (
@@ -74,20 +102,24 @@ export const columns: ColumnDef<User>[] = [
   },
   {
     accessorKey: "name",
-    header: "User name",
+    header: "User",
     cell: ({ row }) => {
       return (
         <div className="flex items-center gap-4">
           <Avatar>
             <AvatarImage src={row.original.avatarUrl} />
-            <AvatarFallback>{row.original.name[0]}</AvatarFallback>
+            <AvatarFallback className="bg-primary/10 text-primary">
+              {row.original.name[0]}
+            </AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
             <span className="font-medium">{row.original.name}</span>
-            <span className="text-sm text-muted-foreground">{row.original.email}</span>
+            <span className="text-sm text-muted-foreground">
+              {row.original.email}
+            </span>
           </div>
         </div>
-      )
+      );
     },
   },
   {
@@ -95,18 +127,20 @@ export const columns: ColumnDef<User>[] = [
     header: "Role",
   },
   {
-    accessorKey: "lastActive",
-    header: "Last Active",
-  },
-  {
     accessorKey: "dateAdded",
     header: "Date Added",
+    cell: ({ row }) => row.original.dateAdded,
+    sortingFn: (rowA, rowB) => {
+      const dateA = new Date(rowA.original.dateAdded);
+      const dateB = new Date(rowB.original.dateAdded);
+      return dateA.getTime() - dateB.getTime();
+    },
   },
   {
     id: "actions",
     cell: ({ row }) => {
-      const user = row.original
- 
+      const user = row.original;
+
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -116,30 +150,35 @@ export const columns: ColumnDef<User>[] = [
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(user.id)}
-            >
-              Copy user ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>View user details</DropdownMenuItem>
+            <DropdownMenuItem>View details</DropdownMenuItem>
             <DropdownMenuItem>Edit user</DropdownMenuItem>
             <DropdownMenuItem className="text-destructive">
               Delete user
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      )
+      );
     },
   },
-]
+];
 
 export function UsersTable() {
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = useState({})
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = useState({});
+  const [roleFilter, setRoleFilter] = useState<string | null>(null);
+  const [currentSort, setCurrentSort] = useState<string>("Sort");
+
+  const handleSort = (id: string, desc: boolean, label: string) => {
+    setSorting([{ id, desc }]);
+    setCurrentSort(label);
+  };
+
+  const clearSort = () => {
+    setSorting([]);
+    setCurrentSort("Sort");
+  };
 
   const table = useReactTable({
     data,
@@ -158,7 +197,7 @@ export function UsersTable() {
       columnVisibility,
       rowSelection,
     },
-  })
+  });
 
   return (
     <div className="w-full">
@@ -170,55 +209,99 @@ export function UsersTable() {
             onChange={(event) =>
               table.getColumn("name")?.setFilterValue(event.target.value)
             }
-            className="max-w-md w-full h-12 text-lg"
+            className="max-w-md w-full text-lg"
           />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="h-12">
-                <Filter className="mr-2 h-4 w-4" />
-                Filter
-                <ChevronDown className="ml-2 h-4 w-4" />
+              <Button variant="outline">
+                <Filter className="h-4 w-4 mr-2" />
+                {roleFilter || "Role"}
+                <ChevronDown className="h-4 w-4 ml-2" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[200px]">
-              <DropdownMenuLabel>Filter by</DropdownMenuLabel>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={() => {
+                  setRoleFilter("Student");
+                  table.getColumn("role")?.setFilterValue("Student");
+                }}
+              >
+                Student
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  setRoleFilter("Faculty");
+                  table.getColumn("role")?.setFilterValue("Faculty");
+                }}
+              >
+                Faculty
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  setRoleFilter(null);
+                  table.getColumn("role")?.setFilterValue("");
+                }}
+              >
+                Clear
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                <ArrowUpDown className="h-4 w-4 mr-2" />
+                {currentSort}
+                <ChevronDown className="h-4 w-4 ml-2" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Sort by</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Role</DropdownMenuItem>
-              <DropdownMenuItem>Last Active</DropdownMenuItem>
-              <DropdownMenuItem>Date Added</DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleSort("name", false, "Name (A - Z)")}
+              >
+                Name (A - Z)
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleSort("name", true, "Name (Z - A)")}
+              >
+                Name (Z - A)
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  handleSort("dateAdded", true, "Date (New - Old)")
+                }
+              >
+                Date (New - Old)
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  handleSort("dateAdded", false, "Date (Old - New)")
+                }
+              >
+                Date (Old - New)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={clearSort}>Clear</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
         <div className="flex items-center gap-2">
           <Link href="users/add-user">
-            <Button 
-              size="lg" 
-              className="bg-[#35563F] hover:bg-[#2A4A33] text-white h-12 px-6"
-            >
-              <Plus className="mr-2 h-5 w-5" /> Add user
+            <Button className="bg-[#2F5233] hover:bg-[#2F5233]/90">
+              <Plus className="h-4 w-4 mr-2" /> Add User
             </Button>
           </Link>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="h-12 w-12">
-                <MoreHorizontal className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[200px]">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Export Users</DropdownMenuItem>
-              <DropdownMenuItem>Import Users</DropdownMenuItem>
-              <DropdownMenuItem>Delete Users</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </div>
       <div className="rounded-md border">
-        <Table>
+        <Table className="min-w-full">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow
+                key={headerGroup.id}
+                className="bg-muted/75 hover:bg-muted/75"
+              >
                 {headerGroup.headers.map((header) => {
                   return (
                     <TableHead key={header.id}>
@@ -229,7 +312,7 @@ export function UsersTable() {
                             header.getContext()
                           )}
                     </TableHead>
-                  )
+                  );
                 })}
               </TableRow>
             ))}
@@ -240,6 +323,7 @@ export function UsersTable() {
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className={"hover:bg-transparent"}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -255,9 +339,9 @@ export function UsersTable() {
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center"
+                  className="h-24 text-center hover:bg-transparent"
                 >
-                  No results.
+                  No results
                 </TableCell>
               </TableRow>
             )}
@@ -289,6 +373,5 @@ export function UsersTable() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-

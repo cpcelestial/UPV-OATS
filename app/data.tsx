@@ -6,9 +6,9 @@ export interface Student {
   studentNumber: string;
   college: string;
   degreeProgram: string;
-  country: string;
-  cityTown: string;
-  description: string;
+  country?: string;
+  cityTown?: string;
+  description?: string;
   avatarUrl: string;
   schedule: DaySchedule[];
 }
@@ -21,9 +21,9 @@ export interface Faculty {
   facultyNumber: string;
   college: string;
   department: string;
-  country: string;
-  cityTown: string;
-  description: string;
+  country?: string;
+  cityTown?: string;
+  description?: string;
   avatarUrl: string;
   schedule: DaySchedule[];
 }

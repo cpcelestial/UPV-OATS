@@ -62,7 +62,6 @@ function generateTimeSlots() {
 
     // Add slot for current hour to half hour (e.g., 7:00 - 7:30)
     if (hour !== 17) {
-      // Don't add 5:00 - 5:30 PM
       slots.push(
         `${hourFormatted}:00 ${period} - ${hourFormatted}:30 ${period}`
       );
@@ -70,7 +69,6 @@ function generateTimeSlots() {
 
     // Add slot for half hour to next hour (e.g., 7:30 - 8:00)
     if (hour !== 17) {
-      // Don't add 5:30 - 6:00 PM
       const nextHour = (hour + 1) % 12 === 0 ? 12 : (hour + 1) % 12;
       const nextPeriod = hour + 1 < 12 ? "AM" : "PM";
       slots.push(
