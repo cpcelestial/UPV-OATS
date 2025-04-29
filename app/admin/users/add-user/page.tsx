@@ -92,7 +92,7 @@ export function AddUserForm() {
     try {
       const userData = {
         ...values,
-        createdAt: serverTimestamp(),
+        dateAdded: serverTimestamp(),
       };
 
       const collectionName = values.role === "student" ? "Student" : "Faculty";
