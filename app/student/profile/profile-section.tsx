@@ -41,7 +41,7 @@ export function ProfileSection({
               <div>
                 <h1 className="text-3xl font-bold mb-1">{`${profile.firstName} ${profile.lastName}`}</h1>
                 <p className="text-muted-foreground mb-6">
-                  {profile.description || "This is my bio."}
+                  {profile.description}
                 </p>
               </div>
               <Button
@@ -62,9 +62,13 @@ export function ProfileSection({
                 <p className="text-muted-foreground mb-1">College</p>
                 <p className="font-medium">{profile.college}</p>
               </div>
-              <div>
-                <p className="text-muted-foreground mb-1">City/Town</p>
-                <p className="font-medium">{profile.cityTown}</p>
+              <div className="invisible">
+                {profile.cityTown && (
+                  <div className="visible">
+                    <p className="text-muted-foreground mb-1">City/Town</p>
+                    <p className="font-medium">{profile.cityTown}</p>
+                  </div>
+                )}
               </div>
               <div>
                 <p className="text-muted-foreground mb-1">Student Number</p>
@@ -74,9 +78,13 @@ export function ProfileSection({
                 <p className="text-muted-foreground mb-1">Degree Program</p>
                 <p className="font-medium">{profile.degreeProgram}</p>
               </div>
-              <div>
-                <p className="text-muted-foreground mb-1">Country</p>
-                <p className="font-medium">{profile.country}</p>
+              <div className="invisible">
+                {profile.country && (
+                  <div className="visible">
+                    <p className="text-muted-foreground mb-1">Country</p>
+                    <p className="font-medium">{profile.country}</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

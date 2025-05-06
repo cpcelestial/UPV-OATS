@@ -19,7 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Camera } from "lucide-react";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "@/app/firebase-config";
-import type { Student } from "../data";
+import type { Student } from "../../data";
 
 interface ProfileDialogProps {
   open: boolean;
@@ -112,13 +112,13 @@ export function ProfileDialog({
               />
 
               <Button
-                variant="ghost"
+                variant="secondary"
                 size="icon"
                 className="absolute bottom-0 right-0 rounded-full"
               >
                 <label
                   htmlFor="file-input"
-                  className="absolute bottom-0 right-0 bg-gray-200 p-2 rounded-full  bg-transparent cursor-pointer flex items-center justify-center"
+                  className="absolute bottom-0 right-0 p-2 rounded-full cursor-pointer flex items-center justify-center"
                   style={{
                     width: "32px", // Adjust the size to match the small icon
                     height: "32px",
@@ -193,6 +193,7 @@ export function ProfileDialog({
               <Input
                 id="cityTown"
                 value={editedProfile.cityTown}
+                placeholder="Miagao, Iloilo"
                 onChange={(e) =>
                   setEditedProfile((prev) => ({
                     ...prev,
@@ -206,6 +207,7 @@ export function ProfileDialog({
               <Input
                 id="country"
                 value={editedProfile.country}
+                placeholder="Philippines"
                 onChange={(e) =>
                   setEditedProfile((prev) => ({
                     ...prev,
