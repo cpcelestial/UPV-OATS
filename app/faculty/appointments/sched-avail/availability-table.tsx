@@ -26,7 +26,7 @@ export function AvailabilityTable({
   // Generate time slots from 00:00 to 23:30 in 30-min increments
   const generateTimeSlots = () => {
     const slots: TimeSlot[] = [];
-    for (let hour = 0; hour < 24; hour++) {
+    for (let hour = 6; hour < 21; hour++) {
       for (let min = 0; min < 60; min += 30) {
         slots.push({
           time: `${hour.toString().padStart(2, "0")}:${min
