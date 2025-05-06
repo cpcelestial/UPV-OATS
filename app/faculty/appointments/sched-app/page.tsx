@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -82,26 +83,24 @@ function generateTimeSlots() {
 }
 
 const formSchema = z.object({
-  purpose: z.string().min(1, "Required"),
-  class: z.string().min(1, "Required"),
-  section: z.string().min(1, "Required"),
-  department: z.string().min(1, "Required"),
-  facultyName: z.string().min(1, "Required"),
-  facultyEmail: z.string().email("Invalid email").optional(),
+  purpose: z.string().min(1, "Purpose is required"),
+  class: z.string().min(1, "Class is required"),
+  section: z.string().min(1, "Section is required"),
+  department: z.string().min(1, "Department is required"),
+  facultyName: z.string().min(1, "Faculty name is required"),
+  facultyEmail: z.string().email("Invalid email address").optional(),
   date: z.date({
-    required_error: "Required",
+    required_error: "Date is required",
   }),
-  timeSlot: z.string().min(1, "Required"),
+  timeSlot: z.string().min(1, "Time slot is required"),
   meetingType: z.enum(["f2f", "online"]).default("f2f"),
   details: z.string().optional(),
-  participants: z
-    .array(z.string().email("Invalid email"))
-    .optional()
-    .default([]),
+  participants:z.array(z.string().email("Invalid email address")).optional().default([]),
   status: z.string().optional().default("pending"),
 });
 
 export function AddAppointmentForm() {
+  const router = useRouter();
   const [showDialog, setShowDialog] = React.useState(false);
   const [formChanged, setFormChanged] = React.useState(false);
   const [facultyList, setFacultyList] = React.useState<
@@ -112,18 +111,19 @@ export function AddAppointmentForm() {
       subject: string;
       id: string;
       sections: string[];
-      prof: string[];
+      Prof: string[];
       sub_id: string;
     }[]
   >([]);
   const [loading, setLoading] = React.useState(true);
+
   const [selectedSubject, setSelectedSubject] = React.useState("");
   const [selectedFIC, setSelectedFIC] = React.useState("");
   const [availableSections, setAvailableSections] = React.useState<string[]>(
     []
   );
   const [facultySections, setFacultySections] = React.useState<
-    { faculty: string; sections: string[]; email: string }[]
+    { Faculty: string; sections: string[]; email: string }[]
   >([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -133,7 +133,7 @@ export function AddAppointmentForm() {
       class: "",
       section: "",
       department: "",
-      facultyEmail: "",
+      facultyEmail: "", 
       date: undefined,
       timeSlot: "",
       meetingType: "f2f",
@@ -172,8 +172,7 @@ export function AddAppointmentForm() {
         const q = query(collection(db, "Faculty_in_charge"));
         const querySnapshot = await getDocs(q);
         const facultySectionsData = querySnapshot.docs.map(
-          (doc) =>
-            doc.data() as { faculty: string; sections: string[]; email: string }
+          (doc) => doc.data() as { Faculty: string; sections: string[]; email: string }
         );
         setFacultySections(facultySectionsData);
       } catch (error) {
@@ -182,12 +181,10 @@ export function AddAppointmentForm() {
     };
     fetchFacultySections();
   }, []);
-
   React.useEffect(() => {
     const selectedFacultyEmail =
-      facultySections.find((fs) => fs.sections.includes(selectedFIC))?.email ||
-      "";
-    form.setValue("facultyEmail", selectedFacultyEmail);
+      facultySections.find((fs) => fs.sections.includes(selectedFIC))?.email || "";
+    form.setValue("facultyEmail", selectedFacultyEmail)
   }, [selectedFIC, facultySections]);
 
   React.useEffect(() => {
@@ -199,16 +196,12 @@ export function AddAppointmentForm() {
           id: doc.id,
           ...(doc.data() as {
             sections: string[];
-            prof: string[];
+            Prof: string[];
             subject: string;
             sub_id: string;
           }), // Explicitly define the expected structure
         }));
 
-        // if (subjectsData.length > 0) {
-        //   console.log("Prof list:", subjectsData[0].prof);
-        //   console.log("Sections:", subjectsData[0].sections);
-        // }
         setSubjectOptions(subjectsData);
       } catch (error) {
         console.error("Error fetching sections:", error);
@@ -239,14 +232,14 @@ export function AddAppointmentForm() {
       setAvailableSections([]);
     }
 
-    form.setValue("section", "");
+    form.setValue("section", ""); 
   }, [selectedSubject]);
 
   React.useEffect(() => {
     const singleFaculty =
       facultySections.filter((fs) => fs.sections.includes(selectedFIC))[0]
-        ?.faculty || "";
-    form.setValue("facultyName", singleFaculty);
+        ?.Faculty || "";
+    form.setValue("facultyName", singleFaculty); 
   }, [selectedFIC]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -271,7 +264,7 @@ export function AddAppointmentForm() {
       );
 
       setFormChanged(false);
-      window.history.back();
+      router.push("/student/calendar");
     } catch (error) {
       console.error("Error adding appointment: ", error);
     }
@@ -310,23 +303,13 @@ export function AddAppointmentForm() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div>
-            <FormLabel
-              className={cn(
-                "block w-full mb-2",
-                (form.formState.errors.class ||
-                  form.formState.errors.section ||
-                  form.formState.errors.purpose) &&
-                  "text-destructive"
-              )}
-            >
-              Purpose
-            </FormLabel>
+            <FormLabel className="block w-full mb-2">Purpose</FormLabel>
             <div className="flex gap-2">
               <FormField
                 control={form.control}
                 name="class"
                 render={({ field }) => (
-                  <FormItem className="flex-shrink-0 w-auto">
+                  <FormItem className="w-[120px]">
                     <FormControl>
                       <Select
                         onValueChange={(value) => {
@@ -335,10 +318,8 @@ export function AddAppointmentForm() {
                         }}
                         value={field.value}
                       >
-                        <SelectTrigger className="w-auto">
-                          <div className="flex items-center justify-between w-full">
-                            <SelectValue placeholder="Class" />
-                          </div>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Class" />
                         </SelectTrigger>
                         <SelectContent>
                           {loading ? (
@@ -366,12 +347,12 @@ export function AddAppointmentForm() {
                   </FormItem>
                 )}
               />
-              {selectedSubject && selectedSubject !== "Other" && (
+              {selectedSubject  && selectedSubject !== "Other" && (
                 <FormField
                   control={form.control}
                   name="section"
                   render={({ field }) => (
-                    <FormItem className="flex-shrink-0 w-auto">
+                    <FormItem className="w-[140px]">
                       <FormControl>
                         <Select
                           onValueChange={(value) => {
@@ -380,10 +361,8 @@ export function AddAppointmentForm() {
                           }}
                           value={field.value || ""}
                         >
-                          <SelectTrigger className="w-auto">
-                            <div className="flex items-center justify-between w-full">
-                              <SelectValue placeholder="Section" />
-                            </div>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Section" />
                           </SelectTrigger>
                           <SelectContent>
                             {loading ? (
@@ -441,9 +420,7 @@ export function AddAppointmentForm() {
                       disabled={selectedSubject !== "Other"}
                     >
                       <SelectTrigger>
-                        <div className="flex items-center justify-between w-full">
-                          <SelectValue placeholder="Select faculty" />
-                        </div>
+                        <SelectValue placeholder="Select faculty" />
                       </SelectTrigger>
                       <SelectContent>
                         {loading ? (
@@ -452,18 +429,18 @@ export function AddAppointmentForm() {
                           </SelectItem>
                         ) : selectedSubject === "Other" ? (
                           facultyList
-                            .filter((value) => value.id && value.name) // Filter out invalid entries
-                            .map((value) => (
-                              <SelectItem key={value.id} value={value.name}>
-                                {value.name}
+                            .filter((faculty) => faculty.id && faculty.name) // Filter out invalid entries
+                            .map((faculty) => (
+                              <SelectItem key={faculty.id} value={faculty.name}>
+                                {faculty.name}
                               </SelectItem>
                             ))
                         ) : (
                           facultySections
                             .filter((fs) => fs.sections.includes(selectedFIC))
                             .map((fs) => (
-                              <SelectItem key={fs.faculty} value={fs.faculty}>
-                                {fs.faculty}
+                              <SelectItem key={fs.Faculty} value={fs.Faculty}>
+                                {fs.Faculty}
                               </SelectItem>
                             ))
                         )}
@@ -492,7 +469,7 @@ export function AddAppointmentForm() {
                       </TabsList>
                     </Tabs>
                   </FormControl>
-                  <FormMessage className="text-xs" />
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -534,7 +511,7 @@ export function AddAppointmentForm() {
                       />
                     </PopoverContent>
                   </Popover>
-                  <FormMessage className="text-xs" />
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -547,9 +524,7 @@ export function AddAppointmentForm() {
                   <FormControl>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <SelectTrigger>
-                        <div className="flex items-center justify-between w-full">
-                          <SelectValue placeholder="Select time slot" />
-                        </div>
+                        <SelectValue placeholder="Select time slot" />
                       </SelectTrigger>
                       <SelectContent>
                         {generateTimeSlots().map((slot) => (
@@ -560,7 +535,7 @@ export function AddAppointmentForm() {
                       </SelectContent>
                     </Select>
                   </FormControl>
-                  <FormMessage className="text-xs" />
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -579,7 +554,7 @@ export function AddAppointmentForm() {
                     {...field}
                   />
                 </FormControl>
-                <FormMessage className="text-xs" />
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -629,13 +604,10 @@ export function AddAppointmentForm() {
                       if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
                         const currentParticipants =
                           form.getValues("participants") || [];
-                        if (!currentParticipants.includes(email)) {
-                          form.setValue("participants", [
-                            ...currentParticipants,
-                            email,
-                          ]);
-                          input.value = "";
-                        }
+                          if (!currentParticipants.includes(email)) {
+                            form.setValue("participants", [...currentParticipants, email]);
+                            input.value = "";
+                          }
                       }
                     }
                   }}
@@ -651,13 +623,10 @@ export function AddAppointmentForm() {
                     if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
                       const currentParticipants =
                         form.getValues("participants") || [];
-                      if (!currentParticipants.includes(email)) {
-                        form.setValue("participants", [
-                          ...currentParticipants,
-                          email,
-                        ]);
-                        input.value = "";
-                      }
+                        if (!currentParticipants.includes(email)) {
+                          form.setValue("participants", [...currentParticipants, email]);
+                          input.value = "";
+                        }
                     }
                   }}
                 >
@@ -675,7 +644,14 @@ export function AddAppointmentForm() {
             <Button variant="outline" onClick={handleBack} className="mr-2">
               Cancel
             </Button>
-            <Button type="submit">Schedule</Button>
+            <Button
+              onClick={() => {
+                const values = form.getValues();
+                onSubmit(values);
+              }}
+            >
+              Schedule
+            </Button>
           </div>
         </form>
       </Form>

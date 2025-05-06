@@ -13,6 +13,9 @@ import {
   query,
   where,
 } from "firebase/firestore"; // Firestore methods to fetch user data // Firestore methods to fetch user data
+import { saveScheduleForUser } from "@/app/faculty/appointments/sched-avail/autoslots"; // Function to save time slots for user
+import { getDate, isToday } from "date-fns";
+
 
 const routeTitles: { [key: string]: string } = {
   "/faculty/dashboard": "Dashboard",
@@ -36,22 +39,23 @@ export default function AppNavbar() {
     .join("")
     .toUpperCase();
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        try {
-          // Fetch user document from Firestore
-          const userDocRef = doc(db, "Users", user.uid);
-          const userDocSnap = await getDoc(userDocRef);
-          console.log(userDocSnap);
-          console.log(user.uid);
+    useEffect(() => {
 
-          if (userDocSnap.exists()) {
-            const facultyDocRef = collection(db, "faculty");
-            const facultyQuery = query(
-              facultyDocRef,
-              where("uid", "==", user.uid)
-            );
+      const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        const today = new Date();
+        saveScheduleForUser( today, false); // Call the function to save time slots for user
+        if (user) {
+          try {
+            // Fetch user document from Firestore
+            const userDocRef = doc(db, "Users", user.uid);
+            const userDocSnap = await getDoc(userDocRef);
+  
+            if (userDocSnap.exists()) {
+              const facultyDocRef = collection(db, "faculty");
+              const facultyQuery = query(
+                facultyDocRef,
+                where("uid", "==", user.uid)
+              );
 
             const unsubscribefaculty = onSnapshot(facultyQuery, (snapshot) => {
               const facultyData = snapshot.docs[0]?.data();

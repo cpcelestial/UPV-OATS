@@ -117,6 +117,9 @@ export function AddAppointmentForm() {
   >([]);
   const [loading, setLoading] = React.useState(true);
   const [selectedSubject, setSelectedSubject] = React.useState("");
+  const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(
+    undefined
+  );
   const [selectedFIC, setSelectedFIC] = React.useState("");
   const [availableSections, setAvailableSections] = React.useState<string[]>(
     []
@@ -238,6 +241,26 @@ export function AddAppointmentForm() {
   }, []);
 
   React.useEffect(() => {
+    const fetchTimeslots = async () => {
+      try {
+        const q = query(
+          collection(db, "timeSlots"),
+          where("available", "==", true),
+          );
+        const querySnapshot = await getDocs(q);
+        const timeSlotsData = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...(doc.data() as { slots: string[]; date: string }),
+        }));
+        console.log("Time slots data:", timeSlotsData);
+      } catch (error) {
+        console.error("Error fetching time slots:", error);
+      }
+    }
+    fetchTimeslots();
+  }, []);
+
+  React.useEffect(() => {
     const subscription = form.watch(() => setFormChanged(true));
     return () => subscription.unsubscribe();
   }, [form]);
@@ -276,7 +299,6 @@ export function AddAppointmentForm() {
           student.email.toLowerCase().includes(searchTerm.toLowerCase())
         );
       };
-      return searchItem(searchTerm);
     }
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -556,13 +578,16 @@ export function AddAppointmentForm() {
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) => date < new Date()}
-                        initialFocus
-                      />
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={(value) => {
+                      field.onChange(value);
+                      setSelectedDate(value);
+                      }}
+                      disabled={(date) => date < new Date()}
+                      initialFocus
+                  />
                     </PopoverContent>
                   </Popover>
                   <FormMessage className="text-xs" />
