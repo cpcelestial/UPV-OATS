@@ -31,10 +31,10 @@ export default function AppNavbar() {
 
   const [userName, setUserName] = useState("User");
   const userInitials = userName
-  .split(" ")
-  .map((n) => n[0])
-  .join("")
-  .toUpperCase();
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase();
 
     useEffect(() => {
       const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -51,22 +51,22 @@ export default function AppNavbar() {
                 where("uid", "==", user.uid)
               );
 
-              const unsubscribefaculty = onSnapshot(facultyQuery, (snapshot) => {
-                const facultyData = snapshot.docs[0]?.data();
-                setUserName(facultyData?.firstName || "User");
-              });
-            } else {
-              // Fallback to email or display name if no Firestore doc
-              setUserName(
-                user.displayName || user.email?.split("@")[0] || "User"
-              );
-            }
-          } catch (error) {
-            console.error("Error fetching user data:", error);
-            setUserName("User");
+            const unsubscribefaculty = onSnapshot(facultyQuery, (snapshot) => {
+              const facultyData = snapshot.docs[0]?.data();
+              setUserName(facultyData?.firstName || "User");
+            });
+          } else {
+            // Fallback to email or display name if no Firestore doc
+            setUserName(
+              user.displayName || user.email?.split("@")[0] || "User"
+            );
           }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+          setUserName("User");
         }
-      });
+      }
+    });
     // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []);

@@ -202,10 +202,6 @@ export function AddAppointmentForm() {
           }), // Explicitly define the expected structure
         }));
 
-        if (subjectsData.length > 0) {
-          console.log("Prof list:", subjectsData[0].Prof);
-          console.log("Sections:", subjectsData[0].sections);
-        }
         setSubjectOptions(subjectsData);
       } catch (error) {
         console.error("Error fetching sections:", error);
@@ -267,7 +263,6 @@ export function AddAppointmentForm() {
         appointmentData
       );
 
-      console.log("Appointment added with ID: ", docRef.id);
       setFormChanged(false);
       router.push("/student/calendar");
     } catch (error) {
@@ -651,9 +646,7 @@ export function AddAppointmentForm() {
             </Button>
             <Button
               onClick={() => {
-                console.log("Direct submit attempt");
                 const values = form.getValues();
-                console.log("Values:", values);
                 onSubmit(values);
               }}
             >
