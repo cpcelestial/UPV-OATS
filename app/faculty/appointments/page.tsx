@@ -3,8 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { Appointment } from "../data";
+import { Appointment } from "@/app/data";
 import { AppointmentsTabs } from "./appointment-tabs";
 import { auth, db } from "@/app/firebase-config";
 import {
@@ -113,7 +112,7 @@ export default function Page() {
     };
   }, []);
 
-  console.log(upcomingAppointments); 
+  console.log(upcomingAppointments);
   console.log(pendingAppointments);
   console.log(cancelledAppointments);
   console.log(rescheduleAppointments);
@@ -136,11 +135,10 @@ export default function Page() {
   return (
     <div className="p-4">
       <Button
-        onClick={() => router.push("appointments/sched-app")}
-        className="float-right bg-[#2F5233] hover:bg-[#2F5233]/90"
+        onClick={() => router.push("appointments/sched-avail")}
+        className="float-right"
       >
-        <Plus className="h-4 w-4 mr-2" />
-        Add Appointment
+        Check Availability
       </Button>
       <AppointmentsTabs
         upcomingAppointments={upcomingAppointments}
