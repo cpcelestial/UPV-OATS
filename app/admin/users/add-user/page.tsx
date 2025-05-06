@@ -100,13 +100,34 @@ export function AddUserForm() {
       console.log("User created successfully");
 
       const userData = {
-        ...values,
+        email: values.email,
+        studentnumber: values.role === "student" ? values.studentNumber : null,
+        facultynumber: values.role === "faculty" ? values.facultyNumber : null,
+        role: values.role,
         dateAdded: serverTimestamp(),
       };
 
       const collectionName = values.role === "student" ? "student" : "faculty";
 
       const docRef = await addDoc(collection(db, "Users"), userData);
+      if (values.role === "student") {
+        await addDoc(collection(db, "student"), {
+          ...userData,
+          firstName: values.firstName,
+          lastName: values.lastName,
+          college: values.college,
+          degreeProgram: values.degreeProgram,
+        });
+      }
+      if (values.role === "faculty") {
+        await addDoc(collection(db, "Faculty_in_charge"), {
+          ...userData,
+          firstName: values.firstName,
+          lastName: values.lastName,
+          college: values.college,
+          department: values.department,
+        });
+      }
 
       console.log(`${values.role} added with ID: `, docRef.id);
       setFormChanged(false);
