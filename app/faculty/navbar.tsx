@@ -36,22 +36,7 @@ export default function AppNavbar() {
     .join("")
     .toUpperCase();
 
-    useEffect(() => {
-      const unsubscribe = onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          try {
-            // Fetch user document from Firestore
-            const userDocRef = doc(db, "Users", user.uid);
-            const userDocSnap = await getDoc(userDocRef);
-            console.log(userDocSnap);
-            console.log(user.uid)
-  
-            if (userDocSnap.exists()) {
-              const facultyDocRef = collection(db, "faculty");
-              const facultyQuery = query(
-                facultyDocRef,
-                where("uid", "==", user.uid)
-              );
+  useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
