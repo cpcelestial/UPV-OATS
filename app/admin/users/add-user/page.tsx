@@ -33,7 +33,8 @@ import { ArrowLeft, UserPlus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { auth, db } from "@/app/firebase-config";
+import { db } from "@/app/firebase-config";
+import { auth as adminAuth } from "@/app/firebase-config";
 import { collection, addDoc, serverTimestamp, setDoc, doc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { createUserWithEmailAndPassword, getAuth, onAuthStateChanged } from 'firebase/auth';
@@ -257,7 +258,6 @@ export function AddUserForm() {
                         {...field}
                         onChange={(e) => {
                           field.onChange(e);
-                          console.log("Password input:", e.target.value);
                           setPassword(e.target.value);
                         }}
                         />
@@ -349,7 +349,6 @@ export function AddUserForm() {
                           value={email}
                           onChange={(e) => {
                             field.onChange(e);
-                            console.log("Email input:", e.target.value);
                             setEmail(e.target.value);
                           }}
                         />
@@ -371,7 +370,6 @@ export function AddUserForm() {
                           {...field}
                           onChange={(e) => {
                             field.onChange(e);
-                            console.log("Password input:", e.target.value);
                             setPassword(e.target.value);
                           }}
                         />

@@ -5,6 +5,7 @@
 /.pnp
 .pnp.js
 .yarn/install-state.gz
+/secrets
 
 # testing
 /coverage
@@ -35,3 +36,4 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 navbar/styles/global.css
+/app/secrets
