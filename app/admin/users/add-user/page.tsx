@@ -33,9 +33,10 @@ import { ArrowLeft, UserPlus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { db } from "@/app/firebase-config";
+import { auth, db } from "@/app/firebase-config";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 const studentSchema = z.object({
   role: z.literal("student"),
@@ -87,17 +88,25 @@ export function AddUserForm() {
   }, [role, form]);
 
   const router = useRouter();
+  
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [error, setError] = React.useState(null);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+
     try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      console.log("User created successfully");
+
       const userData = {
         ...values,
         dateAdded: serverTimestamp(),
       };
 
-      const collectionName = values.role === "student" ? "Student" : "Faculty";
+      const collectionName = values.role === "student" ? "student" : "faculty";
 
-      const docRef = await addDoc(collection(db, collectionName), userData);
+      const docRef = await addDoc(collection(db, "Users"), userData);
 
       console.log(`${values.role} added with ID: `, docRef.id);
       setFormChanged(false);
@@ -199,6 +208,11 @@ export function AddUserForm() {
                           type="email"
                           placeholder="email@up.edu.ph"
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            console.log("Email input:", e.target.value);
+                            setEmail(e.target.value);
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -213,9 +227,14 @@ export function AddUserForm() {
                       <FormLabel>Password</FormLabel>
                       <FormControl>
                         <Input
-                          type="password"
-                          placeholder="••••••••"
-                          {...field}
+                        type="password"
+                        placeholder="••••••••"
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          console.log("Password input:", e.target.value);
+                          setPassword(e.target.value);
+                        }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -302,6 +321,9 @@ export function AddUserForm() {
                           type="email"
                           placeholder="email@up.edu.ph"
                           {...field}
+                          value={email}
+                          onChange={(e) => {setEmail(e.target.value);}
+                          }
                         />
                       </FormControl>
                       <FormMessage />
