@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppointmentList } from "./appointment-list";
-import type { Appointment } from "./appointment-card";
+import type { Appointment } from "../../data";
 import { getFirestore, doc, updateDoc } from "firebase/firestore";
 
 interface AppointmentsTabsProps {

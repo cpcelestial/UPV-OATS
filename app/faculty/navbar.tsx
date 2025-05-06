@@ -31,10 +31,10 @@ export default function AppNavbar() {
 
   const [userName, setUserName] = useState("User");
   const userInitials = userName
-  .split(" ")
-  .map((n) => n[0])
-  .join("")
-  .toUpperCase();
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase();
 
     useEffect(() => {
       const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -52,23 +52,38 @@ export default function AppNavbar() {
                 facultyDocRef,
                 where("uid", "==", user.uid)
               );
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          // Fetch user document from Firestore
+          const userDocRef = doc(db, "Users", user.uid);
+          const userDocSnap = await getDoc(userDocRef);
+          console.log(userDocSnap);
+          console.log(user.uid);
 
-              const unsubscribefaculty = onSnapshot(facultyQuery, (snapshot) => {
-                const facultyData = snapshot.docs[0]?.data();
-                setUserName(facultyData?.firstName || "User");
-              });
-            } else {
-              // Fallback to email or display name if no Firestore doc
-              setUserName(
-                user.displayName || user.email?.split("@")[0] || "User"
-              );
-            }
-          } catch (error) {
-            console.error("Error fetching user data:", error);
-            setUserName("User");
+          if (userDocSnap.exists()) {
+            const facultyDocRef = collection(db, "faculty");
+            const facultyQuery = query(
+              facultyDocRef,
+              where("uid", "==", user.uid)
+            );
+
+            const unsubscribefaculty = onSnapshot(facultyQuery, (snapshot) => {
+              const facultyData = snapshot.docs[0]?.data();
+              setUserName(facultyData?.firstName || "User");
+            });
+          } else {
+            // Fallback to email or display name if no Firestore doc
+            setUserName(
+              user.displayName || user.email?.split("@")[0] || "User"
+            );
           }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+          setUserName("User");
         }
-      });
+      }
+    });
     // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []);
