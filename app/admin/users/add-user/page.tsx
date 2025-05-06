@@ -96,14 +96,6 @@ export function AddUserForm() {
   const [currentUser, setCurrentUser] = React.useState<any>(null);
   const auth = getAuth(); // Initialize Firebase Auth
 
-  React.useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log("Current user:", user ? user.email : "No user logged in");
-      setCurrentUser(user);
-    });
-    return () => unsubscribe();
-  }, []);
-
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
 
     try {

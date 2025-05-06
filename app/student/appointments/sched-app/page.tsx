@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, CalendarIcon, Plus, X } from "lucide-react";
+import { ArrowLeft, CalendarIcon, Plus, TerminalSquare, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useForm } from "react-hook-form";
@@ -53,6 +53,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import dynamic from "next/dynamic";
 
 function generateTimeSlots() {
   const slots = [];
@@ -123,6 +124,7 @@ export function AddAppointmentForm() {
   const [facultySections, setFacultySections] = React.useState<
     { faculty: string; sections: string[]; email: string }[]
   >([]);
+  const [participantEmail, setParticipantEmail] = React.useState("");
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -189,6 +191,24 @@ export function AddAppointmentForm() {
   }, [selectedFIC, facultySections]);
 
   React.useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const q = query(collection(db, "students"));
+        const querySnapshot = await getDocs(q);
+        const studentsData = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...(doc.data() as { name: string; email: string }),
+        }));
+        console.log("Students data:", studentsData);
+      } catch (error) {
+        console.error("Error fetching students:", error);
+      }
+    };
+
+    fetchStudents();
+  }, []);
+  
+  React.useEffect(() => {
     const fetchSections = async () => {
       try {
         const q = query(collection(db, "Subjects"));
@@ -246,6 +266,18 @@ export function AddAppointmentForm() {
         ?.faculty || "";
     form.setValue("facultyName", singleFaculty);
   }, [selectedFIC]);
+
+  function dynamicSearch(search: string, students: { name: string; email: string }[]){
+      const [searchTerm, setSearchTerm] = React.useState(search);
+      const searchItem = (searchTerm: string) => {
+        if(!searchTerm) return [];
+        return students.filter((student) => 
+          student.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+          student.email.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      };
+      return searchItem(searchTerm);
+    }
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -624,7 +656,10 @@ export function AddAppointmentForm() {
                       e.preventDefault();
                       const input = e.currentTarget;
                       const email = input.value.trim();
+                      setParticipantEmail(email);
 
+                      dynamicSearch(email, []); 
+                      console.log("Filtered participants:", dynamicSearch(email, []));
                       if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
                         const currentParticipants =
                           form.getValues("participants") || [];
