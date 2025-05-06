@@ -18,7 +18,6 @@ import {
   LayoutDashboard,
   LogOut,
   NotebookTabs,
-  UserRound,
 } from "lucide-react";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase-config";
@@ -59,7 +58,6 @@ export default function AppSidebar() {
       route: "/admin/appointments",
     },
     { name: "Users", icon: BookUser, route: "/admin/users" },
-    { name: "Profile", icon: UserRound, route: "/admin/profile" },
   ];
 
   return (
