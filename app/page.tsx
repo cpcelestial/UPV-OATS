@@ -28,6 +28,7 @@ const App: React.FC = () => {
     signInWithEmailAndPassword(auth, email, password)
       .then(async (userCredential) => {
         const user = userCredential.user;
+        console.log(user.uid, "User authenticated successfully.");
         const userDocRef = doc(db, "Users", user.uid);
         const userDoc = await getDoc(userDocRef);
 

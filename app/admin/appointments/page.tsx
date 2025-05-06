@@ -47,10 +47,6 @@ export default function Page() {
         const appointmentsRef = collection(db, "appointments");
         const q = query(
           appointmentsRef,
-          or(
-            where("userId", "==", user.uid),
-            where("participants", "array-contains", user.email)
-          ),
           orderBy("date", "asc")
         );
 

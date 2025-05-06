@@ -6,8 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { CalendarIcon, MapPinIcon, VideoIcon } from "lucide-react";
 import { format } from "date-fns";
 import { getFirestore, doc, updateDoc } from "firebase/firestore";
-
-const db = getFirestore();
+import { db } from "@/app/firebase-config";
 export const handleDecline = async (appointmentId: string) => {
   try {
     const appointmentRef = doc(db, "appointments", appointmentId);

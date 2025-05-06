@@ -33,9 +33,11 @@ import { ArrowLeft, UserPlus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { db } from "@/app/firebase-config";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { auth, db } from "@/app/firebase-config";
+import { collection, addDoc, serverTimestamp, setDoc, doc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
+import { createUserWithEmailAndPassword, getAuth, onAuthStateChanged } from 'firebase/auth';
+import { Fira_Sans } from "next/font/google";
 
 const studentSchema = z.object({
   role: z.literal("student"),
@@ -87,17 +89,51 @@ export function AddUserForm() {
   }, [role, form]);
 
   const router = useRouter();
+  
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [error, setError] = React.useState(null);
+  const [currentUser, setCurrentUser] = React.useState<any>(null);
+  const auth = getAuth(); // Initialize Firebase Auth
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+
     try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user; // Retrieve the user object
+      console.log("User created successfully");
+
       const userData = {
-        ...values,
+        firstName: values.firstName,
+        email: values.email,
+        studentnumber: values.role === "student" ? values.studentNumber : null,
+        facultynumber: values.role === "faculty" ? values.facultyNumber : null,
+        role: values.role,
         dateAdded: serverTimestamp(),
       };
 
-      const collectionName = values.role === "student" ? "Student" : "Faculty";
+      const collectionName = values.role === "student" ? "student" : "faculty";
 
-      const docRef = await addDoc(collection(db, collectionName), userData);
+      const docRef = doc(db, "Users", user.uid);
+      await setDoc(docRef, userData);
+      if (values.role === "student") {
+        await addDoc(collection(db, "student"), {
+          ...userData,
+          firstName: values.firstName,
+          lastName: values.lastName,
+          college: values.college,
+          degreeProgram: values.degreeProgram,
+        });
+      }
+      if (values.role === "faculty") {
+        await addDoc(collection(db, "Faculty_in_charge"), {
+          ...userData,
+          firstName: values.firstName,
+          lastName: values.lastName,
+          college: values.college,
+          department: values.department,
+        });
+      }
 
       console.log(`${values.role} added with ID: `, docRef.id);
       setFormChanged(false);
@@ -199,6 +235,11 @@ export function AddUserForm() {
                           type="email"
                           placeholder="email@up.edu.ph"
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            console.log("Email input:", e.target.value);
+                            setEmail(e.target.value);
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -213,9 +254,14 @@ export function AddUserForm() {
                       <FormLabel>Password</FormLabel>
                       <FormControl>
                         <Input
-                          type="password"
-                          placeholder="••••••••"
-                          {...field}
+                        type="password"
+                        placeholder="••••••••"
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          console.log("Password input:", e.target.value);
+                          setPassword(e.target.value);
+                        }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -302,6 +348,12 @@ export function AddUserForm() {
                           type="email"
                           placeholder="email@up.edu.ph"
                           {...field}
+                          value={email}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            console.log("Email input:", e.target.value);
+                            setEmail(e.target.value);
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -319,6 +371,11 @@ export function AddUserForm() {
                           type="password"
                           placeholder="••••••••"
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            console.log("Password input:", e.target.value);
+                            setPassword(e.target.value);
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
