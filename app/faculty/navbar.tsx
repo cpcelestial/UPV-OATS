@@ -4,14 +4,22 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { usePathname } from "next/navigation";
 import { auth, db } from "../firebase-config"; // Firebase auth and Firestore db
 import { onAuthStateChanged } from "firebase/auth"; // Firebase auth state listener
-import { doc, getDoc } from "firebase/firestore"; // Firestore methods to fetch user data
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  onSnapshot,
+  query,
+  where,
+} from "firebase/firestore"; // Firestore methods to fetch user data // Firestore methods to fetch user data
 
 const routeTitles: { [key: string]: string } = {
   "/faculty/dashboard": "Dashboard",
   "/faculty/calendar": "Calendar",
   "/faculty/appointments": "Appointments",
   "/faculty/appointments/sched-app": "Appointments",
-  "/faculty/student": "Student",
+  "/faculty/students": "Student",
   "/faculty/profile": "Profile",
 };
 
@@ -22,6 +30,11 @@ export default function AppNavbar() {
     : "Loading...";
 
   const [userName, setUserName] = useState("User");
+  const userInitials = userName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -30,13 +43,20 @@ export default function AppNavbar() {
           // Fetch user document from Firestore
           const userDocRef = doc(db, "Users", user.uid);
           const userDocSnap = await getDoc(userDocRef);
+          console.log(userDocSnap);
+          console.log(user.uid);
 
           if (userDocSnap.exists()) {
-            const  studentDocRef = doc(db, "Students", user.uid);
-            const studentDocSnap = await getDoc(studentDocRef);
-            const studentData = studentDocSnap.data();
-            // Assuming the user document has a 'name' field
-            setUserName(studentData?.name || studentData?.firstName || "User");
+            const studentDocRef = collection(db, "students");
+            const studentQuery = query(
+              studentDocRef,
+              where("uid", "==", user.uid)
+            );
+
+            const unsubscribeStudent = onSnapshot(studentQuery, (snapshot) => {
+              const studentData = snapshot.docs[0]?.data();
+              setUserName(studentData?.firstName || "User");
+            });
           } else {
             // Fallback to email or display name if no Firestore doc
             setUserName(
@@ -49,7 +69,6 @@ export default function AppNavbar() {
         }
       }
     });
-
     // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []);
@@ -66,11 +85,13 @@ export default function AppNavbar() {
         <div className="flex items-center gap-4 flex-1 justify-end">
           <Avatar className="h-12 w-12">
             <AvatarImage
-              src="/profile2.jpg"
+              src="placeholder.svg"
               alt="Profile"
               className="object-cover"
             />
-            <AvatarFallback>ST</AvatarFallback>
+            <AvatarFallback className="bg-primary/10 text-primary">
+              {userInitials}
+            </AvatarFallback>
           </Avatar>
         </div>
       </div>

@@ -53,20 +53,20 @@ export function AppointmentsTabs({
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
       <TabsList>
-        <TabsTrigger value="upcoming" className="mr-2 px-6">
+        <TabsTrigger value="upcoming" className="px-6">
           Upcoming{" "}
           <span className="ml-2 opacity-50">
             [ {upcomingAppointments.length} ]
           </span>
         </TabsTrigger>
-        <TabsTrigger value="pending" className="mr-2 px-6">
+        <TabsTrigger value="pending" className="ml-2 px-6">
           Pending{" "}
           <span className="ml-2 opacity-50">
             [ {pendingAppointments.length} ]
           </span>
         </TabsTrigger>
         {cancelledAppointments != undefined && (
-          <TabsTrigger value="declined" className="mr-2 px-6">
+          <TabsTrigger value="declined" className="ml-2 px-6">
             Cancelled{" "}
             <span className="ml-2 opacity-50">
               [ {cancelledAppointments.length} ]
@@ -76,7 +76,7 @@ export function AppointmentsTabs({
         {rescheduleAppointments.length > 0 && (
           <TabsTrigger
             value="reschedule"
-            className="px-6 bg-red-100 text-red-500"
+            className="ml-2 px-6 bg-red-100 text-red-500"
           >
             For Reschedule{" "}
             <span className="ml-2 opacity-50">

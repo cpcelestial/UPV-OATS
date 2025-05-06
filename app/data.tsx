@@ -32,6 +32,7 @@ export interface TimeSlot {
   start: string;
   end: string;
   subject?: string;
+  section?: string;
   room?: string;
   professor?: string;
   color?: string;

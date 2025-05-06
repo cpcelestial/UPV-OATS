@@ -20,8 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, Plus, AlertCircle } from "lucide-react";
-import type { DaySchedule } from "../data";
+import { Trash2, Plus } from "lucide-react";
+import type { DaySchedule } from "../../data";
 
 interface ScheduleDialogProps {
   open: boolean;
@@ -62,8 +62,8 @@ interface ClassFormData {
   start: string;
   end: string;
   subject: string;
+  section: string;
   room: string;
-  professor: string;
   color: string;
 }
 
@@ -88,8 +88,8 @@ export function ScheduleDialog({
               cls.start === slot.start &&
               cls.end === slot.end &&
               cls.subject === slot.subject &&
-              cls.room === slot.room &&
-              cls.professor === slot.professor
+              cls.section === slot.section &&
+              cls.room === slot.room
           );
 
           if (existingClass) {
@@ -99,9 +99,9 @@ export function ScheduleDialog({
               days: [day.day],
               start: slot.start,
               end: slot.end,
-              subject: slot.subject,
-              room: slot.room,
-              professor: slot.professor,
+              subject: slot.subject || "",
+              section: slot.section || "",
+              room: slot.room || "",
               color: slot.color || CLASS_COLORS[0].value,
             });
           }
@@ -156,8 +156,8 @@ export function ScheduleDialog({
         start: "8:00 AM",
         end: "9:30 AM",
         subject: "",
+        section: "",
         room: "",
-        professor: "",
         color: CLASS_COLORS[prev.length % CLASS_COLORS.length].value,
       },
     ]);
@@ -181,8 +181,8 @@ export function ScheduleDialog({
           start: cls.start,
           end: cls.end,
           subject: cls.subject,
+          section: cls.section,
           room: cls.room,
-          professor: cls.professor,
           color: cls.color,
         }));
 
@@ -202,8 +202,8 @@ export function ScheduleDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl py-6 pl-6 pr-4">
         <DialogHeader>
-          <DialogTitle className="font-bold">Edit Class Schedule</DialogTitle>
-          <DialogDescription>Customize your class schedule</DialogDescription>
+          <DialogTitle className="font-bold">Edit Weekly Schedule</DialogTitle>
+          <DialogDescription>Customize your weekly schedule</DialogDescription>
         </DialogHeader>
         <div className="max-h-[60vh] overflow-y-auto py-2 pr-4 space-y-6">
           {classes.map((cls, index) => (
@@ -261,15 +261,6 @@ export function ScheduleDialog({
                       handleClassChange(index, "room", e.target.value)
                     }
                   />
-                  <Input
-                    placeholder="Professor"
-                    value={cls.professor}
-                    onChange={(e) =>
-                      handleClassChange(index, "professor", e.target.value)
-                    }
-                  />
-                </div>
-                <div className="space-y-4">
                   <Select
                     value={cls.color}
                     onValueChange={(value) =>
@@ -294,17 +285,16 @@ export function ScheduleDialog({
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="space-y-4">
+                  <Input
+                    placeholder="Section"
+                    value={cls.section}
+                    onChange={(e) =>
+                      handleClassChange(index, "section", e.target.value)
+                    }
+                  />
                   <div>
-                    <div
-                      className={`font-semibold mb-1 flex items-center ${
-                        invalidClasses.includes(index) ? "text-red-500" : ""
-                      }`}
-                    >
-                      Choose the days:
-                      {invalidClasses.includes(index) && (
-                        <AlertCircle className="h-4 w-4 ml-2" />
-                      )}
-                    </div>
                     <div
                       className={`grid grid-cols-2 gap-2 p-2 rounded-md border ${
                         invalidClasses.includes(index)

@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, Plus, AlertCircle } from "lucide-react";
+import { Trash2, Plus } from "lucide-react";
 import type { DaySchedule } from "../../data";
 
 interface ScheduleDialogProps {
@@ -202,8 +202,8 @@ export function ScheduleDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl py-6 pl-6 pr-4">
         <DialogHeader>
-          <DialogTitle className="font-bold">Edit Class Schedule</DialogTitle>
-          <DialogDescription>Customize your class schedule</DialogDescription>
+          <DialogTitle className="font-bold">Edit Weekly Schedule</DialogTitle>
+          <DialogDescription>Customize your weekly schedule</DialogDescription>
         </DialogHeader>
         <div className="max-h-[60vh] overflow-y-auto py-2 pr-4 space-y-6">
           {classes.map((cls, index) => (
@@ -295,16 +295,6 @@ export function ScheduleDialog({
                     </SelectContent>
                   </Select>
                   <div>
-                    <div
-                      className={`font-semibold mb-1 flex items-center ${
-                        invalidClasses.includes(index) ? "text-red-500" : ""
-                      }`}
-                    >
-                      Choose the days:
-                      {invalidClasses.includes(index) && (
-                        <AlertCircle className="h-4 w-4 ml-2" />
-                      )}
-                    </div>
                     <div
                       className={`grid grid-cols-2 gap-2 p-2 rounded-md border ${
                         invalidClasses.includes(index)
