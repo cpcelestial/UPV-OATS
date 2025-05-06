@@ -13,7 +13,6 @@ const routeTitles: { [key: string]: string } = {
   "/admin/appointments/sched-app": "Appointments",
   "/admin/users": "Users",
   "/admin/users/add-user": "Users",
-  "/admin/profile": "Profile",
 };
 
 export default function AppNavbar() {

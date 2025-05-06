@@ -8,10 +8,10 @@ import { ScheduleDialog } from "./schedule-dialog";
 import { ScheduleSection } from "./schedule-section";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/app/firebase-config"; // Firestore instance
-import type { Student, DaySchedule } from "../data";
+import type { Faculty, DaySchedule } from "../../data";
 
 export default function Page() {
-  const [profile, setProfile] = useState<Student | null>(null); // Start with null
+  const [profile, setProfile] = useState<Faculty | null>(null); // Start with null
   const [schedule, setSchedule] = useState<DaySchedule[]>([]);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
@@ -21,11 +21,11 @@ export default function Page() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const profileDocRef = doc(db, "students", "1"); // Replace "1" with the actual document ID
+        const profileDocRef = doc(db, "faculty", "1"); // Replace "1" with the actual document ID
         const profileSnapshot = await getDoc(profileDocRef);
 
         if (profileSnapshot.exists()) {
-          setProfile(profileSnapshot.data() as Student);
+          setProfile(profileSnapshot.data() as Faculty);
         } else {
           console.error("Profile document does not exist.");
         }
@@ -53,7 +53,7 @@ export default function Page() {
     fetchSchedule();
   }, []);
 
-  const handleUpdateProfile = (updatedProfile: Partial<Student>) => {
+  const handleUpdateProfile = (updatedProfile: Partial<Faculty>) => {
     setProfile((prev) => (prev ? { ...prev, ...updatedProfile } : null));
     console.log("Updated Profile:", updatedProfile);
   };

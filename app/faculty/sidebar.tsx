@@ -58,7 +58,7 @@ export default function AppSidebar() {
       icon: NotebookTabs,
       route: "/faculty/appointments",
     },
-    { name: "Students", icon: BookUser, route: "/faculty/student" },
+    { name: "Students", icon: BookUser, route: "/faculty/students" },
     { name: "Profile", icon: UserRound, route: "/faculty/profile" },
   ];
 

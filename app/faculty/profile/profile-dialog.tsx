@@ -19,13 +19,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Camera } from "lucide-react";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "@/app/firebase-config";
-import type { Student } from "../../data";
+import type { Faculty } from "../../data";
 
 interface ProfileDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  profile: Student;
-  onUpdateProfile: (profile: Partial<Student>) => void;
+  profile: Faculty;
+  onUpdateProfile: (profile: Partial<Faculty>) => void;
 }
 
 export function ProfileDialog({
@@ -77,7 +77,7 @@ export function ProfileDialog({
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const profileDocRef = doc(db, "students", profile.id);
+      const profileDocRef = doc(db, "faculty", profile.id);
       await setDoc(profileDocRef, editedProfile, { merge: true });
 
       // Update local state
@@ -169,10 +169,10 @@ export function ProfileDialog({
               <Input id="email" value={profile.email} disabled />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="studentNumber">Student Number</Label>
+              <Label htmlFor="studentNumber">Faculty Number</Label>
               <Input
                 id="studentNumber"
-                value={profile.studentNumber}
+                value={profile.facultyNumber}
                 disabled
               />
             </div>
@@ -181,12 +181,8 @@ export function ProfileDialog({
               <Input id="college" value={profile.college} disabled />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="degreeProgram">Degree Program</Label>
-              <Input
-                id="degreeProgram"
-                value={profile.degreeProgram}
-                disabled
-              />
+              <Label htmlFor="degreeProgram">Department</Label>
+              <Input id="degreeProgram" value={profile.department} disabled />
             </div>
             <div className="space-y-2">
               <Label htmlFor="cityTown">City/Town</Label>

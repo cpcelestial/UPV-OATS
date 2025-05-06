@@ -3,10 +3,10 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import type { Student } from "../../data";
+import type { Faculty } from "../../data";
 
 interface ProfileSectionProps {
-  profile: Student;
+  profile: Faculty;
   onUpdateProfile: () => void;
   onChangePassword: () => void;
 }
@@ -71,12 +71,12 @@ export function ProfileSection({
                 )}
               </div>
               <div>
-                <p className="text-muted-foreground mb-1">Student Number</p>
-                <p className="font-medium">{profile.studentNumber}</p>
+                <p className="text-muted-foreground mb-1">Faculty Number</p>
+                <p className="font-medium">{profile.facultyNumber}</p>
               </div>
               <div>
-                <p className="text-muted-foreground mb-1">Degree Program</p>
-                <p className="font-medium">{profile.degreeProgram}</p>
+                <p className="text-muted-foreground mb-1">Department</p>
+                <p className="font-medium">{profile.department}</p>
               </div>
               <div className="invisible">
                 {profile.country && (
