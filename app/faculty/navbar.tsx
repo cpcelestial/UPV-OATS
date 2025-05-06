@@ -18,7 +18,7 @@ const routeTitles: { [key: string]: string } = {
   "/faculty/dashboard": "Dashboard",
   "/faculty/calendar": "Calendar",
   "/faculty/appointments": "Appointments",
-  "/faculty/appointments/sched-app": "Appointments",
+  "/faculty/appointments/sched-avail": "Appointments",
   "/faculty/students": "Student",
   "/faculty/profile": "Profile",
 };

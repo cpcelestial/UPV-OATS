@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import type { Appointment } from "../../data";
 import { getFirestore, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/app/firebase-config";
+
 export const handleDecline = async (appointmentId: string) => {
   try {
     const appointmentRef = doc(db, "appointments", appointmentId);
@@ -18,6 +19,7 @@ export const handleDecline = async (appointmentId: string) => {
     console.error("Error declining appointment:", error);
   }
 };
+
 export const handleAccept = async (appointmentId: string) => {
   try {
     const appointmentRef = doc(db, "appointments", appointmentId);
