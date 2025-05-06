@@ -135,7 +135,6 @@ export function AddUserForm() {
         });
       }
 
-      console.log(`${values.role} added with ID: `, docRef.id);
       setFormChanged(false);
       router.push("/admin/users");
     } catch (error) {
@@ -237,7 +236,6 @@ export function AddUserForm() {
                           {...field}
                           onChange={(e) => {
                             field.onChange(e);
-                            console.log("Email input:", e.target.value);
                             setEmail(e.target.value);
                           }}
                         />
