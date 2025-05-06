@@ -34,9 +34,10 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { auth, db } from "@/app/firebase-config";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, setDoc, doc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, getAuth, onAuthStateChanged } from 'firebase/auth';
+import { Fira_Sans } from "next/font/google";
 
 const studentSchema = z.object({
   role: z.literal("student"),
@@ -92,14 +93,26 @@ export function AddUserForm() {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [error, setError] = React.useState(null);
+  const [currentUser, setCurrentUser] = React.useState<any>(null);
+  const auth = getAuth(); // Initialize Firebase Auth
+
+  React.useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log("Current user:", user ? user.email : "No user logged in");
+      setCurrentUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
 
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user; // Retrieve the user object
       console.log("User created successfully");
 
       const userData = {
+        firstName: values.firstName,
         email: values.email,
         studentnumber: values.role === "student" ? values.studentNumber : null,
         facultynumber: values.role === "faculty" ? values.facultyNumber : null,
@@ -109,7 +122,8 @@ export function AddUserForm() {
 
       const collectionName = values.role === "student" ? "student" : "faculty";
 
-      const docRef = await addDoc(collection(db, "Users"), userData);
+      const docRef = doc(db, "Users", user.uid);
+      await setDoc(docRef, userData);
       if (values.role === "student") {
         await addDoc(collection(db, "student"), {
           ...userData,
@@ -343,8 +357,11 @@ export function AddUserForm() {
                           placeholder="email@up.edu.ph"
                           {...field}
                           value={email}
-                          onChange={(e) => {setEmail(e.target.value);}
-                          }
+                          onChange={(e) => {
+                            field.onChange(e);
+                            console.log("Email input:", e.target.value);
+                            setEmail(e.target.value);
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -362,6 +379,11 @@ export function AddUserForm() {
                           type="password"
                           placeholder="••••••••"
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            console.log("Password input:", e.target.value);
+                            setPassword(e.target.value);
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
