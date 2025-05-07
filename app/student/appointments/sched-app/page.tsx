@@ -117,9 +117,9 @@ export function AddAppointmentForm() {
   >([]);
   const [loading, setLoading] = React.useState(true);
   const [selectedSubject, setSelectedSubject] = React.useState("");
-  const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(
-    undefined
-  );
+  // const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(
+  //   undefined
+  // );
   const [selectedFIC, setSelectedFIC] = React.useState("");
   const [availableSections, setAvailableSections] = React.useState<string[]>(
     []
@@ -127,7 +127,7 @@ export function AddAppointmentForm() {
   const [facultySections, setFacultySections] = React.useState<
     { faculty: string; sections: string[]; email: string }[]
   >([]);
-  const [participantEmail, setParticipantEmail] = React.useState("");
+  // const [participantEmail, setParticipantEmail] = React.useState("");
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -210,7 +210,7 @@ export function AddAppointmentForm() {
 
     fetchStudents();
   }, []);
-  
+
   React.useEffect(() => {
     const fetchSections = async () => {
       try {
@@ -245,8 +245,8 @@ export function AddAppointmentForm() {
       try {
         const q = query(
           collection(db, "timeSlots"),
-          where("available", "==", true),
-          );
+          where("available", "==", true)
+        );
         const querySnapshot = await getDocs(q);
         const timeSlotsData = querySnapshot.docs.map((doc) => ({
           id: doc.id,
@@ -256,7 +256,7 @@ export function AddAppointmentForm() {
       } catch (error) {
         console.error("Error fetching time slots:", error);
       }
-    }
+    };
     fetchTimeslots();
   }, []);
 
@@ -290,16 +290,16 @@ export function AddAppointmentForm() {
     form.setValue("facultyName", singleFaculty);
   }, [selectedFIC]);
 
-  function dynamicSearch(search: string, students: { name: string; email: string }[]){
-      const [searchTerm, setSearchTerm] = React.useState(search);
-      const searchItem = (searchTerm: string) => {
-        if(!searchTerm) return [];
-        return students.filter((student) => 
-          student.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-          student.email.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      };
-    }
+  // function dynamicSearch(search: string, students: { name: string; email: string }[]){
+  //     const [searchTerm, setSearchTerm] = React.useState(search);
+  //     const searchItem = (searchTerm: string) => {
+  //       if(!searchTerm) return [];
+  //       return students.filter((student) =>
+  //         student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //         student.email.toLowerCase().includes(searchTerm.toLowerCase())
+  //       );
+  //     };
+  //   }
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -578,16 +578,16 @@ export function AddAppointmentForm() {
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={(value) => {
-                      field.onChange(value);
-                      setSelectedDate(value);
-                      }}
-                      disabled={(date) => date < new Date()}
-                      initialFocus
-                  />
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={(value) => {
+                          field.onChange(value);
+                          // setSelectedDate(value);
+                        }}
+                        disabled={(date) => date < new Date()}
+                        initialFocus
+                      />
                     </PopoverContent>
                   </Popover>
                   <FormMessage className="text-xs" />
@@ -683,19 +683,19 @@ export function AddAppointmentForm() {
                       const email = input.value.trim();
                       setParticipantEmail(email);
 
-                      dynamicSearch(email, []); 
-                      console.log("Filtered participants:", dynamicSearch(email, []));
-                      if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                        const currentParticipants =
-                          form.getValues("participants") || [];
-                        if (!currentParticipants.includes(email)) {
-                          form.setValue("participants", [
-                            ...currentParticipants,
-                            email,
-                          ]);
-                          input.value = "";
-                        }
-                      }
+                      // dynamicSearch(email, []);
+                      // console.log("Filtered participants:", dynamicSearch(email, []));
+                      // if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                      //   const currentParticipants =
+                      //     form.getValues("participants") || [];
+                      //   if (!currentParticipants.includes(email)) {
+                      //     form.setValue("participants", [
+                      //       ...currentParticipants,
+                      //       email,
+                      //     ]);
+                      //     input.value = "";
+                      //   }
+                      // }
                     }
                   }}
                 />
