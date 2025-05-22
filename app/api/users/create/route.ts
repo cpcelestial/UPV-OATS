@@ -69,27 +69,16 @@ export async function POST(request: NextRequest) {
       dateAdded: admin.firestore.FieldValue.serverTimestamp(),
       uid: userRecord.uid
     };
-
-    // Add role-specific fields
-    if (role === 'student') {
-      Object.assign(userData, {
-        studentNumber,
-        college,
-        degreeProgram
-      });
-    } else if (role === 'faculty') {
-      Object.assign(userData, {
-        facultyNumber,
-        college,
-        department
-      });
-    }
-
     // Create user document in main Users collection
     await db.collection('Users').doc(userRecord.uid).set(userData);
 
     // Create role-specific document
     if (role === 'student') {
+        Object.assign(userData, {
+        studentNumber,
+        college,
+        degreeProgram
+      });
       await db.collection('students').doc(userRecord.uid).set({
         ...userData,
         studentNumber,
@@ -97,6 +86,11 @@ export async function POST(request: NextRequest) {
         degreeProgram
       });
     } else if (role === 'faculty') {
+            Object.assign(userData, {
+        facultyNumber,
+        college,
+        department
+      });
       await db.collection('faculty').doc(userRecord.uid).set({
         ...userData,
         facultyNumber,
