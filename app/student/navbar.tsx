@@ -50,7 +50,7 @@ export default function AppNavbar() {
             const studentDocRef = collection(db, "students");
             const studentQuery = query(
               studentDocRef,
-              where("uid", "==", user.uid)
+              where("email", "==", user.email)
             );
 
             const unsubscribeStudent = onSnapshot(studentQuery, (snapshot) => {

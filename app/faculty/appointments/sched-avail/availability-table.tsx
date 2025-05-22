@@ -318,7 +318,7 @@ export function AvailabilityTable({
                         className="mx-auto"
                       />
                     ) : (
-                      (slot.available || isPast) && (
+                      slot.available  && (
                         <div className="flex justify-center">
                           <Badge
                             variant={"outline"}

@@ -29,16 +29,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, UserPlus } from "lucide-react";
+import { ArrowLeft, UserPlus, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { db } from "@/app/firebase-config";
-import { auth as adminAuth } from "@/app/firebase-config";
-import { collection, addDoc, serverTimestamp, setDoc, doc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { createUserWithEmailAndPassword, getAuth, onAuthStateChanged } from 'firebase/auth';
-import { Fira_Sans } from "next/font/google";
+import { toast } from "sonner"; // Add this if you're using sonner for toasts
 
 const studentSchema = z.object({
   role: z.literal("student"),
@@ -68,6 +64,7 @@ export function AddUserForm() {
   const [showDialog, setShowDialog] = React.useState(false);
   const [formChanged, setFormChanged] = React.useState(false);
   const [role, setRole] = React.useState<"student" | "faculty">("student");
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -90,56 +87,50 @@ export function AddUserForm() {
   }, [role, form]);
 
   const router = useRouter();
-  
-  const [email, setEmail] = React.useState('');
-  const [password, setPassword] = React.useState('');
-  const [error, setError] = React.useState(null);
-  const [currentUser, setCurrentUser] = React.useState<any>(null);
-  const auth = getAuth(); // Initialize Firebase Auth
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-
+    setIsSubmitting(true);
+    
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user; // Retrieve the user object
-      console.log("User created successfully");
+      const response = await fetch('/api/users/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      });
 
-      const userData = {
-        firstName: values.firstName,
-        email: values.email,
-        studentnumber: values.role === "student" ? values.studentNumber : null,
-        facultynumber: values.role === "faculty" ? values.facultyNumber : null,
-        role: values.role,
-        dateAdded: serverTimestamp(),
-      };
+      const data = await response.json();
 
-      const collectionName = values.role === "student" ? "student" : "faculty";
-
-      const docRef = doc(db, "Users", user.uid);
-      await setDoc(docRef, userData);
-      if (values.role === "student") {
-        await addDoc(collection(db, "student"), {
-          ...userData,
-          firstName: values.firstName,
-          lastName: values.lastName,
-          college: values.college,
-          degreeProgram: values.degreeProgram,
-        });
-      }
-      if (values.role === "faculty") {
-        await addDoc(collection(db, "Faculty_in_charge"), {
-          ...userData,
-          firstName: values.firstName,
-          lastName: values.lastName,
-          college: values.college,
-          department: values.department,
-        });
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create user');
       }
 
+      console.log("User created successfully:", data.user);
+      
+      // Show success message
+      toast?.success(`${role.charAt(0).toUpperCase() + role.slice(1)} created successfully!`);
+      
+      // Reset form and navigate
       setFormChanged(false);
+      form.reset();
       router.push("/admin/users");
-    } catch (error) {
-      console.error(`Error adding ${role}: `, error);
+      
+    } catch (error: any) {
+      console.error(`Error adding ${role}:`, error);
+      
+      // Show error message
+      toast?.error(error.message || `Failed to create ${role}`);
+      
+      // Set form error if it's an email already exists error
+      if (error.message?.includes('already in use')) {
+        form.setError('email', {
+          type: 'manual',
+          message: 'This email address is already registered'
+        });
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -168,7 +159,7 @@ export function AddUserForm() {
             </p>
           </div>
         </div>
-        <Button variant="outline" onClick={handleBack}>
+        <Button variant="outline" onClick={handleBack} disabled={isSubmitting}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back
         </Button>
@@ -186,8 +177,12 @@ export function AddUserForm() {
               className="w-full"
             >
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="student">Student</TabsTrigger>
-                <TabsTrigger value="faculty">Faculty</TabsTrigger>
+                <TabsTrigger value="student" disabled={isSubmitting}>
+                  Student
+                </TabsTrigger>
+                <TabsTrigger value="faculty" disabled={isSubmitting}>
+                  Faculty
+                </TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
@@ -200,7 +195,11 @@ export function AddUserForm() {
                 <FormItem>
                   <FormLabel>First Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Juan" {...field} />
+                    <Input 
+                      placeholder="Juan" 
+                      {...field} 
+                      disabled={isSubmitting}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -213,7 +212,50 @@ export function AddUserForm() {
                 <FormItem>
                   <FormLabel>Last Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Dela Cruz" {...field} />
+                    <Input 
+                      placeholder="Dela Cruz" 
+                      {...field} 
+                      disabled={isSubmitting}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      placeholder="email@up.edu.ph"
+                      {...field}
+                      disabled={isSubmitting}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="••••••••"
+                      {...field}
+                      disabled={isSubmitting}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -226,56 +268,16 @@ export function AddUserForm() {
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          placeholder="email@up.edu.ph"
-                          {...field}
-                          onChange={(e) => {
-                            field.onChange(e);
-                            setEmail(e.target.value);
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input
-                        type="password"
-                        placeholder="••••••••"
-                        {...field}
-                        onChange={(e) => {
-                          field.onChange(e);
-                          setPassword(e.target.value);
-                        }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
                   name="studentNumber"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Student Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="20XX-XXXXX" {...field} />
+                        <Input 
+                          placeholder="20XX-XXXXX" 
+                          {...field} 
+                          disabled={isSubmitting}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -291,6 +293,7 @@ export function AddUserForm() {
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
+                          disabled={isSubmitting}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select college" />
@@ -324,7 +327,11 @@ export function AddUserForm() {
                     <FormItem>
                       <FormLabel>Degree Program</FormLabel>
                       <FormControl>
-                        <Input placeholder="BS Computer Science" {...field} />
+                        <Input 
+                          placeholder="BS Computer Science" 
+                          {...field} 
+                          disabled={isSubmitting}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -337,57 +344,16 @@ export function AddUserForm() {
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          placeholder="email@up.edu.ph"
-                          {...field}
-                          value={email}
-                          onChange={(e) => {
-                            field.onChange(e);
-                            setEmail(e.target.value);
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="password"
-                          placeholder="••••••••"
-                          {...field}
-                          onChange={(e) => {
-                            field.onChange(e);
-                            setPassword(e.target.value);
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
                   name="facultyNumber"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Faculty Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="20XX-XXXXX" {...field} />
+                        <Input 
+                          placeholder="20XX-XXXXX" 
+                          {...field} 
+                          disabled={isSubmitting}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -403,6 +369,7 @@ export function AddUserForm() {
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
+                          disabled={isSubmitting}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select college" />
@@ -439,6 +406,7 @@ export function AddUserForm() {
                         <Input
                           placeholder="Division of Physical Sciences and Mathematics"
                           {...field}
+                          disabled={isSubmitting}
                         />
                       </FormControl>
                       <FormMessage />
@@ -450,10 +418,24 @@ export function AddUserForm() {
           )}
 
           <div className="flex justify-end">
-            <Button variant="outline" onClick={handleBack} className="mr-2">
+            <Button 
+              variant="outline" 
+              onClick={handleBack} 
+              className="mr-2"
+              disabled={isSubmitting}
+            >
               Cancel
             </Button>
-            <Button type="submit">Create</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                'Create'
+              )}
+            </Button>
           </div>
         </form>
       </Form>
