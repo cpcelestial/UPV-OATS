@@ -14,11 +14,7 @@ import {
   parse,
   getHours,
 } from "date-fns";
-import {
-  Calendar as CalendarIcon,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -29,6 +25,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import type { Appointment } from "../../data";
+import { AppointmentCard } from "../appointments/appointment-card";
 import { CalendarDialog } from "./calendar-dialog";
 import {
   collection,
@@ -36,27 +34,12 @@ import {
   where,
   onSnapshot,
   and,
-  or
+  or,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "../../firebase-config";
 
 type ViewType = "month" | "week" | "day";
-
-export interface Appointment {
-  purpose: string;
-  class: string;
-  id: string;
-  details?: string;
-  meetingType: string;
-  facultyName: string;
-  email: string;
-  date: Date;
-  participants: string[];
-  status: string;
-  timeSlot: string;
-  userId: string;
-}
 
 export function Calendar() {
   const [currentDate, setCurrentDate] = React.useState<Date>(new Date());
@@ -66,6 +49,13 @@ export function Calendar() {
   const [currentUser, setCurrentUser] = React.useState<any>(null);
   const [appointments, setAppointments] = React.useState<Appointment[]>([]);
 
+  const getNumber = (str: string | null | undefined): string | null => {
+    if (!str) return null;
+    const parts = str.split("_");
+    const last = parts.pop();
+    return last && /^\d+$/.test(last) ? last : null;
+  };
+
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -73,8 +63,16 @@ export function Calendar() {
         const appointmentsRef = collection(db, "appointments");
         const q = query(
           appointmentsRef,
-          where("facultyEmail", "==", user.email),
-          where("status", "==", "approved"),
+          or(
+            and(
+              where("userId", "==", user.uid),
+              where("status", "==", "approved")
+            ),
+            and(
+              where("participants", "array-contains", user.email),
+              where("status", "==", "approved")
+            )
+          )
         );
         const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
           const fetchedAppointments: Appointment[] = snapshot.docs.map(
@@ -92,7 +90,7 @@ export function Calendar() {
         });
       } else {
         setCurrentUser(null);
-        setAppointments([]); 
+        setAppointments([]);
       }
     });
 
@@ -172,6 +170,7 @@ export function Calendar() {
             const dayAppointments = appointments.filter((appt) =>
               isSameDay(appt.date, day)
             );
+            const appointmentCount = dayAppointments.length;
             const isLastInRow = (index + 1) % 7 === 0;
             const isLastRow = index >= days.length - 7;
 
@@ -188,19 +187,36 @@ export function Calendar() {
                   isLastRow && "border-b-0"
                 )}
               >
-                <span className="text-sm font-medium">{format(day, "d")}</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">
+                    {format(day, "d")}
+                  </span>
+                  {appointmentCount > 0 && (
+                    <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-semibold rounded-sm bg-green-100 border border-green-200 text-green-700">
+                      {appointmentCount}
+                    </span>
+                  )}
+                </div>
                 <div className="mt-1 space-y-1">
-                  {dayAppointments.map((appointment) => (
+                  {dayAppointments.length > 0 && (
                     <Card
-                      key={appointment.id}
+                      key={dayAppointments[0].id}
                       className="p-2 mb-2 bg-red-100 border-red-200 text-red-700 shadow-none"
                     >
                       <div className="text-sm font-semibold">
-                        {appointment.purpose}
+                        {dayAppointments[0].class === "Other"
+                          ? " "
+                          : dayAppointments[0].class}{" "}
+                        {dayAppointments[0].section &&
+                          getNumber(dayAppointments[0].section) &&
+                          `- ${getNumber(dayAppointments[0].section)}`}{" "}
+                        {dayAppointments[0].purpose}
                       </div>
-                      <div className="text-sm">{appointment.timeSlot}</div>
+                      <div className="text-sm">
+                        {dayAppointments[0].timeSlot}
+                      </div>
                     </Card>
-                  ))}
+                  )}
                 </div>
               </div>
             );
@@ -229,18 +245,18 @@ export function Calendar() {
                 key={day.toString()}
                 onClick={() => handleDayClick(day)}
                 className={cn(
-                  "min-h-[400px] p-2 border-r border-border",
-                  "hover:bg-accent/5 cursor-pointer transition-colors",
+                  "min-h-[400px] border-r border-border",
+                  "hover:bg-accent cursor-pointer transition-colors",
                   isLast && "border-r-0"
                 )}
               >
-                <div className="text-sm font-medium mb-2">
-                  {format(day, "EEE MMM d")}
+                <div className="text-sm font-medium mb-2 p-2 border-b">
+                  {format(day, "EEE - MMM d")}
                 </div>
                 {dayAppointments.map((appointment) => (
                   <Card
                     key={appointment.id}
-                    className="p-2 mb-2 bg-red-100 border-red-200 text-red-700 shadow-none"
+                    className="p-2 m-2 bg-red-100 border-red-200 text-red-700 shadow-none"
                   >
                     <div className="text-sm font-semibold">
                       {appointment.purpose}
@@ -260,7 +276,7 @@ export function Calendar() {
     const dayAppointments = appointments.filter((appt) =>
       isSameDay(appt.date, currentDate)
     );
-    const hours = Array.from({ length: 24 }, (_, i) => i);
+    const hours = Array.from({ length: 16 }, (_, i) => i + 6); // 6am to 9pm (6 to 21)
 
     return (
       <div className="border rounded-lg overflow-hidden">
@@ -298,25 +314,12 @@ export function Calendar() {
                     isLast && "border-b-0"
                   )}
                 >
-                  {hourAppointments.map((appointment) => {
-                    const startTime = getStartTimeFromTimeSlot(
-                      appointment.timeSlot
-                    );
-                    const [, endTime] = appointment.timeSlot.split(" - ");
-                    return (
-                      <Card
-                        key={appointment.id}
-                        className="p-2 mb-2 bg-red-100 border-red-200 text-red-700 shadow-none"
-                      >
-                        <div className="text-sm font-semibold">
-                          {appointment.purpose}
-                        </div>
-                        <div className="text-sm">
-                          {startTime} - {endTime?.trim()}
-                        </div>
-                      </Card>
-                    );
-                  })}
+                  {hourAppointments.map((appointment) => (
+                    <AppointmentCard
+                      key={appointment.id}
+                      appointment={appointment}
+                    />
+                  ))}
                 </div>
               </React.Fragment>
             );

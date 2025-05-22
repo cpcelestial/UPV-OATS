@@ -275,7 +275,7 @@ export function AvailabilityTable({
       <table className="w-full min-w-[800px] border-collapse">
         <thead>
           <tr className="bg-muted">
-            <th className="border-b px-4 py-2 text-center w-24">Local Time</th>
+            <th className="px-4 py-2 text-center w-24">Local Time</th>
             {Object.keys(schedule).map((date) => (
               <th
                 key={date}
@@ -292,7 +292,7 @@ export function AvailabilityTable({
         <tbody>
           {generateTimeSlots().map((timeSlot) => (
             <tr key={timeSlot.time}>
-              <td className="border-b px-2 py-2 text-center bg-muted/50">
+              <td className="border-t px-2 py-2 text-center bg-muted/50">
                 {timeSlot.time}
               </td>
 
@@ -304,7 +304,10 @@ export function AvailabilityTable({
                 const isBooked = isSlotBooked(date, timeSlot.time);
 
                 return (
-                  <td key={date} className="border px-2 py-1 text-center">
+                  <td
+                    key={date}
+                    className="border-t border-l px-2 py-1 text-center"
+                  >
                     {editMode ? (
                       <Checkbox
                         checked={slot.available}
