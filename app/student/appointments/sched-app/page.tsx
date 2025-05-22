@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, CalendarIcon, Plus, TerminalSquare, X } from "lucide-react";
+import { ArrowLeft, CalendarIcon, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useForm } from "react-hook-form";
@@ -53,7 +53,6 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
-import dynamic from "next/dynamic";
 
 function generateTimeSlots() {
   const slots = [];
@@ -84,15 +83,15 @@ const formSchema = z.object({
   purpose: z.string().min(1, "Required"),
   class: z.string().min(1, "Required"),
   section: z.string().min(1, "Required"),
-  department: z.string().min(1, "Required"),
+  department: z.string().optional().default(""),
   facultyName: z.string().min(1, "Required"),
-  facultyEmail: z.string().email("Invalid email").optional(),
+  facultyEmail: z.string().email("Invalid email").optional().or(z.literal("")),
   date: z.date({
     required_error: "Required",
   }),
   timeSlot: z.string().min(1, "Required"),
   meetingType: z.enum(["f2f", "online"]).default("f2f"),
-  details: z.string().optional(),
+  details: z.string().optional().default(""),
   participants: z
     .array(z.string().email("Invalid email"))
     .optional()
@@ -116,10 +115,11 @@ export function AddAppointmentForm() {
     }[]
   >([]);
   const [loading, setLoading] = React.useState(true);
+  const [submitting, setSubmitting] = React.useState(false);
   const [selectedSubject, setSelectedSubject] = React.useState("");
-  // const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(
-  //   undefined
-  // );
+  const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(
+    undefined
+  );
   const [selectedFIC, setSelectedFIC] = React.useState("");
   const [availableSections, setAvailableSections] = React.useState<string[]>(
     []
@@ -127,7 +127,7 @@ export function AddAppointmentForm() {
   const [facultySections, setFacultySections] = React.useState<
     { faculty: string; sections: string[]; email: string }[]
   >([]);
-  // const [participantEmail, setParticipantEmail] = React.useState("");
+  const [students, setStudents] = React.useState<{ name: string; email: string }[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -136,6 +136,7 @@ export function AddAppointmentForm() {
       class: "",
       section: "",
       department: "",
+      facultyName: "",
       facultyEmail: "",
       date: undefined,
       timeSlot: "",
@@ -159,6 +160,7 @@ export function AddAppointmentForm() {
           name: doc.data().name,
         }));
         setFacultyList(facultyData);
+        console.log("Faculty loaded:", facultyData);
       } catch (error) {
         console.error("Error fetching faculty:", error);
       } finally {
@@ -179,6 +181,7 @@ export function AddAppointmentForm() {
             doc.data() as { faculty: string; sections: string[]; email: string }
         );
         setFacultySections(facultySectionsData);
+        console.log("Faculty sections loaded:", facultySectionsData);
       } catch (error) {
         console.error("Error fetching faculty sections:", error);
       }
@@ -191,7 +194,7 @@ export function AddAppointmentForm() {
       facultySections.find((fs) => fs.sections.includes(selectedFIC))?.email ||
       "";
     form.setValue("facultyEmail", selectedFacultyEmail);
-  }, [selectedFIC, facultySections]);
+  }, [selectedFIC, facultySections, form]);
 
   React.useEffect(() => {
     const fetchStudents = async () => {
@@ -202,6 +205,7 @@ export function AddAppointmentForm() {
           id: doc.id,
           ...(doc.data() as { name: string; email: string }),
         }));
+        setStudents(studentsData);
         console.log("Students data:", studentsData);
       } catch (error) {
         console.error("Error fetching students:", error);
@@ -210,7 +214,7 @@ export function AddAppointmentForm() {
 
     fetchStudents();
   }, []);
-
+  
   React.useEffect(() => {
     const fetchSections = async () => {
       try {
@@ -223,14 +227,11 @@ export function AddAppointmentForm() {
             prof: string[];
             subject: string;
             sub_id: string;
-          }), // Explicitly define the expected structure
+          }),
         }));
 
-        if (subjectsData.length > 0) {
-          console.log("Prof list:", subjectsData[0].prof);
-          console.log("Sections:", subjectsData[0].sections);
-        }
         setSubjectOptions(subjectsData);
+        console.log("Subjects loaded:", subjectsData);
       } catch (error) {
         console.error("Error fetching sections:", error);
       } finally {
@@ -238,26 +239,6 @@ export function AddAppointmentForm() {
       }
     };
     fetchSections();
-  }, []);
-
-  React.useEffect(() => {
-    const fetchTimeslots = async () => {
-      try {
-        const q = query(
-          collection(db, "timeSlots"),
-          where("available", "==", true)
-        );
-        const querySnapshot = await getDocs(q);
-        const timeSlotsData = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...(doc.data() as { slots: string[]; date: string }),
-        }));
-        console.log("Time slots data:", timeSlotsData);
-      } catch (error) {
-        console.error("Error fetching time slots:", error);
-      }
-    };
-    fetchTimeslots();
   }, []);
 
   React.useEffect(() => {
@@ -281,52 +262,91 @@ export function AddAppointmentForm() {
     }
 
     form.setValue("section", "");
-  }, [selectedSubject]);
+  }, [selectedSubject, subjectOptions, form]);
 
   React.useEffect(() => {
     const singleFaculty =
       facultySections.filter((fs) => fs.sections.includes(selectedFIC))[0]
         ?.faculty || "";
     form.setValue("facultyName", singleFaculty);
-  }, [selectedFIC]);
+  }, [selectedFIC, facultySections, form]);
 
-  // function dynamicSearch(search: string, students: { name: string; email: string }[]){
-  //     const [searchTerm, setSearchTerm] = React.useState(search);
-  //     const searchItem = (searchTerm: string) => {
-  //       if(!searchTerm) return [];
-  //       return students.filter((student) =>
-  //         student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //         student.email.toLowerCase().includes(searchTerm.toLowerCase())
-  //       );
-  //     };
-  //   }
+  const dynamicSearch = (search: string) => {
+    if (!search) return [];
+    return students.filter(
+      (student) =>
+        student.name.toLowerCase().includes(search.toLowerCase()) ||
+        student.email.toLowerCase().includes(search.toLowerCase())
+    );
+  };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    console.log("Form submission started");
+    console.log("Form values:", values);
+    
+    setSubmitting(true);
+    
     try {
       const auth = getAuth();
       const user = auth.currentUser;
 
+      console.log("Current user:", user);
+
       if (!user) {
         console.error("No user logged in");
+        alert("Please log in to schedule an appointment");
         return;
       }
 
+      // Prepare the data for submission
       const appointmentData = {
-        ...values,
+        purpose: values.purpose,
+        class: values.class,
+        section: values.section,
+        department: values.department || "",
+        facultyName: values.facultyName,
+        facultyEmail: values.facultyEmail || "",
+        date: values.date,
+        timeSlot: values.timeSlot,
+        meetingType: values.meetingType,
+        details: values.details || "",
+        participants: values.participants || [],
+        status: values.status || "pending",
         userId: user.uid,
+        userEmail: user.email,
         createdAt: serverTimestamp(),
       };
 
+      console.log("Appointment data to be saved:", appointmentData);
+
+      // Add to Firestore
       const docRef = await addDoc(
         collection(db, "appointments"),
         appointmentData
       );
 
-      console.log("Appointment added with ID: ", docRef.id);
+      console.log("Appointment successfully added with ID:", docRef.id);
+      
+      // Show success message
+      alert("Appointment scheduled successfully!");
+      
+      // Reset form state
       setFormChanged(false);
+      
+      // Navigate back
       window.history.back();
+      
     } catch (error) {
-      console.error("Error adding appointment: ", error);
+      console.error("Detailed error adding appointment:", error);
+      
+      // Show user-friendly error message
+      if (error instanceof Error) {
+        alert(`Error scheduling appointment: ${error.message}`);
+      } else {
+        alert("An unexpected error occurred. Please try again.");
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -342,6 +362,18 @@ export function AddAppointmentForm() {
     setShowDialog(false);
     window.history.back();
   };
+
+  const addParticipantByEmail = (email: string) => {
+    if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      const currentParticipants = form.getValues("participants") || [];
+      if (!currentParticipants.includes(email)) {
+        form.setValue("participants", [...currentParticipants, email]);
+        return true;
+      }
+    }
+    return false;
+  };
+
   return (
     <div className="mb-4 p-6 space-y-6 max-w-2xl mx-auto bg-white rounded-lg">
       <div className="flex items-center justify-between mb-8">
@@ -505,7 +537,7 @@ export function AddAppointmentForm() {
                           </SelectItem>
                         ) : selectedSubject === "Other" ? (
                           facultyList
-                            .filter((value) => value.id && value.name) // Filter out invalid entries
+                            .filter((value) => value.id && value.name)
                             .map((value) => (
                               <SelectItem key={value.id} value={value.name}>
                                 {value.name}
@@ -583,7 +615,7 @@ export function AddAppointmentForm() {
                         selected={field.value}
                         onSelect={(value) => {
                           field.onChange(value);
-                          // setSelectedDate(value);
+                          setSelectedDate(value);
                         }}
                         disabled={(date) => date < new Date()}
                         initialFocus
@@ -681,25 +713,15 @@ export function AddAppointmentForm() {
                       e.preventDefault();
                       const input = e.currentTarget;
                       const email = input.value.trim();
-                      setParticipantEmail(email);
-
-                      // dynamicSearch(email, []);
-                      // console.log("Filtered participants:", dynamicSearch(email, []));
-                      // if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                      //   const currentParticipants =
-                      //     form.getValues("participants") || [];
-                      //   if (!currentParticipants.includes(email)) {
-                      //     form.setValue("participants", [
-                      //       ...currentParticipants,
-                      //       email,
-                      //     ]);
-                      //     input.value = "";
-                      //   }
-                      // }
+                      
+                      if (addParticipantByEmail(email)) {
+                        input.value = "";
+                      }
                     }
                   }}
                 />
                 <Button
+                  type="button"
                   variant={"secondary"}
                   onClick={() => {
                     const input = document.getElementById(
@@ -707,16 +729,8 @@ export function AddAppointmentForm() {
                     ) as HTMLInputElement;
                     const email = input.value.trim();
 
-                    if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                      const currentParticipants =
-                        form.getValues("participants") || [];
-                      if (!currentParticipants.includes(email)) {
-                        form.setValue("participants", [
-                          ...currentParticipants,
-                          email,
-                        ]);
-                        input.value = "";
-                      }
+                    if (addParticipantByEmail(email)) {
+                      input.value = "";
                     }
                   }}
                 >
@@ -731,10 +745,21 @@ export function AddAppointmentForm() {
           </div>
 
           <div className="flex justify-end">
-            <Button variant="outline" onClick={handleBack} className="mr-2">
+            <Button 
+              variant="outline" 
+              onClick={handleBack} 
+              className="mr-2"
+              type="button"
+              disabled={submitting}
+            >
               Cancel
             </Button>
-            <Button type="submit">Schedule</Button>
+            <Button 
+              type="submit" 
+              disabled={submitting}
+            >
+              {submitting ? "Scheduling..." : "Schedule"}
+            </Button>
           </div>
         </form>
       </Form>
