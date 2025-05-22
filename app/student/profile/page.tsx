@@ -7,7 +7,8 @@ import { PasswordDialog } from "./password-dialog";
 import { ScheduleDialog } from "./schedule-dialog";
 import { ScheduleSection } from "./schedule-section";
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/app/firebase-config"; // Firestore instance
+import { onAuthStateChanged } from "firebase/auth";
+import { auth, db } from "@/app/firebase-config"; // Firestore instance
 import type { Student, DaySchedule } from "../../data";
 
 export default function Page() {
@@ -16,43 +17,57 @@ export default function Page() {
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
-
-  // Fetch profile data from Firestore
+  const [docID, setDocID] = useState<string | null>(null);
+// Fetch profile and schedule data from Firestore when user is authenticated
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const profileDocRef = doc(db, "students", "1"); // Replace "1" with the actual document ID
-        const profileSnapshot = await getDoc(profileDocRef);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const userId = user.uid;
+        console.log("User ID:", userId);
+        setDocID(userId);
 
-        if (profileSnapshot.exists()) {
-          setProfile(profileSnapshot.data() as Student);
-        } else {
-          console.error("Profile document does not exist.");
+        // Fetch profile
+        try {
+          const profileDocRef = doc(db, "student", userId);
+          const profileSnapshot = await getDoc(profileDocRef);
+
+          if (profileSnapshot.exists()) {
+            setProfile(profileSnapshot.data() as Student);
+          } else {
+            console.error("Profile document does not exist for user:", userId);
+            setProfile(null); // Ensure profile is null if no data exists
+          }
+        } catch (error) {
+          console.error("Failed to fetch profile:", error);
+          setProfile(null);
         }
-      } catch (error) {
-        console.error("Failed to fetch profile:", error);
-      }
-    };
 
-    const fetchSchedule = async () => {
-      try {
-        const scheduleDocRef = doc(db, "schedules", "userSchedule");
-        const scheduleSnapshot = await getDoc(scheduleDocRef);
+        // Fetch schedule
+        try {
+          const scheduleDocRef = doc(db, "schedules", "userSchedule"); // Consider using userId if schedule is user-specific
+          const scheduleSnapshot = await getDoc(scheduleDocRef);
 
-        if (scheduleSnapshot.exists()) {
-          setSchedule(scheduleSnapshot.data().schedule as DaySchedule[]);
-        } else {
-          console.error("Schedule document does not exist.");
+          if (scheduleSnapshot.exists()) {
+            setSchedule(scheduleSnapshot.data().schedule as DaySchedule[]);
+          } else {
+            console.error("Schedule document does not exist.");
+            setSchedule([]); // Ensure schedule is empty if no data exists
+          }
+        } catch (error) {
+          console.error("Failed to fetch schedule:", error);
+          setSchedule([]);
         }
-      } catch (error) {
-        console.error("Failed to fetch schedule:", error);
+      } else {
+        // User is not authenticated
+        setDocID(null);
+        setProfile(null);
+        setSchedule([]);
       }
-    };
+    });
 
-    fetchProfile();
-    fetchSchedule();
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
   }, []);
-
   const handleUpdateProfile = (updatedProfile: Partial<Student>) => {
     setProfile((prev) => (prev ? { ...prev, ...updatedProfile } : null));
     console.log("Updated Profile:", updatedProfile);
