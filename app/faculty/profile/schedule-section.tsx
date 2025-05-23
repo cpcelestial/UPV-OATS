@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { fetchSchedule } from "@/app/firebaseService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Clock, MapPin, User } from "lucide-react";
+import { Clock, MapPin } from "lucide-react";
 import type { DaySchedule } from "../../data";
 
 export function ScheduleSection({
@@ -31,11 +31,9 @@ export function ScheduleSection({
     <Card>
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">
-            Weekly Consultation Schedule
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900">Weekly Schedule</h1>
           <Button variant="secondary" onClick={onEditSchedule}>
-            Edit consultation hours
+            Edit schedule
           </Button>
         </div>
 
@@ -69,7 +67,7 @@ export function ScheduleSection({
                   ))
                 ) : (
                   <div className="h-20 flex items-center justify-center text-sm text-gray-500">
-                    No consultation hours
+                    None
                   </div>
                 )}
               </div>

@@ -19,17 +19,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, Plus } from "lucide-react";
-import { doc, getDoc, setDoc } from "firebase/firestore";
-import { db } from "@/app/firebase-config";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Trash2, BookOpen, Calendar } from "lucide-react";
 import type { DaySchedule } from "../../data";
+import { db } from "@/app/firebase-config";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 interface ScheduleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   schedule: DaySchedule[];
   onUpdateSchedule: (schedule: DaySchedule[]) => void;
-  userId: string; // <-- Pass the current user's UID
+  userId: string;
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => {
@@ -48,7 +49,7 @@ const DAYS = [
   "Saturday",
 ];
 
-const CLASS_COLORS = [
+const COLORS = [
   { label: "Pink", value: "bg-pink-100 border-pink-200 text-pink-700" },
   { label: "Red", value: "bg-red-100 border-red-200 text-red-700" },
   { label: "Orange", value: "bg-orange-100 border-orange-200 text-orange-700" },
@@ -59,11 +60,13 @@ const CLASS_COLORS = [
   { label: "Purple", value: "bg-purple-100 border-purple-200 text-purple-700" },
 ];
 
-interface ClassFormData {
+interface ScheduleItemData {
+  type: "class" | "consultation";
   days: string[];
   start: string;
   end: string;
   subject: string;
+  section: string;
   room: string;
   color: string;
 }
@@ -75,31 +78,6 @@ export function ScheduleDialog({
   onUpdateSchedule,
   userId,
 }: ScheduleDialogProps) {
-  const [classes, setClasses] = useState<ClassFormData[]>([]);
-  const [invalidClasses, setInvalidClasses] = useState<number[]>([]);
-
-  function isTimeOverlap(
-    aStart: string,
-    aEnd: string,
-    bStart: string,
-    bEnd: string
-  ) {
-    // Convert "8:00 AM" to minutes since midnight
-    function toMinutes(t: string) {
-      const [time, period] = t.split(" ");
-      const [hInit, m] = time.split(":").map(Number);
-      let h = hInit;
-      if (period === "PM" && h !== 12) h += 12;
-      if (period === "AM" && h === 12) h = 0;
-      return h * 60 + m;
-    }
-    const aS = toMinutes(aStart),
-      aE = toMinutes(aEnd);
-    const bS = toMinutes(bStart),
-      bE = toMinutes(bEnd);
-    return aS < bE && bS < aE;
-  }
-
   // Always fetch the schedule for this user when dialog opens
   useEffect(() => {
     if (open && userId) {
@@ -117,83 +95,125 @@ export function ScheduleDialog({
     }
   }, [open, userId]);
 
-  // Map existing schedule to editable classes when dialog opens or schedule changes
+  const [activeTab, setActiveTab] = useState<string>("classes");
+  const [scheduleItems, setScheduleItems] = useState<ScheduleItemData[]>([]);
+  const [invalidItems, setInvalidItems] = useState<number[]>([]);
+
   useEffect(() => {
     if (open) {
-      const existingClasses: ClassFormData[] = [];
+      // Map existing schedule to editable items
+      const existingItems: ScheduleItemData[] = [];
+
       schedule.forEach((day) => {
         day.slots.forEach((slot) => {
-          const existingClass = existingClasses.find(
-            (cls) => cls.start === slot.start && cls.end === slot.end
+          // Determine if it's a class or consultation based on properties
+          // This is an assumption - you may need a better way to distinguish them
+          const type = slot.section ? "class" : "consultation";
+
+          const existingItem = existingItems.find(
+            (item) =>
+              item.start === slot.start &&
+              item.end === slot.end &&
+              item.subject === slot.subject &&
+              item.section === slot.section &&
+              item.room === slot.room &&
+              item.type === type
           );
-          if (existingClass) {
-            existingClass.days.push(day.day);
+
+          if (existingItem) {
+            existingItem.days.push(day.day);
           } else {
-            existingClasses.push({
+            existingItems.push({
+              type,
               days: [day.day],
               start: slot.start,
               end: slot.end,
-
-              color: slot.color || CLASS_COLORS[0].value,
+              subject: slot.subject || "",
+              section: slot.section || "",
+              room: slot.room || "",
+              color: slot.color || COLORS[0].value,
             });
           }
         });
       });
-      setClasses(existingClasses);
-      setInvalidClasses([]);
+
+      setScheduleItems(existingItems);
+      setInvalidItems([]);
     }
-  }, [open]);
+  }, [open, schedule]);
 
   const handleDayToggle = (
-    classIndex: number,
+    itemIndex: number,
     day: string,
     checked: boolean
   ) => {
-    setClasses((prev) => {
-      const newClasses = [...prev];
+    setScheduleItems((prev) => {
+      const newItems = [...prev];
       if (checked) {
-        newClasses[classIndex].days.push(day);
+        newItems[itemIndex].days.push(day);
       } else {
-        newClasses[classIndex].days = newClasses[classIndex].days.filter(
+        newItems[itemIndex].days = newItems[itemIndex].days.filter(
           (d) => d !== day
         );
       }
-      return newClasses;
+      return newItems;
     });
 
+    // Remove from invalid items if days are now selected
     if (checked) {
-      setInvalidClasses((prev) => prev.filter((idx) => idx !== classIndex));
+      setInvalidItems((prev) => prev.filter((idx) => idx !== itemIndex));
     }
   };
 
-  const handleClassChange = <K extends keyof ClassFormData>(
+  const handleItemChange = <K extends keyof ScheduleItemData>(
     index: number,
     field: K,
-    value: ClassFormData[K]
+    value: ScheduleItemData[K]
   ) => {
-    setClasses((prev) => {
-      const newClasses = [...prev];
-      newClasses[index] = { ...newClasses[index], [field]: value };
-      return newClasses;
+    setScheduleItems((prev) => {
+      const newItems = [...prev];
+      newItems[index] = { ...newItems[index], [field]: value };
+      return newItems;
     });
   };
 
   const handleAddClass = () => {
-    setClasses((prev) => [
+    setScheduleItems((prev) => [
       ...prev,
       {
+        type: "class",
         days: [],
-        start: "8:00 AM",
-        end: "9:30 AM",
-
-        color: CLASS_COLORS[prev.length % CLASS_COLORS.length].value,
+        start: "6:00 AM",
+        end: "9:00 PM",
+        subject: "",
+        section: "",
+        room: "",
+        color: COLORS[prev.length % COLORS.length].value,
       },
     ]);
+    setActiveTab("classes");
   };
 
-  const handleRemoveClass = (index: number) => {
-    setClasses((prev) => prev.filter((_, i) => i !== index));
-    setInvalidClasses((prev) =>
+  const handleAddConsultation = () => {
+    setScheduleItems((prev) => [
+      ...prev,
+      {
+        type: "consultation",
+        days: [],
+        start: "6:00 AM",
+        end: "9:00 PM",
+        subject: "Consultation",
+        section: "",
+        room: "",
+        color: "bg-gray-200 border-gray-300 text-gray-800",
+      },
+    ]);
+    setActiveTab("consultations");
+  };
+
+  const handleRemoveItem = (index: number) => {
+    setScheduleItems((prev) => prev.filter((_, i) => i !== index));
+    setInvalidItems((prev) =>
       prev
         .filter((idx) => idx !== index)
         .map((idx) => (idx > index ? idx - 1 : idx))
@@ -201,46 +221,21 @@ export function ScheduleDialog({
   };
 
   const handleSave = async () => {
-    // Check for overlaps
-    let hasOverlap = false;
-    for (const day of DAYS) {
-      const dayClasses = classes.filter((cls) => cls.days.includes(day));
-      for (let i = 0; i < dayClasses.length; i++) {
-        for (let j = i + 1; j < dayClasses.length; j++) {
-          if (
-            isTimeOverlap(
-              dayClasses[i].start,
-              dayClasses[i].end,
-              dayClasses[j].start,
-              dayClasses[j].end
-            )
-          ) {
-            hasOverlap = true;
-            break;
-          }
-        }
-        if (hasOverlap) break;
-      }
-      if (hasOverlap) break;
-    }
-    if (hasOverlap) {
-      alert("Classes cannot overlap on the same day.");
-      return;
-    }
+    // Merge new items with the existing schedule
+    const newSchedule = DAYS.map((day) => {
+      const slots = scheduleItems
+        .filter((item) => item.days.includes(day))
+        .map((item) => ({
+          start: item.start,
+          end: item.end,
+          subject: item.subject,
+          section: item.section,
+          room: item.room,
+          color: item.color,
+        }));
 
-    // ...save logic (call updateSchedule with userId and newSchedule)...
-    // Build new schedule in DaySchedule[] format
-    const newSchedule: DaySchedule[] = DAYS.map((day) => ({
-      day,
-      slots: classes
-        .filter((cls) => cls.days.includes(day))
-        .map((cls) => ({
-          start: cls.start,
-          end: cls.end,
-
-          color: cls.color,
-        })),
-    }));
+      return { day, slots };
+    });
 
     try {
       // Save to Firestore under this user's document
@@ -254,149 +249,353 @@ export function ScheduleDialog({
     }
   };
 
+  const classItems = scheduleItems.filter((item) => item.type === "class");
+  const consultationItems = scheduleItems.filter(
+    (item) => item.type === "consultation"
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl py-6 pl-6 pr-4">
         <DialogHeader>
           <DialogTitle className="font-bold">Edit Weekly Schedule</DialogTitle>
-          <DialogDescription>Customize your weekly schedule</DialogDescription>
+          <DialogDescription>
+            Manage your classes and consultation hours
+          </DialogDescription>
         </DialogHeader>
-        <div className="max-h-[60vh] overflow-y-auto py-2 pr-4 space-y-6">
-          {classes.map((cls, index) => (
-            <div key={index} className="space-y-4 p-4 border rounded-lg">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Select
-                      value={cls.start}
-                      onValueChange={(value) =>
-                        handleClassChange(index, "start", value)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Start time" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {HOURS.map((hour) => (
-                          <SelectItem key={hour} value={hour}>
-                            {hour}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <span>to</span>
-                    <Select
-                      value={cls.end}
-                      onValueChange={(value) =>
-                        handleClassChange(index, "end", value)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="End time" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {HOURS.map((hour) => (
-                          <SelectItem key={hour} value={hour}>
-                            {hour}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <Select
-                    value={cls.color}
-                    onValueChange={(value) =>
-                      handleClassChange(index, "color", value)
-                    }
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="classes">
+              Classes ({classItems.length})
+            </TabsTrigger>
+            <TabsTrigger value="consultations">
+              Consultations ({consultationItems.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent
+            value="classes"
+            className="max-h-[50vh] overflow-y-auto py-2 pr-4 space-y-6"
+          >
+            {classItems.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No classes added yet.
+              </div>
+            ) : (
+              classItems.map((item, index) => {
+                const itemIndex = scheduleItems.findIndex((i) => i === item);
+                return (
+                  <div
+                    key={itemIndex}
+                    className="space-y-4 p-4 border rounded-lg"
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choose color" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CLASS_COLORS.map((color) => (
-                        <SelectItem key={color.value} value={color.value}>
-                          <div className="flex items-center gap-2">
-                            <div
-                              className={`w-4 h-4 rounded ${
-                                color.value.split(" ")[0]
-                              }`}
-                            />
-                            <span>{color.label}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <div>
-                    <div
-                      className={`grid grid-cols-2 gap-2 p-2 rounded-md border ${
-                        invalidClasses.includes(index)
-                          ? "bg-red-50 border-red-200"
-                          : "border-transparent"
-                      }`}
-                    >
-                      {DAYS.map((day) => (
-                        <div key={day} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`${day}-${index}`}
-                            checked={cls.days.includes(day)}
-                            onCheckedChange={(checked) =>
-                              handleDayToggle(index, day, checked as boolean)
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-4">
+                        <Input
+                          placeholder="Subject"
+                          value={item.subject}
+                          onChange={(e) =>
+                            handleItemChange(
+                              itemIndex,
+                              "subject",
+                              e.target.value
+                            )
+                          }
+                        />
+                        <div className="flex items-center gap-2">
+                          <Select
+                            value={item.start}
+                            onValueChange={(value) =>
+                              handleItemChange(itemIndex, "start", value)
                             }
-                          />
-                          <label
-                            htmlFor={`${day}-${index}`}
-                            className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                           >
-                            {day}
-                          </label>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Start time" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {HOURS.map((hour) => (
+                                <SelectItem key={hour} value={hour}>
+                                  {hour}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <span>to</span>
+                          <Select
+                            value={item.end}
+                            onValueChange={(value) =>
+                              handleItemChange(itemIndex, "end", value)
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="End time" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {HOURS.map((hour) => (
+                                <SelectItem key={hour} value={hour}>
+                                  {hour}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
-                      ))}
+                        <Input
+                          placeholder="Room"
+                          value={item.room}
+                          onChange={(e) =>
+                            handleItemChange(itemIndex, "room", e.target.value)
+                          }
+                        />
+                        <Select
+                          value={item.color}
+                          onValueChange={(value) =>
+                            handleItemChange(itemIndex, "color", value)
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Choose color" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {COLORS.map((color) => (
+                              <SelectItem key={color.value} value={color.value}>
+                                <div className="flex items-center gap-2">
+                                  <div
+                                    className={`w-4 h-4 rounded ${
+                                      color.value.split(" ")[0]
+                                    }`}
+                                  />
+                                  <span>{color.label}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-4">
+                        <Input
+                          placeholder="Section"
+                          value={item.section}
+                          onChange={(e) =>
+                            handleItemChange(
+                              itemIndex,
+                              "section",
+                              e.target.value
+                            )
+                          }
+                        />
+                        <div>
+                          <div
+                            className={`grid grid-cols-2 gap-2 p-2 rounded-md border ${
+                              invalidItems.includes(itemIndex)
+                                ? "bg-red-50 border-red-200"
+                                : "border-transparent"
+                            }`}
+                          >
+                            {DAYS.map((day) => (
+                              <div
+                                key={day}
+                                className="flex items-center space-x-2"
+                              >
+                                <Checkbox
+                                  id={`${day}-${itemIndex}`}
+                                  checked={item.days.includes(day)}
+                                  onCheckedChange={(checked) =>
+                                    handleDayToggle(
+                                      itemIndex,
+                                      day,
+                                      checked as boolean
+                                    )
+                                  }
+                                />
+                                <label
+                                  htmlFor={`${day}-${itemIndex}`}
+                                  className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                >
+                                  {day}
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="w-full mt-4"
+                          onClick={() => handleRemoveItem(itemIndex)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Remove Class
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    className="w-full mt-4"
-                    onClick={() => handleRemoveClass(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Remove Schedule
-                  </Button>
-                </div>
+                );
+              })
+            )}
+          </TabsContent>
+
+          <TabsContent
+            value="consultations"
+            className="max-h-[50vh] overflow-y-auto py-2 pr-4 space-y-6"
+          >
+            {consultationItems.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No consultation hours added yet.
               </div>
-            </div>
-          ))}
-        </div>
-        <DialogFooter>
+            ) : (
+              consultationItems.map((item, index) => {
+                const itemIndex = scheduleItems.findIndex((i) => i === item);
+                return (
+                  <div
+                    key={itemIndex}
+                    className="space-y-4 p-4 border rounded-lg"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-4">
+                        <Input
+                          placeholder="Title"
+                          value="Consultation"
+                          onChange={(e) =>
+                            handleItemChange(
+                              itemIndex,
+                              "subject",
+                              "Consultation"
+                            )
+                          }
+                          disabled
+                        />
+                        <div className="flex items-center gap-2">
+                          <Select
+                            value={item.start}
+                            onValueChange={(value) =>
+                              handleItemChange(itemIndex, "start", value)
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Start time" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {HOURS.map((hour) => (
+                                <SelectItem key={hour} value={hour}>
+                                  {hour}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <span>to</span>
+                          <Select
+                            value={item.end}
+                            onValueChange={(value) =>
+                              handleItemChange(itemIndex, "end", value)
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="End time" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {HOURS.map((hour) => (
+                                <SelectItem key={hour} value={hour}>
+                                  {hour}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        <div>
+                          <div
+                            className={`grid grid-cols-2 gap-2 p-2 rounded-md border ${
+                              invalidItems.includes(itemIndex)
+                                ? "bg-red-50 border-red-200"
+                                : "border-transparent"
+                            }`}
+                          >
+                            {DAYS.map((day) => (
+                              <div
+                                key={day}
+                                className="flex items-center space-x-2"
+                              >
+                                <Checkbox
+                                  id={`${day}-${itemIndex}`}
+                                  checked={item.days.includes(day)}
+                                  onCheckedChange={(checked) =>
+                                    handleDayToggle(
+                                      itemIndex,
+                                      day,
+                                      checked as boolean
+                                    )
+                                  }
+                                />
+                                <label
+                                  htmlFor={`${day}-${itemIndex}`}
+                                  className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                >
+                                  {day}
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="w-full mt-4"
+                          onClick={() => handleRemoveItem(itemIndex)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Remove Consultation
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </TabsContent>
+        </Tabs>
+
+        <DialogFooter className="mt-6">
           <div className="w-full">
             <Button
-              className="float-left bg-[#2F5233] hover:bg-[#2F5233]/90"
               onClick={handleAddClass}
+              className="mr-2 float-left bg-[#2F5233] hover:bg-[#2F5233]/90"
             >
-              <Plus className="h-4 w-4" />
-              Add Schedule
+              <BookOpen className="h-4 w-4" />
+              Add Class
+            </Button>
+
+            <Button
+              onClick={handleAddConsultation}
+              className="float-left bg-[#2F5233] hover:bg-[#2F5233]/90"
+            >
+              <Calendar className="h-4 w-4" />
+              Add Consultation
+            </Button>
+
+            <Button onClick={handleSave} className="float-right">
+              Save
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => {
+                const itemsWithNoDays = scheduleItems
+                  .map((item, index) => (item.days.length === 0 ? index : -1))
+                  .filter((index) => index !== -1);
+
+                if (itemsWithNoDays.length > 0) {
+                  setInvalidItems(itemsWithNoDays);
+                  return;
+                }
+                onOpenChange(false);
+              }}
+              className="mr-2 float-right"
+            >
+              Cancel
             </Button>
           </div>
-          <Button
-            variant="outline"
-            onClick={() => {
-              const classesWithNoDays = classes
-                .map((cls, index) => (cls.days.length === 0 ? index : -1))
-                .filter((index) => index !== -1);
-
-              if (classesWithNoDays.length > 0) {
-                setInvalidClasses(classesWithNoDays);
-                return;
-              }
-              onOpenChange(false);
-            }}
-          >
-            Cancel
-          </Button>
-          <Button onClick={handleSave}>Save</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
