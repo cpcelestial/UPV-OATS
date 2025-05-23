@@ -166,28 +166,48 @@ export function AvailabilityTable({
     checked?: boolean | "indeterminate"
   ) => {
     if (!editMode) return;
-  
+
     const auth = getAuth();
     const user = auth.currentUser;
-    if (!user) return;
-  
-    // Update local state
+    
+    if (!user) {
+      console.error("No authenticated user found");
+      return;
+    }
+
+    console.log(`Toggling availability for ${date} ${time}:`, checked);
+
+    // Determine the new availability state
+    const newAvailability = checked === true ? true : checked === false ? false : 
+      !(schedule[date]?.find((s) => s.time === time)?.available || false);
+
+    console.log("New availability state:", newAvailability);
+
+    // Update local state first
     setSchedule((prev) => {
       const updated = { ...prev };
       const slot = updated[date]?.find((s) => s.time === time);
       if (slot) {
-        slot.available = checked === true ? true : checked === false ? false : !slot.available;
+        slot.available = newAvailability;
+        console.log("Updated local state for slot:", slot);
+      } else {
+        console.error("Slot not found in local state");
       }
       return updated;
     });
-  
+
     try {
       const docRef = doc(db, "timeSlots", user.uid);
+      console.log("Fetching document for user:", user.uid);
+      
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
         const data = docSnap.data();
+        console.log("Existing document data:", data);
+        
         let existingDateSlots = data[date] || [];
+        console.log("Existing slots for date:", existingDateSlots);
         
         // Find if this time slot already exists
         const existingSlotIndex = existingDateSlots.findIndex(
@@ -198,15 +218,18 @@ export function AvailabilityTable({
           // Update the existing time slot's availability
           existingDateSlots[existingSlotIndex] = {
             ...existingDateSlots[existingSlotIndex],
-            available: checked === true ? true : checked === false ? false : !existingDateSlots[existingSlotIndex].available
+            available: newAvailability
           };
+          console.log("Updated existing slot:", existingDateSlots[existingSlotIndex]);
         } else {
           // Add a new time slot
-          existingDateSlots.push({
+          const newSlot = {
             time,
-            available: checked === true ? true : checked === false ? false : true,
+            available: newAvailability,
             booked: false
-          });
+          };
+          existingDateSlots.push(newSlot);
+          console.log("Added new slot:", newSlot);
         }
         
         // Sort the array by time
@@ -214,36 +237,55 @@ export function AvailabilityTable({
           a.time.localeCompare(b.time)
         );
         
+        console.log("Final slots array to save:", existingDateSlots);
+        
         // Update the document with the modified slots array
         await updateDoc(docRef, {
           [date]: existingDateSlots
         });
+        
+        console.log("Successfully updated document");
       } else {
         // Create a new document for this user
         const newSlot = {
           time,
-          available: checked === true ? true : checked === false ? false : true,
+          available: newAvailability,
           booked: false
         };
+        
+        console.log("Creating new document with slot:", newSlot);
         
         await setDoc(docRef, {
           [date]: [newSlot]
         });
+        
+        console.log("Successfully created new document");
       }
     } catch (error) {
       console.error("Failed to update availability:", error);
+      
+      // Revert local state on error
+      setSchedule((prev) => {
+        const updated = { ...prev };
+        const slot = updated[date]?.find((s) => s.time === time);
+        if (slot) {
+          slot.available = !newAvailability; // Revert to previous state
+        }
+        return updated;
+      });
     }
   };
 
-  // Check if a slot is in the past
-  const isSlotInPast = (date: string, time: string) => {
-    const [hour, minute] = time.split(":").map(Number);
-    const slotDate = new Date(date);
-    setHours(slotDate, hour);
-    setMinutes(slotDate, minute);
+    // Check if a slot is in the past
+    const isSlotInPast = (date: string, time: string) => {
+      const [hour, minute] = time.split(":").map(Number);
+      
+      // Parse the date string properly to avoid timezone issues
+      const [year, month, day] = date.split("-").map(Number);
+      const slotDate = new Date(year, month - 1, day, hour, minute);
 
-    return isBefore(slotDate, new Date());
-  };
+      return isBefore(slotDate, new Date());
+    };
 
   // Check if a slot is booked
   const isSlotBooked = (date: string, time: string) => {
@@ -254,8 +296,8 @@ export function AvailabilityTable({
 
   // Determine slot status text
   const getSlotStatus = (date: string, time: string, available: boolean) => {
-    if (isSlotInPast(date, time)) return "CLOSED";
     if (isSlotBooked(date, time)) return "BOOKED";
+    if (isSlotInPast(date, time) && available) return "CLOSED"; // Only show CLOSED if it was available
     if (available) return "OPEN";
     return "";
   };
@@ -296,45 +338,63 @@ export function AvailabilityTable({
                 {timeSlot.time}
               </td>
 
-              {Object.entries(schedule).map(([date, slots]) => {
-                const slot = slots.find((s) => s.time === timeSlot.time);
-                if (!slot) return <td key={date} className="px-2 py-1"></td>;
+            {Object.entries(schedule).map(([date, slots]) => {
+              const slot = slots.find((s) => s.time === timeSlot.time);
+              if (!slot) return <td key={date} className="px-2 py-1"></td>;
 
-                const isPast = isSlotInPast(date, timeSlot.time);
-                const isBooked = isSlotBooked(date, timeSlot.time);
+              const isPast = isSlotInPast(date, timeSlot.time);
+              const isBooked = isSlotBooked(date, timeSlot.time);
 
-                return (
-                  <td
-                    key={date}
-                    className="border-t border-l px-2 py-1 text-center"
-                  >
-                    {editMode ? (
-                      <Checkbox
-                        checked={slot.available}
-                        disabled={isPast}
-                        onCheckedChange={(checked) =>
-                          handleToggleAvailability(date, timeSlot.time, checked)
-                        }
-                        className="mx-auto"
-                      />
-                    ) : (
-                      slot.available  && (
-                        <div className="flex justify-center">
-                          <Badge
-                            variant={"outline"}
-                            className={cn(
-                              "px-4 py-1 font-semibold justify-center w-24",
-                              getSlotColor(date, timeSlot.time, slot.available)
-                            )}
-                          >
-                            {getSlotStatus(date, timeSlot.time, slot.available)}
-                          </Badge>
-                        </div>
-                      )
-                    )}
-                  </td>
-                );
-              })}
+              return (
+                <td
+                  key={date}
+                  className="border-t border-l px-2 py-1 text-center"
+                >
+                  {editMode ? (
+                    // In edit mode, show checkbox for all slots
+                    <Checkbox
+                      checked={slot.available}
+                      disabled={isPast || isBooked}
+                      onCheckedChange={(checked) =>
+                        handleToggleAvailability(date, timeSlot.time, checked)
+                      }
+                      className="mx-auto"
+                    />
+                  ) : (
+                    // In view mode, show appropriate content based on slot state
+                    (() => {
+                      const status = getSlotStatus(date, timeSlot.time, slot.available);
+                      
+                      if (status) {
+                        // Show badge for slots with status (OPEN, CLOSED, BOOKED)
+                        return (
+                          <div className="flex justify-center">
+                            <Badge
+                              variant={"outline"}
+                              className={cn(
+                                "px-4 py-1 font-semibold justify-center w-24",
+                                getSlotColor(date, timeSlot.time, slot.available)
+                              )}
+                            >
+                              {status}
+                            </Badge>
+                          </div>
+                        );
+                      } else {
+                        // For unavailable future slots, show empty cell or a subtle indicator
+                        return (
+                          <div className="flex justify-center">
+                            <div className="w-24 h-6 flex items-center justify-center text-xs text-gray-400">
+                              -
+                            </div>
+                          </div>
+                        );
+                      }
+                    })()
+                  )}
+                </td>
+              );
+            })}
             </tr>
           ))}
         </tbody>
