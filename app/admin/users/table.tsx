@@ -3,201 +3,209 @@
 import { useState } from "react";
 import {
   type ColumnDef,
-  type ColumnFiltersState,
-  type SortingState,
-  type VisibilityState,
   flexRender,
+  useReactTable,
   getCoreRowModel,
+  getSortedRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
+  type SortingState,
 } from "@tanstack/react-table";
-import {
-  ChevronDown,
-  MoreHorizontal,
-  Plus,
-  Filter,
-  ArrowUpDown,
-} from "lucide-react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
+  DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import {
   Table,
-  TableBody,
-  TableCell,
-  TableHead,
   TableHeader,
+  TableBody,
   TableRow,
+  TableHead,
+  TableCell,
 } from "@/components/ui/table";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import Link from "next/link";
+import { ArrowUpDown, Filter, ChevronDown, Plus, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
-const data: User[] = [
-  {
-    id: "1",
-    name: "Jane Doe",
-    email: "janed@up.edu.ph",
-    role: "Faculty",
-    dateAdded: "Dec 20, 2023",
-    avatarUrl: "/placeholder.svg",
-  },
-  {
-    id: "2",
-    name: "John Smith",
-    email: "johns@up.edu.ph",
-    role: "Student",
-    dateAdded: "Jan 15, 2024",
-    avatarUrl: "/placeholder.svg",
-  },
-  {
-    id: "3",
-    name: "Alice Johnson",
-    email: "alicej@up.edu.ph",
-    role: "Faculty",
-    dateAdded: "Nov 5, 2023",
-    avatarUrl: "/placeholder.svg",
-  },
-  {
-    id: "4",
-    name: "Bob Williams",
-    email: "bobw@up.edu.ph",
-    role: "Student",
-    dateAdded: "Feb 10, 2024",
-    avatarUrl: "/placeholder.svg",
-  },
-];
+// Define the User interface
+interface User {
+  id?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  avatarUrl?: string;
+  role: string;
+  dateAdded?: {
+    seconds: number;
+  };
+}
 
-export const columns: ColumnDef<User>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <input
-        type="checkbox"
-        className="translate-y-[2px]"
-        checked={table.getIsAllPageRowsSelected()}
-        onChange={(value) =>
-          table.toggleAllPageRowsSelected(!!value.target.checked)
-        }
-      />
-    ),
-    cell: ({ row }) => (
-      <input
-        type="checkbox"
-        className="translate-y-[2px]"
-        checked={row.getIsSelected()}
-        onChange={(value) => row.toggleSelected(!!value.target.checked)}
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "name",
-    header: "User",
-    cell: ({ row }) => {
-      return (
-        <div className="flex items-center gap-4">
-          <Avatar>
-            <AvatarImage src={row.original.avatarUrl} />
-            <AvatarFallback className="bg-primary/10 text-primary">
-              {row.original.name[0]}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex flex-col">
-            <span className="font-medium">{row.original.name}</span>
-            <span className="text-sm text-muted-foreground">
-              {row.original.email}
-            </span>
-          </div>
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "role",
-    header: "Role",
-  },
-  {
-    accessorKey: "dateAdded",
-    header: "Date Added",
-    cell: ({ row }) => row.original.dateAdded,
-    sortingFn: (rowA, rowB) => {
-      const dateA = new Date(rowA.original.dateAdded);
-      const dateB = new Date(rowB.original.dateAdded);
-      return dateA.getTime() - dateB.getTime();
-    },
-  },
-  {
-    id: "actions",
-    cell: ({ row }) => {
-      const user = row.original;
+interface UsersTableProps {
+  users: User[];
+}
 
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem>View details</DropdownMenuItem>
-            <DropdownMenuItem>Edit user</DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">
-              Delete user
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
-];
-
-export function UsersTable() {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = useState({});
+export function UsersTable({ users: propsUsers }: UsersTableProps) {
   const [roleFilter, setRoleFilter] = useState<string | null>(null);
   const [currentSort, setCurrentSort] = useState<string>("Sort");
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [users, setUsers] = useState<User[]>(propsUsers);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
-  const handleSort = (id: string, desc: boolean, label: string) => {
-    setSorting([{ id, desc }]);
-    setCurrentSort(label);
+  const deleteUser = (userId: string) => {
+    try {
+      // Here you would typically call an API to delete the user
+      // For now, we'll just remove it from the local state
+      setUsers(users.filter((user) => user.id !== userId));
+      toast.success("User deleted successfully");
+      setIsDeleteDialogOpen(false);
+      setUserToDelete(null);
+    } catch (error) {
+      toast.error("Failed to delete user");
+      console.error("Error deleting user:", error);
+    }
   };
 
-  const clearSort = () => {
-    setSorting([]);
-    setCurrentSort("Sort");
+  const handleDeleteClick = (user: User) => {
+    setUserToDelete(user);
+    setIsDeleteDialogOpen(true);
   };
+
+  const columns: ColumnDef<User>[] = [
+    {
+      accessorKey: "name",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() =>
+            handleSort("name", column.getIsSorted() === "asc", "Name (A - Z)")
+          }
+          className="px-0"
+        >
+          Name
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => (
+        <div className="flex items-center gap-4">
+          <Avatar>
+            <AvatarImage src={row.original.avatarUrl || "/placeholder.svg"} />
+            <AvatarFallback>
+              {row.original.firstName?.[0]}
+              {row.original.lastName?.[0]}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <span className="font-medium">
+              {row.original.firstName} {row.original.lastName}
+            </span>
+            <div className="text-sm text-muted-foreground">
+              {row.original.email}
+            </div>
+          </div>
+        </div>
+      ),
+      sortingFn: (rowA, rowB) => {
+        const nameA =
+          `${rowA.original.firstName} ${rowA.original.lastName}`.toLowerCase();
+        const nameB =
+          `${rowB.original.firstName} ${rowB.original.lastName}`.toLowerCase();
+        return nameA.localeCompare(nameB);
+      },
+      filterFn: (row, columnId, filterValue) => {
+        const name =
+          `${row.original.firstName} ${row.original.lastName}`.toLowerCase();
+        return name.includes(filterValue.toLowerCase());
+      },
+    },
+    {
+      accessorKey: "role",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() =>
+            handleSort("role", column.getIsSorted() === "asc", "Role")
+          }
+          className="px-0"
+        >
+          Role
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+    },
+    {
+      accessorKey: "dateAdded",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() =>
+            handleSort(
+              "dateAdded",
+              column.getIsSorted() === "asc",
+              "Date (New - Old)"
+            )
+          }
+          className="px-0"
+        >
+          Date Added
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) =>
+        row.original.dateAdded
+          ? new Date(row.original.dateAdded.seconds * 1000).toLocaleDateString()
+          : "—",
+      sortingFn: (rowA, rowB) => {
+        const dateA = rowA.original.dateAdded?.seconds || 0;
+        const dateB = rowB.original.dateAdded?.seconds || 0;
+        return dateA - dateB;
+      },
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => handleDeleteClick(row.original)}
+          className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      ),
+    },
+  ];
 
   const table = useReactTable({
-    data,
+    data: users,
     columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-    },
+    getPaginationRowModel: getPaginationRowModel(),
+    onSortingChange: setSorting,
+    state: { sorting },
   });
+
+  function handleSort(columnId: string, desc: boolean, label: string) {
+    setSorting([{ id: columnId, desc }]);
+    setCurrentSort(label);
+  }
 
   return (
     <div className="w-full">
@@ -211,6 +219,7 @@ export function UsersTable() {
             }
             className="max-w-md w-full text-lg"
           />
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline">
@@ -246,46 +255,8 @@ export function UsersTable() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <ArrowUpDown className="h-4 w-4 mr-2" />
-                {currentSort}
-                <ChevronDown className="h-4 w-4 ml-2" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => handleSort("name", false, "Name (A - Z)")}
-              >
-                Name (A - Z)
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleSort("name", true, "Name (Z - A)")}
-              >
-                Name (Z - A)
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() =>
-                  handleSort("dateAdded", true, "Date (New - Old)")
-                }
-              >
-                Date (New - Old)
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() =>
-                  handleSort("dateAdded", false, "Date (Old - New)")
-                }
-              >
-                Date (Old - New)
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={clearSort}>Clear</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
+
         <div className="flex items-center gap-2">
           <Link href="users/add-user">
             <Button className="bg-[#2F5233] hover:bg-[#2F5233]/90">
@@ -294,6 +265,7 @@ export function UsersTable() {
           </Link>
         </div>
       </div>
+
       <div className="rounded-md border">
         <Table className="min-w-full">
           <TableHeader>
@@ -348,11 +320,13 @@ export function UsersTable() {
           </TableBody>
         </Table>
       </div>
+
       <div className="flex items-center justify-end space-x-2 py-4">
         <div className="text-muted-foreground flex-1 text-sm">
           {table.getFilteredSelectedRowModel().rows.length} of{" "}
           {table.getFilteredRowModel().rows.length} row(s) selected.
         </div>
+
         <div className="space-x-2">
           <Button
             variant="outline"
@@ -372,6 +346,38 @@ export function UsersTable() {
           </Button>
         </div>
       </div>
+
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Are you sure you want to delete this user?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {userToDelete && (
+                <div>
+                  <p>
+                    You are about to delete {userToDelete.firstName}{" "}
+                    {userToDelete.lastName}. This action cannot be undone.
+                  </p>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => userToDelete?.id && deleteUser(userToDelete.id)}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

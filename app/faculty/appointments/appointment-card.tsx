@@ -172,7 +172,7 @@ export function AppointmentCard({
             {onAccept && (
               <Button
                 onClick={() => onAccept(appointment.id)}
-                className="bg-green-500 hover:bg-green-600"
+                className="bg-green-800 hover:bg-green-700"
               >
                 Accept
               </Button>

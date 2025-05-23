@@ -1,6 +1,5 @@
 "use client";
 
-import { updateSchedule } from "@/app/firebaseService";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +20,8 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, Plus } from "lucide-react";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { db } from "@/app/firebase-config";
 import type { DaySchedule } from "../../data";
 
 interface ScheduleDialogProps {
@@ -28,6 +29,7 @@ interface ScheduleDialogProps {
   onOpenChange: (open: boolean) => void;
   schedule: DaySchedule[];
   onUpdateSchedule: (schedule: DaySchedule[]) => void;
+  userId: string; // <-- Pass the current user's UID
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => {
@@ -72,15 +74,54 @@ export function ScheduleDialog({
   onOpenChange,
   schedule,
   onUpdateSchedule,
+  userId,
 }: ScheduleDialogProps) {
   const [classes, setClasses] = useState<ClassFormData[]>([]);
   const [invalidClasses, setInvalidClasses] = useState<number[]>([]);
 
+  function isTimeOverlap(
+    aStart: string,
+    aEnd: string,
+    bStart: string,
+    bEnd: string
+  ) {
+    // Convert "8:00 AM" to minutes since midnight
+    function toMinutes(t: string) {
+      const [time, period] = t.split(" ");
+      const [hInit, m] = time.split(":").map(Number);
+      let h = hInit;
+      if (period === "PM" && h !== 12) h += 12;
+      if (period === "AM" && h === 12) h = 0;
+      return h * 60 + m;
+    }
+    const aS = toMinutes(aStart),
+      aE = toMinutes(aEnd);
+    const bS = toMinutes(bStart),
+      bE = toMinutes(bEnd);
+    return aS < bE && bS < aE;
+  }
+
+  // Always fetch the schedule for this user when dialog opens
+  useEffect(() => {
+    if (open && userId) {
+      const fetchSchedule = async () => {
+        try {
+          const scheduleDocRef = doc(db, "schedules", userId);
+          await getDoc(scheduleDocRef);
+
+          // Optionally, you can update the schedule state here if needed
+        } catch (error) {
+          console.error("Failed to fetch schedule:", error);
+        }
+      };
+      fetchSchedule();
+    }
+  }, [open, userId]);
+
+  // Map existing schedule to editable classes when dialog opens or schedule changes
   useEffect(() => {
     if (open) {
-      // Map existing schedule to editable classes
       const existingClasses: ClassFormData[] = [];
-
       schedule.forEach((day) => {
         day.slots.forEach((slot) => {
           const existingClass = existingClasses.find(
@@ -91,7 +132,6 @@ export function ScheduleDialog({
               cls.room === slot.room &&
               cls.professor === slot.professor
           );
-
           if (existingClass) {
             existingClass.days.push(day.day);
           } else {
@@ -107,11 +147,10 @@ export function ScheduleDialog({
           }
         });
       });
-
-      setClasses(existingClasses); // Initialize classes with all existing slots
-      setInvalidClasses([]); // Reset invalid classes when dialog opens
+      setClasses(existingClasses);
+      setInvalidClasses([]);
     }
-  }, [open, schedule]);
+  }, [open]);
 
   const handleDayToggle = (
     classIndex: number,
@@ -130,7 +169,6 @@ export function ScheduleDialog({
       return newClasses;
     });
 
-    // Remove from invalid classes if days are now selected
     if (checked) {
       setInvalidClasses((prev) => prev.filter((idx) => idx !== classIndex));
     }
@@ -173,9 +211,38 @@ export function ScheduleDialog({
   };
 
   const handleSave = async () => {
-    // Merge new classes with the existing schedule
-    const newSchedule = DAYS.map((day) => {
-      const slots = classes
+    // Check for overlaps
+    let hasOverlap = false;
+    for (const day of DAYS) {
+      const dayClasses = classes.filter((cls) => cls.days.includes(day));
+      for (let i = 0; i < dayClasses.length; i++) {
+        for (let j = i + 1; j < dayClasses.length; j++) {
+          if (
+            isTimeOverlap(
+              dayClasses[i].start,
+              dayClasses[i].end,
+              dayClasses[j].start,
+              dayClasses[j].end
+            )
+          ) {
+            hasOverlap = true;
+            break;
+          }
+        }
+        if (hasOverlap) break;
+      }
+      if (hasOverlap) break;
+    }
+    if (hasOverlap) {
+      alert("Classes cannot overlap on the same day.");
+      return;
+    }
+  
+    // ...save logic (call updateSchedule with userId and newSchedule)...
+    // Build new schedule in DaySchedule[] format
+    const newSchedule: DaySchedule[] = DAYS.map((day) => ({
+      day,
+      slots: classes
         .filter((cls) => cls.days.includes(day))
         .map((cls) => ({
           start: cls.start,
@@ -184,15 +251,16 @@ export function ScheduleDialog({
           room: cls.room,
           professor: cls.professor,
           color: cls.color,
-        }));
-
-      return { day, slots };
-    });
+        })),
+    }));
 
     try {
-      await updateSchedule(newSchedule); // Save to Firestore
-      onUpdateSchedule(newSchedule); // Update local state
-      onOpenChange(false); // Close the dialog
+      // Save to Firestore under this user's document
+      await setDoc(doc(db, "schedules", userId), {
+        schedule: newSchedule,
+      });
+      onUpdateSchedule(newSchedule);
+      onOpenChange(false);
     } catch (error) {
       console.error("Failed to save schedule:", error);
     }

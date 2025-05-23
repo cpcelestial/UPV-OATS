@@ -37,3 +37,6 @@ yarn-error.log*
 next-env.d.ts
 navbar/styles/global.css
 /app/secrets
+app/admin/secrets/serviceKey.json
+app/admin/secrets/serviceKey.json
+app/admin/secrets/serviceKey.json

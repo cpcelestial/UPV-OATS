@@ -102,29 +102,31 @@ export function ProfileDialog({
         </DialogHeader>
         <div className="space-y-6 max-h-[60vh] overflow-y-auto py-2 pl-2 pr-4">
           <div className="flex justify-center mb-4">
-            <div className="relative">
-              <Image
-                src={editedProfile.avatarUrl || "/placeholder.svg"}
-                alt="Profile"
-                width={96}
-                height={96}
-                className="rounded-full object-cover"
-              />
-
-              <Button
-                variant="secondary"
-                size="icon"
-                className="absolute bottom-0 right-0 rounded-full"
-              >
-                <label
-                  htmlFor="file-input"
-                  className="absolute bottom-0 right-0 p-2 rounded-full cursor-pointer flex items-center justify-center"
-                  style={{
-                    width: "32px", // Adjust the size to match the small icon
-                    height: "32px",
-                    borderRadius: "50%",
-                  }}
+            <div className="relative w-32 h-32">
+              {profile.avatarUrl && profile.avatarUrl.trim() !== "" ? (
+                <Image
+                  src={profile.avatarUrl}
+                  alt={`${profile.firstName} ${profile.lastName}`}
+                  fill
+                  className="rounded-full object-cover"
                 />
+              ) : (
+                <div className="rounded-full bg-gray-200 w-full h-full flex items-center justify-center text-5xl text-gray-400">
+                  <span>
+                    {profile.firstName?.[0]}
+                    {profile.lastName?.[0]}
+                  </span>
+                </div>
+              )}
+              <label
+                htmlFor="file-input"
+                className="absolute bottom-0 right-0 p-2 rounded-full cursor-pointer flex items-center justify-center bg-white shadow"
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "50%",
+                }}
+              >
                 <Camera className="h-4 w-4" />
                 <input
                   id="file-input"
@@ -133,7 +135,7 @@ export function ProfileDialog({
                   className="hidden"
                   onChange={handleImageUpload}
                 />
-              </Button>
+              </label>
             </div>
           </div>
 

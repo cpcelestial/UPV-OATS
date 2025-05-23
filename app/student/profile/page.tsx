@@ -18,7 +18,15 @@ export default function Page() {
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [docID, setDocID] = useState<string | null>(null);
-// Fetch profile and schedule data from Firestore when user is authenticated
+  const DAYS = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+  // Fetch profile and schedule data from Firestore when user is authenticated
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -28,7 +36,7 @@ export default function Page() {
 
         // Fetch profile
         try {
-          const profileDocRef = doc(db, "student", userId);
+          const profileDocRef = doc(db, "students", userId);
           const profileSnapshot = await getDoc(profileDocRef);
 
           if (profileSnapshot.exists()) {
@@ -44,30 +52,31 @@ export default function Page() {
 
         // Fetch schedule
         try {
-          const scheduleDocRef = doc(db, "schedules", "userSchedule"); // Consider using userId if schedule is user-specific
+          const scheduleDocRef = doc(db, "schedules", userId);
           const scheduleSnapshot = await getDoc(scheduleDocRef);
-
+          let loadedSchedule: DaySchedule[] = [];
           if (scheduleSnapshot.exists()) {
-            setSchedule(scheduleSnapshot.data().schedule as DaySchedule[]);
-          } else {
-            console.error("Schedule document does not exist.");
-            setSchedule([]); // Ensure schedule is empty if no data exists
+            loadedSchedule = scheduleSnapshot.data().schedule as DaySchedule[];
           }
-        } catch (error) {
-          console.error("Failed to fetch schedule:", error);
-          setSchedule([]);
+          setSchedule(
+            DAYS.map(
+              (day) =>
+                loadedSchedule.find((d) => d.day === day) || { day, slots: [] }
+            )
+          );
+        } catch {
+          setSchedule(DAYS.map((day) => ({ day, slots: [] })));
         }
       } else {
-        // User is not authenticated
         setDocID(null);
         setProfile(null);
-        setSchedule([]);
+        setSchedule(DAYS.map((day) => ({ day, slots: [] })));
       }
     });
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, []);
+  }, [DAYS]);
   const handleUpdateProfile = (updatedProfile: Partial<Student>) => {
     setProfile((prev) => (prev ? { ...prev, ...updatedProfile } : null));
     console.log("Updated Profile:", updatedProfile);
@@ -89,10 +98,11 @@ export default function Page() {
           onUpdateProfile={() => setIsProfileDialogOpen(true)}
           onChangePassword={() => setIsPasswordDialogOpen(true)}
         />
-
         <ScheduleSection
           schedule={schedule}
-          onUpdateSchedule={() => setIsScheduleDialogOpen(true)}
+          onEditSchedule={() => setIsScheduleDialogOpen(true)}
+          onUpdateSchedule={setSchedule}
+          userId={docID}
         />
       </div>
 
@@ -105,9 +115,10 @@ export default function Page() {
 
       <ScheduleDialog
         open={isScheduleDialogOpen}
-        onOpenChange={setIsScheduleDialogOpen}
         schedule={schedule}
         onUpdateSchedule={handleUpdateSchedule}
+        onOpenChange={setIsScheduleDialogOpen}
+        userId={docID ?? ""}
       />
 
       <PasswordDialog

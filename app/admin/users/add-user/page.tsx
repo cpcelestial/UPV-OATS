@@ -34,7 +34,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner"; // Add this if you're using sonner for toasts
+import { toast } from "sonner";
 
 const studentSchema = z.object({
   role: z.literal("student"),
@@ -90,12 +90,12 @@ export function AddUserForm() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
-    
+
     try {
-      const response = await fetch('/api/users/create', {
-        method: 'POST',
+      const response = await fetch("/api/users/create", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(values),
       });
@@ -103,30 +103,31 @@ export function AddUserForm() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to create user');
+        throw new Error(data.error || "Failed to create user");
       }
 
       console.log("User created successfully:", data.user);
-      
+
       // Show success message
-      toast?.success(`${role.charAt(0).toUpperCase() + role.slice(1)} created successfully!`);
-      
+      toast?.success(
+        `${role.charAt(0).toUpperCase() + role.slice(1)} created successfully!`
+      );
+
       // Reset form and navigate
       setFormChanged(false);
       form.reset();
       router.push("/admin/users");
-      
     } catch (error: any) {
       console.error(`Error adding ${role}:`, error);
-      
+
       // Show error message
-      toast?.error(error.message || `Failed to create ${role}`);
-      
+      toast?.error(`Failed to create ${role}`);
+
       // Set form error if it's an email already exists error
-      if (error.message?.includes('already in use')) {
-        form.setError('email', {
-          type: 'manual',
-          message: 'This email address is already registered'
+      if (error.message?.includes("already in use")) {
+        form.setError("email", {
+          type: "manual",
+          message: "This email address is already registered",
         });
       }
     } finally {
@@ -195,9 +196,9 @@ export function AddUserForm() {
                 <FormItem>
                   <FormLabel>First Name</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="Juan" 
-                      {...field} 
+                    <Input
+                      placeholder="Juan"
+                      {...field}
                       disabled={isSubmitting}
                     />
                   </FormControl>
@@ -212,9 +213,9 @@ export function AddUserForm() {
                 <FormItem>
                   <FormLabel>Last Name</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="Dela Cruz" 
-                      {...field} 
+                    <Input
+                      placeholder="Dela Cruz"
+                      {...field}
                       disabled={isSubmitting}
                     />
                   </FormControl>
@@ -273,9 +274,9 @@ export function AddUserForm() {
                     <FormItem>
                       <FormLabel>Student Number</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="20XX-XXXXX" 
-                          {...field} 
+                        <Input
+                          placeholder="20XX-XXXXX"
+                          {...field}
                           disabled={isSubmitting}
                         />
                       </FormControl>
@@ -327,9 +328,9 @@ export function AddUserForm() {
                     <FormItem>
                       <FormLabel>Degree Program</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="BS Computer Science" 
-                          {...field} 
+                        <Input
+                          placeholder="BS Computer Science"
+                          {...field}
                           disabled={isSubmitting}
                         />
                       </FormControl>
@@ -349,9 +350,9 @@ export function AddUserForm() {
                     <FormItem>
                       <FormLabel>Faculty Number</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="20XX-XXXXX" 
-                          {...field} 
+                        <Input
+                          placeholder="20XX-XXXXX"
+                          {...field}
                           disabled={isSubmitting}
                         />
                       </FormControl>
@@ -418,9 +419,9 @@ export function AddUserForm() {
           )}
 
           <div className="flex justify-end">
-            <Button 
-              variant="outline" 
-              onClick={handleBack} 
+            <Button
+              variant="outline"
+              onClick={handleBack}
               className="mr-2"
               disabled={isSubmitting}
             >
@@ -433,7 +434,7 @@ export function AddUserForm() {
                   Creating...
                 </>
               ) : (
-                'Create'
+                "Create"
               )}
             </Button>
           </div>

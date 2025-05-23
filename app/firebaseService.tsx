@@ -3,30 +3,41 @@ import { app } from "./firebase-config";
 import type { DaySchedule } from "./data";
 
 const db = getFirestore(app);
-const SCHEDULE_DOC = "schedules/userSchedule";
 
-export async function fetchSchedule(): Promise<DaySchedule[] | null> {
-  try {
-    const docRef = doc(db, SCHEDULE_DOC);
-    const snapshot = await getDoc(docRef);
-    return snapshot.exists()
-      ? (snapshot.data().schedule as DaySchedule[])
-      : null;
-  } catch (error) {
-    console.error("Failed to fetch schedule:", error);
-    return null;
+const DAYS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+
+export async function fetchSchedule(userId: string): Promise<DaySchedule[]> {
+  const scheduleDocRef = doc(db, "schedules", userId);
+  const scheduleSnapshot = await getDoc(scheduleDocRef);
+  let schedule: DaySchedule[] = [];
+  if (scheduleSnapshot.exists()) {
+    schedule = scheduleSnapshot.data().schedule as DaySchedule[];
   }
+  // Ensure all days are present
+  return DAYS.map(
+    (day) => schedule.find((d) => d.day === day) || { day, slots: [] }
+  );
 }
 
-export async function updateSchedule(newSchedule: DaySchedule[]) {
+export async function updateSchedule(
+  userId: string,
+  newSchedule: DaySchedule[]
+) {
   try {
-    const docRef = doc(db, SCHEDULE_DOC);
-    await setDoc(docRef, { schedule: newSchedule }, { merge: true });
+    const scheduleDocRef = doc(db, "schedules", userId);
+    await setDoc(scheduleDocRef, { schedule: newSchedule }, { merge: true });
 
     // Fetch the existing schedule
-    const snapshot = await getDoc(docRef);
+    const snapshot = await getDoc(scheduleDocRef);
     const existingSchedule: DaySchedule[] = snapshot.exists()
-      ? (snapshot.data().schedule as DaySchedule[]) || [] // Ensure it's an array
+      ? (snapshot.data().schedule as DaySchedule[]) || []
       : [];
 
     // Merge the existing schedule with the new schedule
@@ -34,7 +45,7 @@ export async function updateSchedule(newSchedule: DaySchedule[]) {
       const newDay = newSchedule.find((d) => d.day === day.day);
       return {
         day: day.day,
-        slots: [...day.slots, ...(newDay?.slots || [])], // Merge slots
+        slots: [...day.slots, ...(newDay?.slots || [])],
       };
     });
 
@@ -52,7 +63,11 @@ export async function updateSchedule(newSchedule: DaySchedule[]) {
     }));
 
     // Save the deduplicated schedule back to Firestore
-    await setDoc(docRef, { schedule: deduplicatedSchedule }, { merge: true });
+    await setDoc(
+      scheduleDocRef,
+      { schedule: deduplicatedSchedule },
+      { merge: true }
+    );
   } catch (error) {
     console.error("Failed to update schedule:", error);
   }
