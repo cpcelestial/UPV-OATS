@@ -124,11 +124,7 @@ export function ScheduleDialog({
       schedule.forEach((day) => {
         day.slots.forEach((slot) => {
           const existingClass = existingClasses.find(
-            (cls) =>
-              cls.start === slot.start &&
-              cls.end === slot.end &&
-              cls.subject === slot.subject &&
-              cls.room === slot.room
+            (cls) => cls.start === slot.start && cls.end === slot.end
           );
           if (existingClass) {
             existingClass.days.push(day.day);
@@ -137,8 +133,6 @@ export function ScheduleDialog({
               days: [day.day],
               start: slot.start,
               end: slot.end,
-              subject: slot.subject || "",
-              room: slot.room || "",
 
               color: slot.color || CLASS_COLORS[0].value,
             });
@@ -191,8 +185,6 @@ export function ScheduleDialog({
         days: [],
         start: "8:00 AM",
         end: "9:30 AM",
-        subject: "",
-        room: "",
 
         color: CLASS_COLORS[prev.length % CLASS_COLORS.length].value,
       },
@@ -245,8 +237,6 @@ export function ScheduleDialog({
         .map((cls) => ({
           start: cls.start,
           end: cls.end,
-          subject: cls.subject,
-          room: cls.room,
 
           color: cls.color,
         })),
@@ -276,13 +266,6 @@ export function ScheduleDialog({
             <div key={index} className="space-y-4 p-4 border rounded-lg">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-4">
-                  <Input
-                    placeholder="Subject"
-                    value={cls.subject}
-                    onChange={(e) =>
-                      handleClassChange(index, "subject", e.target.value)
-                    }
-                  />
                   <div className="flex items-center gap-2">
                     <Select
                       value={cls.start}
@@ -320,20 +303,6 @@ export function ScheduleDialog({
                       </SelectContent>
                     </Select>
                   </div>
-                  <Input
-                    placeholder="Room"
-                    value={cls.room}
-                    onChange={(e) =>
-                      handleClassChange(index, "room", e.target.value)
-                    }
-                  />
-                  <Input
-                    placeholder="Professor"
-                    value={cls.professor}
-                    onChange={(e) =>
-                      handleClassChange(index, "professor", e.target.value)
-                    }
-                  />
                 </div>
                 <div className="space-y-4">
                   <Select
@@ -394,7 +363,7 @@ export function ScheduleDialog({
                     onClick={() => handleRemoveClass(index)}
                   >
                     <Trash2 className="h-4 w-4" />
-                    Remove Class
+                    Remove Schedule
                   </Button>
                 </div>
               </div>
@@ -408,7 +377,7 @@ export function ScheduleDialog({
               onClick={handleAddClass}
             >
               <Plus className="h-4 w-4" />
-              Add Class
+              Add Schedule
             </Button>
           </div>
           <Button

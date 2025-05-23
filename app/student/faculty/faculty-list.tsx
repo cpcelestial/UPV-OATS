@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,16 +11,46 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useState } from "react";
+import { collection, doc, getDoc } from "firebase/firestore";
+import { db } from "@/app/firebase-config";
 import type { FacultyMember } from "./types/faculty";
 
 interface FacultyListProps {
   faculty: FacultyMember[];
 }
 
+interface FacultyWithSchedule extends FacultyMember {
+  consultationHours?: {
+    day: string;
+    slots: { start: string; end: string; room?: string; note?: string }[];
+  }[];
+}
+
 export function FacultyList({ faculty }: FacultyListProps) {
   const [search, setSearch] = useState("");
   const [selectedCollege, setSelectedCollege] = useState("All Colleges");
+  const [facultyWithSchedules, setFacultyWithSchedules] = useState<
+    FacultyWithSchedule[]
+  >([]);
+
+  // Fetch consultation hours for each faculty
+  useEffect(() => {
+    async function fetchSchedules() {
+      const results = await Promise.all(
+        faculty.map(async (f) => {
+          try {
+            const schedDoc = await getDoc(doc(db, "schedules", f.id));
+            const schedule = schedDoc.exists() ? schedDoc.data().schedule : [];
+            return { ...f, consultationHours: schedule };
+          } catch {
+            return { ...f, consultationHours: [] };
+          }
+        })
+      );
+      setFacultyWithSchedules(results);
+    }
+    if (faculty.length > 0) fetchSchedules();
+  }, [faculty]);
 
   // Unique list of colleges for the dropdown
   const colleges = [
@@ -28,7 +59,7 @@ export function FacultyList({ faculty }: FacultyListProps) {
   ];
 
   // Filter and sort faculty based on search and selected college
-  const filteredFaculty = faculty
+  const filteredFaculty = facultyWithSchedules
     .filter((member) => {
       const matchesCollege =
         selectedCollege === "All Colleges" ||
@@ -41,7 +72,6 @@ export function FacultyList({ faculty }: FacultyListProps) {
       return matchesCollege && matchesSearch;
     })
     .sort((a, b) => {
-      // Always sort by name
       const nameA = `${a.firstName} ${a.lastName}`.toLowerCase();
       const nameB = `${b.firstName} ${b.lastName}`.toLowerCase();
       return nameA.localeCompare(nameB);
@@ -51,7 +81,6 @@ export function FacultyList({ faculty }: FacultyListProps) {
     <div>
       <div className="space-y-8">
         <div className="flex justify-between items-center">
-          {/* Dropdown for college filter */}
           <select
             value={selectedCollege}
             onChange={(e) => setSelectedCollege(e.target.value)}
@@ -78,7 +107,7 @@ export function FacultyList({ faculty }: FacultyListProps) {
             <TableHead className="w-[250px]">User name</TableHead>
             <TableHead>College</TableHead>
             <TableHead>Department</TableHead>
-            <TableHead>Course</TableHead>
+            {/* Remove Consultation Hours column */}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -108,7 +137,6 @@ export function FacultyList({ faculty }: FacultyListProps) {
               </TableCell>
               <TableCell>{member.college}</TableCell>
               <TableCell>{member.department}</TableCell>
-              <TableCell>{member.course}</TableCell>
             </TableRow>
           ))}
         </TableBody>
