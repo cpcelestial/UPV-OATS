@@ -91,22 +91,33 @@ export function PasswordDialog({ open, onOpenChange }: PasswordDialogProps) {
       } else {
         throw new Error("User not authenticated");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Password change error:", error);
 
       // Check for Firebase auth error codes
-      if (error.code === "auth/invalid-credential") {
-        setError("Current password is incorrect. Please try again.");
-      } else if (error.code === "auth/too-many-requests") {
-        setError("Too many failed attempts. Please try again later.");
-      } else if (error.code === "auth/requires-recent-login") {
-        setError(
-          "For security reasons, please log out and log back in before changing your password."
-        );
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        typeof (error as { code: unknown }).code === "string"
+      ) {
+        const code = (error as { code: string }).code;
+        if (code === "auth/invalid-credential") {
+          setError("Current password is incorrect. Please try again.");
+        } else if (code === "auth/too-many-requests") {
+          setError("Too many failed attempts. Please try again later.");
+        } else if (code === "auth/requires-recent-login") {
+          setError(
+            "For security reasons, please log out and log back in before changing your password."
+          );
+        } else {
+          setError(
+            (error as { message?: string }).message ||
+              "Failed to change password. Please try again."
+          );
+        }
       } else {
-        setError(
-          error.message || "Failed to change password. Please try again."
-        );
+        setError("Failed to change password. Please try again.");
       }
     } finally {
       setIsSubmitting(false);

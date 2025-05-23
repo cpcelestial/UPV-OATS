@@ -7,63 +7,118 @@ import { PasswordDialog } from "./password-dialog";
 import { ScheduleDialog } from "./schedule-dialog";
 import { ScheduleSection } from "./schedule-section";
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/app/firebase-config"; // Firestore instance
+import { onAuthStateChanged } from "firebase/auth";
+import { auth, db } from "@/app/firebase-config";
 import type { Faculty, DaySchedule } from "../../data";
 
+const DAYS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+
 export default function Page() {
-  const [profile, setProfile] = useState<Faculty | null>(null); // Start with null
-  const [schedule, setSchedule] = useState<DaySchedule[]>([]);
+  const [profile, setProfile] = useState<Faculty | null>(null);
+  const [schedule, setSchedule] = useState<DaySchedule[]>(
+    DAYS.map((day) => ({ day, slots: [] }))
+  );
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [facultyId, setFacultyId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch profile data from Firestore
+  // Listen for auth state and set facultyId
   useEffect(() => {
-    const fetchProfile = async () => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setFacultyId(user.uid);
+      } else {
+        setFacultyId(null);
+        setProfile(null);
+        setSchedule(DAYS.map((day) => ({ day, slots: [] })));
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Fetch profile and schedule when facultyId changes
+  useEffect(() => {
+    if (!facultyId) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+
+    const fetchProfileAndSchedule = async () => {
+      // Fetch profile
       try {
-        const profileDocRef = doc(db, "faculty", "1"); // Replace "1" with the actual document ID
+        const profileDocRef = doc(db, "faculty", facultyId);
         const profileSnapshot = await getDoc(profileDocRef);
 
         if (profileSnapshot.exists()) {
           setProfile(profileSnapshot.data() as Faculty);
         } else {
-          console.error("Profile document does not exist.");
+          setProfile(null);
+          setLoading(false);
+          return;
         }
       } catch (error) {
-        console.error("Failed to fetch profile:", error);
+        setProfile(null);
+        setLoading(false);
+        return;
       }
-    };
 
-    const fetchSchedule = async () => {
+      // Fetch schedule
       try {
-        const scheduleDocRef = doc(db, "schedules", "userSchedule");
+        const scheduleDocRef = doc(db, "schedules", facultyId);
         const scheduleSnapshot = await getDoc(scheduleDocRef);
-
+        let loadedSchedule: DaySchedule[] = [];
         if (scheduleSnapshot.exists()) {
-          setSchedule(scheduleSnapshot.data().schedule as DaySchedule[]);
-        } else {
-          console.error("Schedule document does not exist.");
+          loadedSchedule = scheduleSnapshot.data().schedule as DaySchedule[];
         }
-      } catch (error) {
-        console.error("Failed to fetch schedule:", error);
+        setSchedule(
+          DAYS.map(
+            (day) =>
+              loadedSchedule.find((d) => d.day === day) || { day, slots: [] }
+          )
+        );
+      } catch {
+        setSchedule(DAYS.map((day) => ({ day, slots: [] })));
       }
+      setLoading(false);
     };
 
-    fetchProfile();
-    fetchSchedule();
-  }, []);
+    fetchProfileAndSchedule();
+  }, [facultyId]);
 
+  // Update profile in state after editing
   const handleUpdateProfile = (updatedProfile: Partial<Faculty>) => {
     setProfile((prev) => (prev ? { ...prev, ...updatedProfile } : null));
-    console.log("Updated Profile:", updatedProfile);
   };
 
+  // Update schedule in state after editing
   const handleUpdateSchedule = (newSchedule: DaySchedule[]) => {
-    setSchedule(newSchedule);
+    setSchedule(
+      DAYS.map(
+        (day) => newSchedule.find((d) => d.day === day) || { day, slots: [] }
+      )
+    );
   };
+
+  if (loading) {
+    return <div className="h-full py-[25%] text-center">Loading...</div>;
+  }
 
   if (!profile) {
-    return <div className="h-full py-[25%] text-center">Loading...</div>; // Show a loading state while fetching the profile
+    return (
+      <div className="h-full py-[25%] text-center">
+        Faculty profile not found. Please contact admin.
+      </div>
+    );
   }
 
   return (
@@ -74,10 +129,10 @@ export default function Page() {
           onUpdateProfile={() => setIsProfileDialogOpen(true)}
           onChangePassword={() => setIsPasswordDialogOpen(true)}
         />
-
         <ScheduleSection
           schedule={schedule}
-          onUpdateSchedule={() => setIsScheduleDialogOpen(true)}
+          onEditSchedule={() => setIsScheduleDialogOpen(true)}
+          userId={facultyId ?? ""}
         />
       </div>
 
@@ -90,9 +145,10 @@ export default function Page() {
 
       <ScheduleDialog
         open={isScheduleDialogOpen}
-        onOpenChange={setIsScheduleDialogOpen}
         schedule={schedule}
         onUpdateSchedule={handleUpdateSchedule}
+        onOpenChange={setIsScheduleDialogOpen}
+        userId={facultyId ?? ""}
       />
 
       <PasswordDialog

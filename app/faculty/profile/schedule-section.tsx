@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { fetchSchedule, updateSchedule } from "@/app/firebaseService";
+import { fetchSchedule } from "@/app/firebaseService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, MapPin, User } from "lucide-react";
@@ -9,42 +9,29 @@ import type { DaySchedule } from "../../data";
 
 export function ScheduleSection({
   schedule: initialSchedule,
-  onUpdateSchedule,
+  onEditSchedule,
+  userId,
 }: {
   schedule: DaySchedule[];
-  onUpdateSchedule: (updatedSchedule: DaySchedule[]) => void;
+  onEditSchedule: (updatedSchedule: DaySchedule[]) => void;
 }) {
   const [schedule, setSchedule] = useState<DaySchedule[]>(initialSchedule);
 
   useEffect(() => {
+    if (!userId) return;
     const loadSchedule = async () => {
-      const data = await fetchSchedule(); // Fetch from Firestore
+      const data = await fetchSchedule(userId); // Fetch from Firestore
       if (data) setSchedule(data);
     };
     loadSchedule();
-  }, []);
-
-  const handleSave = async () => {
-    try {
-      await updateSchedule(schedule); // Save to Firestore
-      onUpdateSchedule(schedule); // Update parent state
-    } catch (error) {
-      console.error("Failed to save schedule:", error);
-    }
-  };
+  }, [userId]);
 
   return (
     <Card>
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Weekly Schedule</h1>
-          <Button
-            variant="secondary"
-            onClick={() => {
-              onUpdateSchedule(schedule); // Pass the current schedule to the dialog
-              handleSave();
-            }}
-          >
+          <Button variant="secondary" onClick={onEditSchedule}>
             Edit schedule
           </Button>
         </div>
@@ -75,12 +62,7 @@ export function ScheduleSection({
                           <span>{slot.room}</span>
                         </div>
                       )}
-                      {slot.professor && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <User className="h-4 w-4" />
-                          <span>{slot.professor}</span>
-                        </div>
-                      )}
+                     
                     </div>
                   ))
                 ) : (

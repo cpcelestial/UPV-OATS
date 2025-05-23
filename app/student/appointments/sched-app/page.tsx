@@ -39,7 +39,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, CalendarIcon, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { format, set } from "date-fns";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -51,6 +51,8 @@ import {
   where,
   addDoc,
   serverTimestamp,
+  getDoc,
+  doc,
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
@@ -128,6 +130,10 @@ export function AddAppointmentForm() {
     { faculty: string; sections: string[]; email: string }[]
   >([]);
   const [students, setStudents] = React.useState<{ name: string; email: string }[]>([]);
+  const [selectedFacultyId, setSelectedFacultyId] = React.useState("");
+  const [facultyNameToIdMap, setFacultyNameToIdMap] = React.useState(new Map());
+  const [datecheck, setDateCheck] = React.useState("");
+  const [availableTimeSlots, setAvailableTimeSlots] = React.useState<string[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -147,6 +153,53 @@ export function AddAppointmentForm() {
     },
   });
 
+React.useEffect(() => {
+  const fetchTimeSlots = async () => {
+    if (!selectedFacultyId || !datecheck) return;
+    try {
+      const docRef = doc(db, "timeSlots", selectedFacultyId);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists() && docSnap.data()[datecheck]) {
+        form.setValue("timeSlot", "");
+        const timeSlotData = docSnap.data()[datecheck];
+        
+        // Handle different data structures
+        if (Array.isArray(timeSlotData)) {
+          // If it's already an array of strings
+          setAvailableTimeSlots(timeSlotData);
+        } else if (typeof timeSlotData === 'object') {
+          // If it's an object with time slot objects
+          const availableSlots = Object.entries(timeSlotData)
+            .filter(([key, value]) => {
+              // Check if the slot is available
+              if (typeof value === 'object' && value !== null) {
+                return value.available === true || !value.booked;
+              }
+              return true;
+            })
+            .map(([key, value]) => {
+              // Extract the time string
+              if (typeof value === 'object' && value !== null && value.time) {
+                return value.time;
+              }
+              return key; // Use the key as fallback
+            });
+          setAvailableTimeSlots(availableSlots);
+        } else {
+          setAvailableTimeSlots(generateTimeSlots());
+        }
+      } else {
+        setAvailableTimeSlots(generateTimeSlots());
+      }
+    } catch (error) {
+      console.error("Error fetching time slots:", error);
+      setAvailableTimeSlots(generateTimeSlots());
+    }
+  };
+  fetchTimeSlots();
+}, [selectedFacultyId, datecheck, form]);
+      
+
   React.useEffect(() => {
     const fetchFaculty = async () => {
       try {
@@ -160,6 +213,14 @@ export function AddAppointmentForm() {
           name: doc.data().name,
         }));
         setFacultyList(facultyData);
+
+        const idMap = new Map();
+
+        facultyData.forEach((faculty) => {
+          idMap.set(faculty.name, faculty.id);
+        });
+        setFacultyNameToIdMap(idMap);
+
         console.log("Faculty loaded:", facultyData);
       } catch (error) {
         console.error("Error fetching faculty:", error);
@@ -269,7 +330,14 @@ export function AddAppointmentForm() {
       facultySections.filter((fs) => fs.sections.includes(selectedFIC))[0]
         ?.faculty || "";
     form.setValue("facultyName", singleFaculty);
-  }, [selectedFIC, facultySections, form]);
+
+    if (singleFaculty && facultyNameToIdMap.has(singleFaculty)) {
+      const facultyId = facultyNameToIdMap.get(singleFaculty);
+      setSelectedFacultyId(facultyId);
+      console.log("Faculty ID:", facultyId);
+    }
+  }, [selectedFIC, facultySections, form, facultyNameToIdMap]);
+  
 
   const dynamicSearch = (search: string) => {
     if (!search) return [];
@@ -306,6 +374,10 @@ export function AddAppointmentForm() {
         department: values.department || "",
         facultyName: values.facultyName,
         facultyEmail: values.facultyEmail || "",
+        facultyId:
+          facultyList.find((f) => f.name === values.facultyName)?.id ||
+          facultySections.find((fs) => fs.faculty === values.facultyName)?.faculty ||
+          "",
         date: values.date,
         timeSlot: values.timeSlot,
         meetingType: values.meetingType,
@@ -437,7 +509,7 @@ export function AddAppointmentForm() {
                           ) : (
                             subjectOptions.map((subject) => (
                               <SelectItem
-                                key={subject.sub_id}
+                                key={`subject-${subject.id}-${subject.sub_id}`}
                                 value={subject.subject}
                               >
                                 {subject.subject}
@@ -462,6 +534,7 @@ export function AddAppointmentForm() {
                           onValueChange={(value) => {
                             setSelectedFIC(value);
                             field.onChange(value);
+                            console.log("Selected section:", selectedFIC);
                           }}
                           value={field.value || ""}
                         >
@@ -482,7 +555,7 @@ export function AddAppointmentForm() {
                             ) : (
                               availableSections.map((section, index) => (
                                 <SelectItem
-                                  key={index}
+                                  key={`section-${selectedSubject}-${section}-${index}`}
                                   value={selectedSubject + "_" + section}
                                 >
                                   {section}
@@ -521,7 +594,17 @@ export function AddAppointmentForm() {
                   <FormLabel>Faculty Name</FormLabel>
                   <FormControl>
                     <Select
-                      onValueChange={field.onChange}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        
+
+                        if (selectedSubject === "Other") {
+                          const facultyId = facultyNameToIdMap.get(value) || "";
+                          setSelectedFacultyId(facultyId);
+                          console.log(`Manual selection - Faculty: ${value}, ID: ${facultyId}`);
+                        }
+
+                      }}
                       value={field.value}
                       disabled={selectedSubject !== "Other"}
                     >
@@ -538,16 +621,16 @@ export function AddAppointmentForm() {
                         ) : selectedSubject === "Other" ? (
                           facultyList
                             .filter((value) => value.id && value.name)
-                            .map((value) => (
-                              <SelectItem key={value.id} value={value.name}>
-                                {value.name}
+                            .map((faculty) => (
+                              <SelectItem key={`faculty-other-${faculty.id}`} value={faculty.name}>
+                                {faculty.name}
                               </SelectItem>
                             ))
                         ) : (
                           facultySections
                             .filter((fs) => fs.sections.includes(selectedFIC))
-                            .map((fs) => (
-                              <SelectItem key={fs.faculty} value={fs.faculty}>
+                            .map((fs, index) => (
+                              <SelectItem key={`faculty-section-${fs.faculty}-${index}`} value={fs.faculty}>
                                 {fs.faculty}
                               </SelectItem>
                             ))
@@ -616,6 +699,8 @@ export function AddAppointmentForm() {
                         onSelect={(value) => {
                           field.onChange(value);
                           setSelectedDate(value);
+                          setDateCheck(value ? format(value, "yyyy-MM-dd") : "");
+                          console.log("Selected date:", datecheck);
                         }}
                         disabled={(date) => date < new Date()}
                         initialFocus
@@ -626,32 +711,45 @@ export function AddAppointmentForm() {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="timeSlot"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Time</FormLabel>
-                  <FormControl>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger>
-                        <div className="flex items-center justify-between w-full">
-                          <SelectValue placeholder="Select time slot" />
-                        </div>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {generateTimeSlots().map((slot) => (
-                          <SelectItem key={slot} value={slot}>
-                            {slot}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage className="text-xs" />
-                </FormItem>
-              )}
-            />
+          <FormField
+            control={form.control}
+            name="timeSlot"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Time</FormLabel>
+                <FormControl>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <div className="flex items-center justify-between w-full">
+                        <SelectValue placeholder="Select time slot" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableTimeSlots.length === 0 ? (
+                        <SelectItem value="no-slots" disabled>
+                          No available time slots
+                        </SelectItem>
+                      ) : (
+                        availableTimeSlots.map((slot, index) => {
+                          // Ensure slot is a string before rendering
+                          const timeSlotText = typeof slot === 'string' ? slot : 
+                                             (typeof slot === 'object' && slot?.time) ? slot.time :
+                                             `Time Slot ${index + 1}`;
+                          
+                          return (
+                            <SelectItem key={`timeslot-${index}-${timeSlotText}`} value={timeSlotText}>
+                              {timeSlotText}
+                            </SelectItem>
+                          );
+                        })
+                      )}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )}
+          />
           </div>
 
           <FormField
@@ -679,7 +777,7 @@ export function AddAppointmentForm() {
                 <div className="flex flex-wrap gap-2 my-2">
                   {form.watch("participants").map((participant, index) => (
                     <Badge
-                      key={index}
+                      key={`participant-badge-${index}-${participant}`}
                       variant="secondary"
                       className="px-3 py-1.5"
                     >
