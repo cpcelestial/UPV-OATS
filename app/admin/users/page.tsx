@@ -1,12 +1,25 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { UsersTable } from "./table";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/app/firebase-config";
 
+// Define a type for the user objects
+interface User {
+  firstName: string;
+  lastName: string;
+  email: string;
+  avatarUrl?: string;
+  role: string;
+  dateAdded?: {
+    seconds: number;
+  };
+}
+
 export default function UsersPage() {
-  const [users, setUsers] = useState([]);
+  // Add the User type to useState
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

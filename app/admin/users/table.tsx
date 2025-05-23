@@ -9,6 +9,7 @@ import {
   getSortedRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
+  type SortingState,
 } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,8 +18,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
   Table,
@@ -30,14 +29,64 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
-import { ArrowUpDown, Filter, ChevronDown, Plus } from "lucide-react";
+import { ArrowUpDown, Filter, ChevronDown, Plus, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
-export function UsersTable({ users }) {
+// Define the User interface
+interface User {
+  id?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  avatarUrl?: string;
+  role: string;
+  dateAdded?: {
+    seconds: number;
+  };
+}
+
+interface UsersTableProps {
+  users: User[];
+}
+
+export function UsersTable({ users: propsUsers }: UsersTableProps) {
   const [roleFilter, setRoleFilter] = useState<string | null>(null);
   const [currentSort, setCurrentSort] = useState<string>("Sort");
-  const [sorting, setSorting] = useState([]);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [users, setUsers] = useState<User[]>(propsUsers);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
-  const columns: ColumnDef<any>[] = [
+  const deleteUser = (userId: string) => {
+    try {
+      // Here you would typically call an API to delete the user
+      // For now, we'll just remove it from the local state
+      setUsers(users.filter((user) => user.id !== userId));
+      toast.success("User deleted successfully");
+      setIsDeleteDialogOpen(false);
+      setUserToDelete(null);
+    } catch (error) {
+      toast.error("Failed to delete user");
+      console.error("Error deleting user:", error);
+    }
+  };
+
+  const handleDeleteClick = (user: User) => {
+    setUserToDelete(user);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const columns: ColumnDef<User>[] = [
     {
       accessorKey: "name",
       header: ({ column }) => (
@@ -127,6 +176,19 @@ export function UsersTable({ users }) {
         return dateA - dateB;
       },
     },
+    {
+      id: "actions",
+      cell: ({ row }) => (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => handleDeleteClick(row.original)}
+          className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      ),
+    },
   ];
 
   const table = useReactTable({
@@ -145,11 +207,6 @@ export function UsersTable({ users }) {
     setCurrentSort(label);
   }
 
-  function clearSort() {
-    setSorting([]);
-    setCurrentSort("Sort");
-  }
-
   return (
     <div className="w-full">
       <div className="flex items-center justify-between py-4">
@@ -162,6 +219,7 @@ export function UsersTable({ users }) {
             }
             className="max-w-md w-full text-lg"
           />
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline">
@@ -197,46 +255,8 @@ export function UsersTable({ users }) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <ArrowUpDown className="h-4 w-4 mr-2" />
-                {currentSort}
-                <ChevronDown className="h-4 w-4 ml-2" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => handleSort("name", false, "Name (A - Z)")}
-              >
-                Name (A - Z)
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleSort("name", true, "Name (Z - A)")}
-              >
-                Name (Z - A)
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() =>
-                  handleSort("dateAdded", true, "Date (New - Old)")
-                }
-              >
-                Date (New - Old)
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() =>
-                  handleSort("dateAdded", false, "Date (Old - New)")
-                }
-              >
-                Date (Old - New)
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={clearSort}>Clear</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
+
         <div className="flex items-center gap-2">
           <Link href="users/add-user">
             <Button className="bg-[#2F5233] hover:bg-[#2F5233]/90">
@@ -245,6 +265,7 @@ export function UsersTable({ users }) {
           </Link>
         </div>
       </div>
+
       <div className="rounded-md border">
         <Table className="min-w-full">
           <TableHeader>
@@ -299,11 +320,13 @@ export function UsersTable({ users }) {
           </TableBody>
         </Table>
       </div>
+
       <div className="flex items-center justify-end space-x-2 py-4">
         <div className="text-muted-foreground flex-1 text-sm">
           {table.getFilteredSelectedRowModel().rows.length} of{" "}
           {table.getFilteredRowModel().rows.length} row(s) selected.
         </div>
+
         <div className="space-x-2">
           <Button
             variant="outline"
@@ -323,6 +346,38 @@ export function UsersTable({ users }) {
           </Button>
         </div>
       </div>
+
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Are you sure you want to delete this user?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {userToDelete && (
+                <div>
+                  <p>
+                    You are about to delete {userToDelete.firstName}{" "}
+                    {userToDelete.lastName}. This action cannot be undone.
+                  </p>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => userToDelete?.id && deleteUser(userToDelete.id)}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
