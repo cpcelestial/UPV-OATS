@@ -133,7 +133,7 @@ export function AddAppointmentForm() {
   const [selectedFacultyId, setSelectedFacultyId] = React.useState("");
   const [facultyNameToIdMap, setFacultyNameToIdMap] = React.useState(new Map());
   const [datecheck, setDateCheck] = React.useState("");
-  const [availableTimeSlots, setAvailableTimeSlots] = React.useState<string[]>([]);
+  const [availableTimeSlots, setAvailableTimeSlots] = React.useState<Array<string>>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -172,15 +172,25 @@ React.useEffect(() => {
           const availableSlots = Object.entries(timeSlotData)
             .filter(([key, value]) => {
               // Check if the slot is available
-              if (typeof value === 'object' && value !== null) {
-                return value.available === true || !value.booked;
+              if (
+                typeof value === 'object' &&
+                value !== null &&
+                ('available' in value || 'booked' in value)
+              ) {
+                return (value as { available?: boolean; booked?: boolean }).available === true ||
+                  !(value as { available?: boolean; booked?: boolean }).booked;
               }
               return true;
             })
             .map(([key, value]) => {
               // Extract the time string
-              if (typeof value === 'object' && value !== null && value.time) {
-                return value.time;
+              if (
+                typeof value === 'object' &&
+                value !== null &&
+                'time' in value &&
+                typeof (value as { time?: string }).time === 'string'
+              ) {
+                return (value as { time: string }).time;
               }
               return key; // Use the key as fallback
             });
@@ -731,10 +741,8 @@ React.useEffect(() => {
                         </SelectItem>
                       ) : (
                         availableTimeSlots.map((slot, index) => {
-                          // Ensure slot is a string before rendering
-                          const timeSlotText = typeof slot === 'string' ? slot : 
-                                             (typeof slot === 'object' && slot?.time) ? slot.time :
-                                             `Time Slot ${index + 1}`;
+                          // Since availableTimeSlots is string[], slot is always a string
+                          const timeSlotText = slot;
                           
                           return (
                             <SelectItem key={`timeslot-${index}-${timeSlotText}`} value={timeSlotText}>
