@@ -86,8 +86,8 @@ export function Calendar() {
               } as Appointment)
           );
           setAppointments(fetchedAppointments);
+          console.log("Appointments fetched:", fetchedAppointments);
         });
-        console.log("Appointments fetched:", appointments);
       } else {
         setCurrentUser(null);
         setAppointments([]);
