@@ -38,6 +38,7 @@ import {
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "../../firebase-config";
+import React from "react";
 
 type ViewType = "month" | "week" | "day";
 
@@ -56,18 +57,18 @@ export function Calendar() {
     return last && /^\d+$/.test(last) ? last : null;
   };
 
-  useEffect(() => {
+  React.useEffect(() => {
     let unsubscribeSnapshot: Unsubscribe | null = null;
 
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user);
 
-      if (currentUser) {
+      if (user) {
         const appointmentsRef = collection(db, "appointments");
+        console.log(appointmentsRef)
         const q = query(
           appointmentsRef,
           and(
-            where("facultyId  ", "==", currentUser.uid),
+            where("facultyId", "==", user.uid),
             where("status", "==", "approved")
           )
         );
@@ -86,6 +87,7 @@ export function Calendar() {
           );
           setAppointments(fetchedAppointments);
         });
+        console.log("Appointments fetched:", appointments);
       } else {
         setCurrentUser(null);
         setAppointments([]);

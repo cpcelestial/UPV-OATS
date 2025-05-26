@@ -191,6 +191,7 @@ export function AvailabilityTable({
           fallbackSchedule[date] = initializeScheduleForDate(date);
         });
         setSchedule(fallbackSchedule);
+        // Fallback or display an error message to the user
       } finally {
         setIsLoading(false);
       }

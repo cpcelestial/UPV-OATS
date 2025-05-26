@@ -12,6 +12,7 @@ import {
   runTransaction,
 } from "firebase/firestore";
 import { getAuth, onAuthStateChanged, User } from "firebase/auth";
+import { toast } from "sonner";
 
 interface AppointmentsTabsProps {
   upcomingAppointments: Appointment[];
