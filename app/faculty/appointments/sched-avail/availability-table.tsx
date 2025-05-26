@@ -1,17 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { format, addDays, isBefore } from "date-fns";
+import { format, addDays, isBefore, parse } from "date-fns";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 import { db } from "@/app/firebase-config";
-import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore"; // setDoc already imported
 import { getAuth } from "firebase/auth";
 
 interface TimeSlot {
-  time: string;
+  time: string; // Will be "hh:mm AM/PM - hh:mm AM/PM"
   available: boolean;
   booked: boolean;
 }
@@ -24,7 +24,7 @@ interface AvailabilityTableProps {
 
 interface Booking {
   date: string;
-  time: string;
+  time: string; // Will be "hh:mm AM/PM - hh:mm AM/PM"
 }
 
 export function AvailabilityTable({
@@ -35,12 +35,22 @@ export function AvailabilityTable({
   // Generate time slots from 6:00 to 20:30 in 30-min increments
   const generateTimeSlots = () => {
     const slots: TimeSlot[] = [];
-    for (let hour = 6; hour < 21; hour++) {
+    const referenceDate = new Date();
+    referenceDate.setHours(0, 0, 0, 0); // Set to start of day for consistent formatting
+
+    for (let hour = 6; hour < 21; hour++) { // From 6 AM to 8:30 PM (last slot starts at 20:30)
       for (let min = 0; min < 60; min += 30) {
+        let startDateTime = new Date(referenceDate);
+        startDateTime.setHours(hour, min);
+
+        let endDateTime = new Date(startDateTime.getTime() + 30 * 60 * 1000); // Add 30 minutes
+
+        // Format start and end times with 'hh:mm a' for 2-digit hour and AM/PM
+        const formattedStartTime = format(startDateTime, "hh:mm a");
+        const formattedEndTime = format(endDateTime, "hh:mm a");
+
         slots.push({
-          time: `${hour.toString().padStart(2, "0")}:${min
-            .toString()
-            .padStart(2, "0")}`,
+          time: `${formattedStartTime} - ${formattedEndTime}`,
           available: false,
           booked: false,
         });
@@ -66,19 +76,23 @@ export function AvailabilityTable({
 
   // Initialize schedule with default business hours for new dates
   const initializeScheduleForDate = (date: string): TimeSlot[] => {
-    const slots = generateTimeSlots();
-    const dayOfWeek = new Date(date).getDay();
-    
+    const slots = generateTimeSlots(); // Get all possible slots for the day
+    const dayOfWeek = new Date(date).getDay(); // 0 for Sunday, 1 for Monday, ..., 6 for Saturday
+
     // Set default business hours for weekdays (Monday = 1, Sunday = 0)
-    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+    // Based on your 7 AM to 5 PM requirement
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) { // If it's a weekday
       slots.forEach((slot) => {
-        const [hour] = slot.time.split(":").map(Number);
-        if (hour >= 9 && hour < 17) {
+        const [startTimeStr] = slot.time.split(" - ");
+        // Parse using 'hh:mm a' to match generated format
+        const parsedTime = parse(startTimeStr, "hh:mm a", new Date());
+        const startHour24 = parsedTime.getHours();
+
+        if (startHour24 >= 7 && startHour24 < 17) { // 7 AM (hour 7) to 5 PM (hour 17)
           slot.available = true;
         }
       });
     }
-    
     return slots;
   };
 
@@ -101,57 +115,76 @@ export function AvailabilityTable({
 
         const newSchedule: { [key: string]: TimeSlot[] } = {};
         const newBookings: Booking[] = [];
+        const datesToSaveToFirebase: { [key: string]: TimeSlot[] } = {}; // Collect dates needing saving
 
-        dates.forEach((date) => {
-          // Always start with a complete set of time slots
-          let dateSlots = generateTimeSlots();
+        for (const date of dates) { // Use for...of for async operations
+          let dateSlots = generateTimeSlots(); // Start with a complete set of all possible slots
+          let shouldSaveDate = false; // Flag to indicate if this date's slots were defaulted/changed
 
           if (docSnap.exists()) {
             const userData = docSnap.data();
-            
+
             if (userData[date] && Array.isArray(userData[date])) {
-              // Merge Firebase data with complete time slot structure
+              // Data for this specific date exists in Firebase
               const firebaseSlots = userData[date] as TimeSlot[];
-              
+
               dateSlots = dateSlots.map((defaultSlot) => {
                 const firebaseSlot = firebaseSlots.find(
                   (s) => s.time === defaultSlot.time
                 );
-                
+
                 if (firebaseSlot) {
-                  // Preserve Firebase data and track bookings
+                  // If a matching slot is found in Firebase, use its data
                   if (firebaseSlot.booked) {
-                    newBookings.push({ date, time: firebaseSlot.time });
+                    newBookings.push({ date, time: firebaseSlot.time }); // Track booked slots
                   }
+                  // Return the Firebase slot data (ensuring 'available' and 'booked' are booleans)
                   return {
                     time: firebaseSlot.time,
                     available: firebaseSlot.available || false,
                     booked: firebaseSlot.booked || false,
                   };
+                } else {
+                  // This specific slot time is missing from Firebase for this date.
+                  // Initialize it with default availability and mark for saving.
+                  shouldSaveDate = true;
+                  const initializedSlot = initializeScheduleForDate(date).find(s => s.time === defaultSlot.time);
+                  return initializedSlot || defaultSlot; // Fallback to basic default if not found
                 }
-                
-                // Use default for missing slots
-                return { ...defaultSlot };
               });
             } else {
-              // Date doesn't exist in Firebase - apply default business hours
+              // Document exists, but no data for this specific date field
+              // Initialize with default business hours and mark for saving.
               dateSlots = initializeScheduleForDate(date);
+              shouldSaveDate = true;
             }
           } else {
-            // No Firebase document exists - apply default business hours
+            // No Firebase document exists for the user.
+            // Initialize all dates with default business hours and mark for saving.
             dateSlots = initializeScheduleForDate(date);
+            shouldSaveDate = true;
           }
 
-          newSchedule[date] = dateSlots;
-        });
+          newSchedule[date] = dateSlots; // Add to local state
+          if (shouldSaveDate) {
+            datesToSaveToFirebase[date] = dateSlots; // Add to list for batch saving to Firebase
+          }
+        }
 
-        console.log("Loaded schedule:", newSchedule); // Debug log
-        console.log("Generated dates:", dates); // Debug log
         setSchedule(newSchedule);
         setBookings(newBookings);
+
+        // --- NEW LOGIC: Save initialized/updated schedules to Firebase ---
+        if (Object.keys(datesToSaveToFirebase).length > 0) {
+            console.log("Saving newly generated/updated schedules to Firebase:", datesToSaveToFirebase);
+            await setDoc(docRef, datesToSaveToFirebase, { merge: true });
+            console.log("Default and merged schedules saved to Firebase successfully.");
+        }
+        // --------------------------------------------------------
+
       } catch (err) {
-        console.error("Error fetching data:", err);
-        // Initialize with defaults on error
+        console.error("Error fetching or initializing data:", err);
+        // Fallback to local defaults on error to prevent empty table
         const dates = generateDates();
         const fallbackSchedule: { [key: string]: TimeSlot[] } = {};
         dates.forEach((date) => {
@@ -182,16 +215,23 @@ export function AvailabilityTable({
     }
 
     const currentSlot = schedule[date]?.find((s) => s.time === time);
-    const newAvailability = checked === true ? true : 
-                           checked === false ? false : 
-                           !(currentSlot?.available || false);
+    // If the slot is booked, it cannot be toggled to unavailable.
+    // If it's already booked, clicking the checkbox does nothing.
+    if (currentSlot?.booked) {
+        console.log("Cannot change availability for a booked slot.");
+        return; 
+    }
+
+    const newAvailability = checked === true ? true :
+                             checked === false ? false :
+                             !(currentSlot?.available || false);
 
     // Update local state immediately for responsive UI
     setSchedule((prev) => {
       const updated = { ...prev };
       if (updated[date]) {
         updated[date] = updated[date].map(slot =>
-          slot.time === time 
+          slot.time === time
             ? { ...slot, available: newAvailability }
             : { ...slot }
         );
@@ -201,48 +241,53 @@ export function AvailabilityTable({
 
     try {
       const docRef = doc(db, "timeSlots", user.uid);
-      
-      // Use current local state to build the complete slot array
-      const currentDateSlots = schedule[date] || generateTimeSlots();
-      const updatedSlots = currentDateSlots.map(slot => 
-        slot.time === time 
+
+      // Ensure we're working with a complete set of slots for the day
+      // If `schedule[date]` is not yet initialized for some reason, generate defaults
+      const currentDateSlots = schedule[date] || initializeScheduleForDate(date);
+      const updatedSlots = currentDateSlots.map(slot =>
+        slot.time === time
           ? { ...slot, available: newAvailability }
           : { ...slot }
       );
 
-      console.log("Saving to Firebase:", { [date]: updatedSlots }); // Debug log
+      console.log("Saving to Firebase:", { [date]: updatedSlots });
 
-      // Save complete slot array to Firebase
+      // Save complete slot array for the specific date to Firebase
       await setDoc(
         docRef,
         { [date]: updatedSlots },
-        { merge: true }
+        { merge: true } // Merge ensures only this date field is updated/added
       );
-      
-      console.log("Successfully saved to Firebase"); // Debug log
+
+      console.log("Successfully saved to Firebase");
     } catch (error) {
       console.error("Failed to update availability:", error);
-      
+
       // Revert local state on error
       setSchedule((prev) => {
         const updated = { ...prev };
         if (updated[date]) {
           updated[date] = updated[date].map(slot =>
-            slot.time === time 
-              ? { ...slot, available: !newAvailability }
+            slot.time === time
+              ? { ...slot, available: !newAvailability } // Revert to previous state
               : { ...slot }
           );
         }
         return updated;
       });
+      // Optionally, show a toast notification for the error
     }
   };
 
   const isSlotInPast = (date: string, time: string) => {
-    const [hour, minute] = time.split(":").map(Number);
+    const [startTimeStr] = time.split(" - ");
     const [year, month, day] = date.split("-").map(Number);
-    const slotDate = new Date(year, month - 1, day, hour, minute);
-    return isBefore(slotDate, new Date());
+    
+    // Parse using 'hh:mm a' to match generated format
+    const slotStartDateTime = parse(startTimeStr, "hh:mm a", new Date(year, month - 1, day));
+    
+    return isBefore(slotStartDateTime, new Date());
   };
 
   const isSlotBooked = (date: string, time: string) => {
@@ -252,23 +297,27 @@ export function AvailabilityTable({
   };
 
   const getSlotStatus = (date: string, time: string, available: boolean) => {
+    // Check booked status first, as it takes precedence
     if (isSlotBooked(date, time)) return "BOOKED";
+    // Then check if it's in the past and was previously available (now effectively closed)
     if (isSlotInPast(date, time) && available) return "CLOSED";
+    // Otherwise, show its actual availability
     if (available) return "OPEN";
-    return "";
+    return ""; // For slots that are not available, not booked, and not in past (e.g., manually made unavailable)
   };
 
   const getSlotColor = (date: string, time: string, available: boolean) => {
-    if (isSlotInPast(date, time))
-      return "bg-red-100 border-red-200 text-red-700";
-    if (isSlotBooked(date, time))
+    if (isSlotBooked(date, time)) // Booked status has highest priority for color
       return "bg-blue-100 border-blue-200 text-blue-700";
-    if (available) return "bg-green-100 border-green-200 text-green-700";
-    return "";
+    if (isSlotInPast(date, time)) // Past status is next, overrides OPEN/UNAVAILABLE if in past
+      return "bg-red-100 border-red-200 text-red-700";
+    if (available) // Available is green
+      return "bg-green-100 border-green-200 text-green-700";
+    return ""; // Default for unavailable slots (no specific color, maybe a light grey)
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div>Loading availability...</div>;
   }
 
   return (
@@ -294,14 +343,15 @@ export function AvailabilityTable({
           {generateTimeSlots().map((timeSlot) => (
             <tr key={timeSlot.time}>
               <td className="border-t px-2 py-2 text-center bg-muted/50">
-                {timeSlot.time}
+                {timeSlot.time} {/* This will display "hh:mm AM/PM - hh:mm AM/PM" */}
               </td>
               {Object.entries(schedule).map(([date, slots]) => {
                 const slot = slots.find((s) => s.time === timeSlot.time);
+                // If a slot doesn't exist (shouldn't happen with generateTimeSlots logic), provide empty cell
                 if (!slot) return <td key={date} className="px-2 py-1"></td>;
 
                 const isPast = isSlotInPast(date, timeSlot.time);
-                const isBooked = isSlotBooked(date, timeSlot.time);
+                const isBooked = isSlotBooked(date, timeSlot.time); // Check if *this* slot is booked
 
                 return (
                   <td
@@ -311,6 +361,7 @@ export function AvailabilityTable({
                     {editMode ? (
                       <Checkbox
                         checked={slot.available}
+                        // Disable if in past or if it's booked
                         disabled={isPast || isBooked}
                         onCheckedChange={(checked) =>
                           handleToggleAvailability(date, timeSlot.time, checked)
@@ -318,6 +369,7 @@ export function AvailabilityTable({
                         className="mx-auto"
                       />
                     ) : (
+                      // Display status badge in view mode
                       (() => {
                         const status = getSlotStatus(date, timeSlot.time, slot.available);
                         if (status) {
@@ -338,7 +390,7 @@ export function AvailabilityTable({
                         return (
                           <div className="flex justify-center">
                             <div className="w-24 h-6 flex items-center justify-center text-xs text-gray-400">
-                              -
+                              - {/* Display a hyphen for intentionally unavailable slots in view mode */}
                             </div>
                           </div>
                         );
