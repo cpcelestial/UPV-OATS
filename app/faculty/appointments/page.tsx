@@ -115,7 +115,6 @@ export default function Page() {
     };
   }, []);
 
-
   const handleReschedule = (id: string) => {
     alert(`Reschedule appointment ${id}`);
     // In a real app, navigate to reschedule page or open a modal
@@ -148,11 +147,10 @@ export default function Page() {
   return (
     <div className="p-4">
       <Button
-        onClick={() => router.push("appointments/sched-app")}
-        className="float-right bg-[#2F5233] hover:bg-[#2F5233]/90"
+        onClick={() => router.push("appointments/sched-avail")}
+        className="float-right"
       >
-        <Plus className="h-4 w-4 mr-2" />
-        Add Appointment
+        Check Availability
       </Button>
       <AppointmentsTabs
         upcomingAppointments={upcomingAppointments}
