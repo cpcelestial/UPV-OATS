@@ -1,24 +1,17 @@
 "use client";
 
-import type React from "react";
 import { useState, useEffect } from "react";
-import { Appointment } from "../../data";
+import { Appointment } from "@/app/data";
 import { AppointmentsTabs } from "../appointments/appointment-tabs";
-import MonthCalendar from "./month-calendar";
+import { MonthCalendar } from "./month-calendar";
 import { auth, db } from "@/app/firebase-config";
 import { onAuthStateChanged } from "firebase/auth";
 import {
   Unsubscribe,
   collection,
   query,
-  where,
   orderBy,
   onSnapshot,
-  doc,
-  getFirestore,
-  updateDoc,
-  and,
-  or,
 } from "firebase/firestore";
 
 export default function Background({
@@ -41,25 +34,6 @@ export default function Background({
     new Date()
   );
 
-  const db = getFirestore();
-
-  const handleDecline = async (appointmentId: string) => {
-    try {
-      const appointmentRef = doc(db, "appointments", appointmentId);
-      await updateDoc(appointmentRef, {
-        status: "cancelled",
-      });
-      console.log(`Appointment ${appointmentId} declined successfully`);
-    } catch (error) {
-      console.error("Error declining appointment:", error);
-    }
-  };
-
-  const handleReschedule = (id: string) => {
-    alert(`Reschedule appointment ${id}`);
-    // In a real app, navigate to reschedule page or open a modal
-  };
-
   useEffect(() => {
     let unsubscribeSnapshot: Unsubscribe | null = null;
 
@@ -67,22 +41,9 @@ export default function Background({
       setCurrentUser(user);
       setLoading(true);
 
-      if (user) {
+      if (currentUser) {
         const appointmentsRef = collection(db, "appointments");
-        const q = query(
-          appointmentsRef,
-          or(
-            and(
-              where("status", "in", ["approved", "pending", "reschedule"]),
-              where("userId", "==", user.uid)
-            ),
-            and(
-              where("status", "in", ["approved", "pending", "reschedule"]),
-              where("participants", "array-contains", user.email)
-            )
-          ),
-          orderBy("date", "asc")
-        );
+        const q = query(appointmentsRef, orderBy("date", "asc"));
 
         unsubscribeSnapshot = onSnapshot(q, (querySnapshot) => {
           const upcoming: Appointment[] = [];
@@ -138,7 +99,7 @@ export default function Background({
         unsubscribeSnapshot();
       }
     };
-  }, []);
+  }, [currentUser]);
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
@@ -160,8 +121,6 @@ export default function Background({
           pendingAppointments={pendingAppointments}
           rescheduleAppointments={rescheduleAppointments}
           loading={loading}
-          onReschedule={handleReschedule}
-          onDecline={handleDecline}
         />
       </div>
 
