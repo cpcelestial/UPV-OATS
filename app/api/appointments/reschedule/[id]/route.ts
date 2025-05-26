@@ -27,7 +27,7 @@ export async function PATCH(
     await db
       .collection("appointments")
       .doc(id)
-      .update({ date, time, status: "rescheduled" });
+      .update({ date, time, status: "reschedule" });
 
     return NextResponse.json({ success: true });
   } catch (error) {
