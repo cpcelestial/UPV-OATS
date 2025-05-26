@@ -15,7 +15,6 @@ import {
   orderBy,
   onSnapshot,
   doc,
-  getFirestore,
   updateDoc,
   and,
   or,
@@ -41,8 +40,6 @@ export default function Background({
     new Date()
   );
 
-  const db = getFirestore();
-
   const handleDecline = async (appointmentId: string) => {
     try {
       const appointmentRef = doc(db, "appointments", appointmentId);
@@ -67,18 +64,18 @@ export default function Background({
       setCurrentUser(user);
       setLoading(true);
 
-      if (user) {
+      if (currentUser) {
         const appointmentsRef = collection(db, "appointments");
         const q = query(
           appointmentsRef,
           or(
             and(
               where("status", "in", ["approved", "pending", "reschedule"]),
-              where("userId", "==", user.uid)
+              where("userId", "==", currentUser.uid)
             ),
             and(
               where("status", "in", ["approved", "pending", "reschedule"]),
-              where("participants", "array-contains", user.email)
+              where("participants", "array-contains", currentUser.email)
             )
           ),
           orderBy("date", "asc")
@@ -111,7 +108,6 @@ export default function Background({
             switch (appointment.status) {
               case "approved":
                 if (appointment.date >= today) {
-                  // Only include upcoming appointments that are today or in the future
                   upcoming.push(appointment);
                 }
                 break;
@@ -143,7 +139,7 @@ export default function Background({
         unsubscribeSnapshot();
       }
     };
-  }, []);
+  }, [currentUser]);
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);

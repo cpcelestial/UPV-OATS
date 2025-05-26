@@ -1,22 +1,8 @@
 "use client";
 
 import { StudentsTable } from "./students-table";
+import type { Student } from "@/app/data";
 
-interface Student {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  studentNumber: string;
-  college: string;
-  degreeProgram: string;
-  country?: string;
-  cityTown?: string;
-  description?: string;
-  avatarUrl: string;
-}
-
-// Sample student data
 const sampleStudents: Student[] = [
   {
     id: "1",
@@ -30,6 +16,7 @@ const sampleStudents: Student[] = [
     cityTown: "San Francisco",
     description: "Passionate about AI and machine learning",
     avatarUrl: "/placeholder.svg?height=40&width=40",
+    schedule: [],
   },
   {
     id: "2",
@@ -43,6 +30,7 @@ const sampleStudents: Student[] = [
     cityTown: "Toronto",
     description: "Interested in entrepreneurship and finance",
     avatarUrl: "/placeholder.svg?height=40&width=40",
+    schedule: [],
   },
   {
     id: "3",
@@ -56,6 +44,7 @@ const sampleStudents: Student[] = [
     cityTown: "Madrid",
     description: "Researching cognitive behavioral therapy",
     avatarUrl: "/placeholder.svg?height=40&width=40",
+    schedule: [],
   },
   {
     id: "4",
@@ -69,6 +58,7 @@ const sampleStudents: Student[] = [
     cityTown: "London",
     description: "Focus on renewable energy systems",
     avatarUrl: "/placeholder.svg?height=40&width=40",
+    schedule: [],
   },
   {
     id: "5",
@@ -82,6 +72,7 @@ const sampleStudents: Student[] = [
     cityTown: "Mumbai",
     description: "Aspiring to specialize in pediatrics",
     avatarUrl: "/placeholder.svg?height=40&width=40",
+    schedule: [],
   },
   {
     id: "6",
@@ -95,6 +86,7 @@ const sampleStudents: Student[] = [
     cityTown: "Seoul",
     description: "Research in applied mathematics",
     avatarUrl: "/placeholder.svg?height=40&width=40",
+    schedule: [],
   },
 ];
 

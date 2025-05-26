@@ -87,7 +87,7 @@ export default function Background({
           const pending: Appointment[] = [];
           const reschedule: Appointment[] = [];
           const today = new Date();
-          today.setHours(0, 0, 0, 0); // Normalize today's date to midnight
+          today.setHours(0, 0, 0, 0);
 
           querySnapshot.forEach((doc) => {
             const data = doc.data();
@@ -112,7 +112,6 @@ export default function Background({
             switch (appointment.status) {
               case "approved":
                 if (appointment.date >= today) {
-                  // Only include upcoming appointments that are today or in the future
                   upcoming.push(appointment);
                 }
                 break;

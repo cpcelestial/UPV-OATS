@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import { useEffect, useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,7 +39,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, CalendarIcon, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { format, set } from "date-fns";
+import { format } from "date-fns";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -56,31 +56,6 @@ import {
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { saveScheduleForUser } from "./autoslots";
-
-function generateTimeSlots() {
-  const slots = [];
-  for (let hour = 7; hour <= 17; hour++) {
-    const hourFormatted = hour % 12 === 0 ? 12 : hour % 12;
-    const period = hour < 12 ? "AM" : "PM";
-
-    // Add slot for current hour to half hour (e.g., 7:00 - 7:30)
-    if (hour !== 17) {
-      slots.push(
-        `${hourFormatted}:00 ${period} - ${hourFormatted}:30 ${period}`
-      );
-    }
-
-    // Add slot for half hour to next hour (e.g., 7:30 - 8:00)
-    if (hour !== 17) {
-      const nextHour = (hour + 1) % 12 === 0 ? 12 : (hour + 1) % 12;
-      const nextPeriod = hour + 1 < 12 ? "AM" : "PM";
-      slots.push(
-        `${hourFormatted}:30 ${period} - ${nextHour}:00 ${nextPeriod}`
-      );
-    }
-  }
-  return slots;
-}
 
 const formSchema = z.object({
   purpose: z.string().min(1, "Required"),
@@ -103,12 +78,12 @@ const formSchema = z.object({
 });
 
 export function AddAppointmentForm() {
-  const [showDialog, setShowDialog] = React.useState(false);
-  const [formChanged, setFormChanged] = React.useState(false);
-  const [facultyList, setFacultyList] = React.useState<
+  const [showDialog, setShowDialog] = useState(false);
+  const [formChanged, setFormChanged] = useState(false);
+  const [facultyList, setFacultyList] = useState<
     { id: string; name: string }[]
   >([]);
-  const [subjectOptions, setSubjectOptions] = React.useState<
+  const [subjectOptions, setSubjectOptions] = useState<
     {
       subject: string;
       id: string;
@@ -117,28 +92,24 @@ export function AddAppointmentForm() {
       sub_id: string;
     }[]
   >([]);
-  const [loading, setLoading] = React.useState(true);
-  const [submitting, setSubmitting] = React.useState(false);
-  const [selectedSubject, setSelectedSubject] = React.useState("");
-  const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(
-    undefined
-  );
-  const [selectedFIC, setSelectedFIC] = React.useState("");
-  const [availableSections, setAvailableSections] = React.useState<string[]>(
-    []
-  );
-  const [facultySections, setFacultySections] = React.useState<
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState("");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedFIC, setSelectedFIC] = useState("");
+  const [availableSections, setAvailableSections] = useState<string[]>([]);
+  const [facultySections, setFacultySections] = useState<
     { faculty: string; sections: string[]; email: string }[]
   >([]);
-  const [students, setStudents] = React.useState<
-    { name: string; email: string }[]
-  >([]);
-  const [selectedId, setSelectedId] = React.useState("");
-  const [facultyNameToIdMap, setFacultyNameToIdMap] = React.useState(new Map());
-  const [datecheck, setDateCheck] = React.useState("");
-  const [availableTimeSlots, setAvailableTimeSlots] = React.useState<
-    Array<string>
-  >([]);
+  const [students, setStudents] = useState<{ name: string; email: string }[]>(
+    []
+  );
+  const [selectedId, setSelectedId] = useState("");
+  const [facultyNameToIdMap, setFacultyNameToIdMap] = useState(new Map());
+  const [datecheck, setDateCheck] = useState("");
+  const [availableTimeSlots, setAvailableTimeSlots] = useState<Array<string>>(
+    []
+  );
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -158,7 +129,7 @@ export function AddAppointmentForm() {
     },
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchTimeSlots = async () => {
       if (!selectedId || !datecheck) {
         setAvailableTimeSlots([]);
@@ -220,7 +191,7 @@ export function AddAppointmentForm() {
     fetchTimeSlots();
   }, [selectedId, datecheck, form]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchFaculty = async () => {
       try {
         const q = query(
@@ -252,7 +223,7 @@ export function AddAppointmentForm() {
     fetchFaculty();
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchFacultySections = async () => {
       try {
         const q = query(collection(db, "Faculty_in_charge"));
@@ -270,14 +241,14 @@ export function AddAppointmentForm() {
     fetchFacultySections();
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const selectedFacultyEmail =
       facultySections.find((fs) => fs.sections.includes(selectedFIC))?.email ||
       "";
     form.setValue("facultyEmail", selectedFacultyEmail);
   }, [selectedFIC, facultySections, form]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchStudents = async () => {
       try {
         const q = query(collection(db, "students"));
@@ -296,7 +267,7 @@ export function AddAppointmentForm() {
     fetchStudents();
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchSections = async () => {
       try {
         const q = query(collection(db, "Subjects"));
@@ -322,12 +293,12 @@ export function AddAppointmentForm() {
     fetchSections();
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const subscription = form.watch(() => setFormChanged(true));
     return () => subscription.unsubscribe();
   }, [form]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (selectedSubject) {
       const subjectObj = subjectOptions.find(
         (subject) => subject.subject === selectedSubject
@@ -345,7 +316,7 @@ export function AddAppointmentForm() {
     form.setValue("section", "");
   }, [selectedSubject, subjectOptions, form]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const singleFaculty =
       facultySections.filter((fs) => fs.sections.includes(selectedFIC))[0]
         ?.faculty || "";

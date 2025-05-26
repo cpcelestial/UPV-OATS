@@ -41,10 +41,10 @@ export function AvailabilityTable({
     for (let hour = 6; hour < 21; hour++) {
       // From 6 AM to 8:30 PM (last slot starts at 20:30)
       for (let min = 0; min < 60; min += 30) {
-        let startDateTime = new Date(referenceDate);
+        const startDateTime = new Date(referenceDate);
         startDateTime.setHours(hour, min);
 
-        let endDateTime = new Date(startDateTime.getTime() + 30 * 60 * 1000); // Add 30 minutes
+        const endDateTime = new Date(startDateTime.getTime() + 30 * 60 * 1000); // Add 30 minutes
 
         // Format start and end times with 'hh:mm a' for 2-digit hour and AM/PM
         const formattedStartTime = format(startDateTime, "hh:mm a");

@@ -30,14 +30,14 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { ArrowUpDown, Filter, ChevronDown } from "lucide-react";
-import type { Student } from "@/app/data";
+import type { Faculty } from "@/app/data";
 
-interface StudentsTableProps {
-  students: Student[];
+interface FacultyTableProps {
+  faculty: Faculty[];
 }
 
-export function StudentsTable({ students: propsStudents }: StudentsTableProps) {
-  const [students, setStudents] = useState<Student[]>(propsStudents);
+export function FacultyTable({ faculty: propsFaculty }: FacultyTableProps) {
+  const [faculty, setFaculty] = useState<Faculty[]>(propsFaculty);
   const [collegeFilter, setCollegeFilter] = useState<string | null>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
 
@@ -45,7 +45,7 @@ export function StudentsTable({ students: propsStudents }: StudentsTableProps) {
     setSorting([{ id: columnId, desc }]);
   }
 
-  const columns: ColumnDef<Student>[] = [
+  const columns: ColumnDef<Faculty>[] = [
     {
       accessorKey: "name",
       header: ({ column }) => (
@@ -88,7 +88,7 @@ export function StudentsTable({ students: propsStudents }: StudentsTableProps) {
         const name =
           `${row.original.firstName} ${row.original.lastName}`.toLowerCase();
         const email = row.original.email.toLowerCase();
-        const studentNumber = row.original.studentNumber.toLowerCase();
+        const studentNumber = row.original.facultyNumber.toLowerCase();
         const searchValue = filterValue.toLowerCase();
         return (
           name.includes(searchValue) ||
@@ -98,12 +98,12 @@ export function StudentsTable({ students: propsStudents }: StudentsTableProps) {
       },
     },
     {
-      accessorKey: "studentNumber",
+      accessorKey: "facultyNumber",
       header: ({ column }) => (
         <Button
           variant="ghost"
           onClick={() =>
-            handleSort("studentNumber", column.getIsSorted() === "asc")
+            handleSort("facultyNumber", column.getIsSorted() === "asc")
           }
           className="px-0"
         >
@@ -112,7 +112,7 @@ export function StudentsTable({ students: propsStudents }: StudentsTableProps) {
         </Button>
       ),
       cell: ({ row }) => (
-        <Badge variant="secondary">{row.original.studentNumber}</Badge>
+        <Badge variant="secondary">{row.original.facultyNumber}</Badge>
       ),
     },
     {
@@ -129,16 +129,16 @@ export function StudentsTable({ students: propsStudents }: StudentsTableProps) {
       ),
     },
     {
-      accessorKey: "degreeProgram",
+      accessorKey: "department",
       header: ({ column }) => (
         <Button
           variant="ghost"
           onClick={() =>
-            handleSort("degreeProgram", column.getIsSorted() === "asc")
+            handleSort("department", column.getIsSorted() === "asc")
           }
           className="px-0"
         >
-          Degree Program
+          Department
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
@@ -146,7 +146,7 @@ export function StudentsTable({ students: propsStudents }: StudentsTableProps) {
   ];
 
   const table = useReactTable({
-    data: students,
+    data: faculty,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -158,7 +158,7 @@ export function StudentsTable({ students: propsStudents }: StudentsTableProps) {
 
   // Get unique colleges for filter
   const colleges = Array.from(
-    new Set(students.map((student) => student.college))
+    new Set(faculty.map((faculty) => faculty.college))
   );
 
   return (

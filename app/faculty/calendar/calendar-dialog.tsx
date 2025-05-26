@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { format } from "date-fns";
-import { AppointmentCard } from "../appointments/appointment-card";
+import { AppointmentList } from "../appointments/appointment-list";
 import type { Appointment } from "@/app/data";
 import { getFirestore, doc, updateDoc } from "firebase/firestore";
 
@@ -40,7 +40,6 @@ export function CalendarDialog({
   };
   const handleReschedule = (id: string) => {
     alert(`Reschedule appointment ${id}`);
-    // In a real app, navigate to reschedule page or open a modal
   };
 
   return (
@@ -51,22 +50,12 @@ export function CalendarDialog({
             Appointments for {format(date, "MMMM d, yyyy")}
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-6 mt-4">
-          {appointments.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">
-              No appointments scheduled for this day
-            </p>
-          ) : (
-            appointments.map((appointment) => (
-              <AppointmentCard
-                key={appointment.id}
-                appointment={appointment}
-                onReschedule={handleReschedule}
-                onDecline={handleDecline}
-              />
-            ))
-          )}
-        </div>
+        <AppointmentList
+          appointments={appointments}
+          emptyMessage="No appointments scheduled for this day"
+          onReschedule={handleReschedule}
+          onDecline={handleDecline}
+        />
       </DialogContent>
     </Dialog>
   );

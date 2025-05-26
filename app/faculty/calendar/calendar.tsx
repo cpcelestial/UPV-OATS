@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Fragment } from "react";
+import { useState, useEffect, Fragment } from "react";
 import {
   addDays,
   format,
@@ -57,7 +57,7 @@ export function Calendar() {
     return last && /^\d+$/.test(last) ? last : null;
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     let unsubscribeSnapshot: Unsubscribe | null = null;
 
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
