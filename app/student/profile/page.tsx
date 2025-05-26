@@ -26,6 +26,7 @@ export default function Page() {
     "Friday",
     "Saturday",
   ];
+
   // Fetch profile and schedule data from Firestore when user is authenticated
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -40,10 +41,13 @@ export default function Page() {
           const profileSnapshot = await getDoc(profileDocRef);
 
           if (profileSnapshot.exists()) {
-            setProfile(profileSnapshot.data() as Student);
+            setProfile({
+              id: profileSnapshot.id,
+              ...profileSnapshot.data(),
+            } as Student);
           } else {
             console.error("Profile document does not exist for user:", userId);
-            setProfile(null); // Ensure profile is null if no data exists
+            setProfile(null);
           }
         } catch (error) {
           console.error("Failed to fetch profile:", error);

@@ -23,12 +23,14 @@ export function ProfileSection({
           <div className="flex flex-col items-center gap-3">
             <div className="relative h-48 w-48">
               <Image
-                src={profile.avatarUrl}
+                src={
+                  profile.avatarUrl && profile.avatarUrl.trim() !== ""
+                    ? profile.avatarUrl
+                    : "/placeholder.svg"
+                }
                 alt={`${profile.firstName} ${profile.lastName}`}
                 fill
-                sizes="(max-width: 768px) 100vw, 192px"
-                className="rounded-lg object-cover"
-                priority
+                className="rounded-full object-cover"
               />
             </div>
             <Button className="w-full" onClick={onChangePassword}>

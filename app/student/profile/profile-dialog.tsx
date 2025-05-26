@@ -42,7 +42,7 @@ export function ProfileDialog({
     if (open) {
       setEditedProfile(profile);
     }
-  }, [open, profile]);
+  }, [open]);
 
   const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -77,15 +77,32 @@ export function ProfileDialog({
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const profileDocRef = doc(db, "students", profile.id);
-      await setDoc(profileDocRef, editedProfile, { merge: true });
+      if (!profile?.id) {
+        throw new Error("Profile ID is missing.");
+      }
 
-      // Update local state
-      onUpdateProfile(editedProfile); // Pass the updated profile to the parent
+      const mergedProfile = {
+        ...editedProfile,
+        id: profile.id,
+        email: profile.email,
+        studentNumber: profile.studentNumber,
+        college: profile.college,
+        degreeProgram: profile.degreeProgram,
+      };
+
+      const cleanProfile: Record<string, any> = {};
+      Object.entries(mergedProfile).forEach(([key, value]) => {
+        if (value !== undefined) cleanProfile[key] = value;
+      });
+
+      const profileDocRef = doc(db, "students", profile.id);
+      await setDoc(profileDocRef, cleanProfile, { merge: true });
+
+      onUpdateProfile(cleanProfile);
       onOpenChange(false);
-    } catch (error) {
-      console.error("Failed to update profile:", error);
-      alert("Failed to save profile. Please try again.");
+    } catch (error: any) {
+      console.error("Failed to save profile:", error);
+      alert(`Failed to save profile. ${error?.message || ""}`);
     } finally {
       setIsSaving(false);
     }
