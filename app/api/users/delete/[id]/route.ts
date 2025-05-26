@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import admin from "firebase-admin";
 
-// Initialize Firebase Admin SDK (do this only once)
 if (!admin.apps.length) {
   const serviceAccount = {
     projectId: process.env.FIREBASE_PROJECT_ID,
