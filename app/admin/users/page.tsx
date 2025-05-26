@@ -50,7 +50,7 @@ export default function UsersPage() {
   }
 
   return (
-    <main className="flex-grow px-4 py-2">
+    <main className="flex-grow p-4">
       <div className="container mx-auto">
         <UsersTable users={users} />
       </div>
