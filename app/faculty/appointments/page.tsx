@@ -56,6 +56,9 @@ export default function Page() {
           const cancelled: Appointment[] = [];
           const reschedule: Appointment[] = [];
 
+          const today =  new Date();
+          today.setHours(0, 0, 0, 0); // Normalize to start of the day
+
           querySnapshot.forEach((doc) => {
             const data = doc.data();
             const appointment: Appointment = {
@@ -75,7 +78,10 @@ export default function Page() {
 
             switch (appointment.status) {
               case "approved":
-                upcoming.push(appointment);
+                if (appointment.date >= today) {
+                  // Only include upcoming appointments that are today or in the future
+                  upcoming.push(appointment);
+                }
                 break;
               case "pending":
                 pending.push(appointment);
