@@ -94,7 +94,6 @@ export function PasswordDialog({ open, onOpenChange }: PasswordDialogProps) {
     } catch (error: any) {
       console.error("Password change error:", error);
 
-      // Check for Firebase auth error codes
       if (error.code === "auth/invalid-credential") {
         setError("Current password is incorrect. Please try again.");
       } else if (error.code === "auth/too-many-requests") {

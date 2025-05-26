@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Fragment } from "react";
+import { useState, Fragment } from "react";
 import {
   addDays,
   format,
@@ -61,10 +61,9 @@ export function Calendar() {
     let unsubscribeSnapshot: Unsubscribe | null = null;
 
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
-
       if (user) {
         const appointmentsRef = collection(db, "appointments");
-        console.log(appointmentsRef)
+        console.log(appointmentsRef);
         const q = query(
           appointmentsRef,
           and(

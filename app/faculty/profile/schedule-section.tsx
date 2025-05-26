@@ -7,21 +7,23 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Clock, MapPin } from "lucide-react";
 import type { DaySchedule } from "../../data";
 
+interface ScheduleSectionProps {
+  userId: string;
+  schedule: DaySchedule[];
+  onEditSchedule: () => void;
+}
+
 export function ScheduleSection({
   schedule: initialSchedule,
   onEditSchedule,
   userId,
-}: {
-  schedule: DaySchedule[];
-  onEditSchedule: (updatedSchedule: DaySchedule[]) => void;
-  userId: string;
-}) {
+}: ScheduleSectionProps) {
   const [schedule, setSchedule] = useState<DaySchedule[]>(initialSchedule);
 
   useEffect(() => {
     if (!userId) return;
     const loadSchedule = async () => {
-      const data = await fetchSchedule(userId); // Fetch from Firestore
+      const data = await fetchSchedule(userId);
       if (data) setSchedule(data);
     };
     loadSchedule();
@@ -49,7 +51,10 @@ export function ScheduleSection({
                       className={`p-3 rounded-lg border ${slot.color} space-y-2`}
                     >
                       {slot.subject && (
-                        <div className="font-semibold">{slot.subject}</div>
+                        <div className="font-semibold">
+                          {slot.subject}
+                          {slot.section ? " - " + slot.section : ""}
+                        </div>
                       )}
                       <div className="flex items-center gap-2 text-sm">
                         <Clock className="h-4 w-4" />

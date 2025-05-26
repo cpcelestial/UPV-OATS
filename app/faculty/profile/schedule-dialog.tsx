@@ -456,7 +456,7 @@ export function ScheduleDialog({
                         <Input
                           placeholder="Title"
                           value="Consultation"
-                          onChange={(e) =>
+                          onChange={() =>
                             handleItemChange(
                               itemIndex,
                               "subject",

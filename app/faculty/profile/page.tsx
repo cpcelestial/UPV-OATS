@@ -65,7 +65,7 @@ export default function Page() {
             ...profileSnapshot.data(),
           } as Faculty);
         } else {
-          console.error("Profile document does not exist for user:", userId);
+          console.error("Profile document does not exist for user:", facultyId);
           setProfile(null);
         }
       } catch (error) {

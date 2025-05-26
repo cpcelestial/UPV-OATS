@@ -160,7 +160,7 @@ export default function Background({
     <div className="flex flex-col md:flex-row">
       {children}
       {/* Appointments Section */}
-      <div className="flex-grow m-4">
+      <div className="flex-grow p-4">
         <AppointmentsTabs
           upcomingAppointments={upcomingAppointments}
           pendingAppointments={pendingAppointments}
@@ -173,7 +173,7 @@ export default function Background({
       </div>
 
       {/* Calendar Section */}
-      <div className="flex-none mx-4 my-6">
+      <div className="flex-none px-4 py-6">
         <MonthCalendar
           onDateSelect={handleDateSelect}
           initialDate={selectedDate}

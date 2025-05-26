@@ -93,76 +93,89 @@ export function AppointmentsTabs({
     }
   };
 
-// Handle accepting an appointment
-// Handle accepting an appointment
-const handleAccept = async (appointmentId: string) => {
-  try {
-    const userId = await getCurrentUserId();
-    if (!userId) {
-      console.log("No user is signed in");
-      return;
-    }
-
-    const appointmentRef = doc(db, "appointments", appointmentId);
-    const snapshot = await getDoc(appointmentRef);
-    const appointmentData = snapshot.data();
-
-    if (appointmentData && appointmentData.date) {  // This is likely the document ID for the faculty's time slots
-      let time: string;
-      try {
-        time = appointmentData.timeSlot; // Convert Timestamp to time slot format
-      } catch (error) {
-        console.error(error);
-        toast.error("Invalid date format in appointment data.");
+  // Handle accepting an appointment
+  const handleAccept = async (appointmentId: string) => {
+    try {
+      const userId = await getCurrentUserId();
+      if (!userId) {
+        console.log("No user is signed in");
         return;
       }
 
-      // Get the date string in YYYY-MM-DD format from the appointmentDate
-      const appointmentDate: Date = appointmentData.date.toDate();
-      const year = appointmentDate.getFullYear();
-      const month = (appointmentDate.getMonth() + 1).toString().padStart(2, '0');
-      const day = appointmentDate.getDate().toString().padStart(2, '0');
-      const dateKey = `${year}-${month}-${day}`; // This is the key for the time slot array
+      const appointmentRef = doc(db, "appointments", appointmentId);
+      const snapshot = await getDoc(appointmentRef);
+      const appointmentData = snapshot.data();
 
-      console.log("Datekey:", dateKey);
+      if (appointmentData && appointmentData.date) {
+        // This is likely the document ID for the faculty's time slots
+        let time: string;
+        try {
+          time = appointmentData.timeSlot; // Convert Timestamp to time slot format
+        } catch (error) {
+          console.error(error);
+          toast.error("Invalid date format in appointment data.");
+          return;
+        }
 
-      const timeSlotRef = doc(db, "timeSlots", userId); // Use facultyId as the document ID
-      const timeSlotSnapshot = await getDoc(timeSlotRef);
-      const timeSlotData = timeSlotSnapshot.data();
+        // Get the date string in YYYY-MM-DD format from the appointmentDate
+        const appointmentDate: Date = appointmentData.date.toDate();
+        const year = appointmentDate.getFullYear();
+        const month = (appointmentDate.getMonth() + 1)
+          .toString()
+          .padStart(2, "0");
+        const day = appointmentDate.getDate().toString().padStart(2, "0");
+        const dateKey = `${year}-${month}-${day}`; // This is the key for the time slot array
 
-      if (timeSlotData && timeSlotData[dateKey]) {
-        console.log("Yes!!!") // Check if the dateKey exists in the timeSlotData
-        const timeSlots = timeSlotData[dateKey] as { available: boolean; booked: boolean; time: string }[];
-        console.log("Time Slots:", timeSlots);
+        console.log("Datekey:", dateKey);
 
-        const updatedTimeSlots = timeSlots.map((slot: { available: boolean; booked: boolean; time: string }) =>
-          slot.time === time ? { ...slot, booked: true } : slot
-        );
+        const timeSlotRef = doc(db, "timeSlots", userId); // Use facultyId as the document ID
+        const timeSlotSnapshot = await getDoc(timeSlotRef);
+        const timeSlotData = timeSlotSnapshot.data();
 
-        // Update the specific date array within the timeSlots document
-        await updateDoc(timeSlotRef, {
-          [dateKey]: updatedTimeSlots,
-        });
+        if (timeSlotData && timeSlotData[dateKey]) {
+          console.log("Yes!!!"); // Check if the dateKey exists in the timeSlotData
+          const timeSlots = timeSlotData[dateKey] as {
+            available: boolean;
+            booked: boolean;
+            time: string;
+          }[];
+          console.log("Time Slots:", timeSlots);
 
-        await updateDoc(appointmentRef, {
-          status: "approved",
-        });
+          const updatedTimeSlots = timeSlots.map(
+            (slot: { available: boolean; booked: boolean; time: string }) =>
+              slot.time === time ? { ...slot, booked: true } : slot
+          );
 
-        toast.success(`Appointment ${appointmentId} accepted and time slot ${time} booked!`);
-        console.log(`Appointment ${appointmentId} accepted and time slot ${time} booked by ${userId}`);
+          // Update the specific date array within the timeSlots document
+          await updateDoc(timeSlotRef, {
+            [dateKey]: updatedTimeSlots,
+          });
+
+          await updateDoc(appointmentRef, {
+            status: "approved",
+          });
+
+          toast.success(
+            `Appointment ${appointmentId} accepted and time slot ${time} booked!`
+          );
+          console.log(
+            `Appointment ${appointmentId} accepted and time slot ${time} booked by ${userId}`
+          );
+        } else {
+          toast.error("Time slot data not found for the specified date.");
+          console.log(
+            "No time slots array found for the specified date in the document"
+          );
+        }
       } else {
-        toast.error("Time slot data not found for the specified date.");
-        console.log("No time slots array found for the specified date in the document");
+        toast.error("Invalid appointment data or faculty ID/date not found.");
+        console.log("Invalid appointment data or facultyId/date not found");
       }
-    } else {
-      toast.error("Invalid appointment data or faculty ID/date not found.");
-      console.log("Invalid appointment data or facultyId/date not found");
+    } catch (error) {
+      console.error("Error accepting appointment:", error);
+      toast.error("Failed to accept appointment.");
     }
-  } catch (error) {
-    console.error("Error accepting appointment:", error);
-    toast.error("Failed to accept appointment.");
-  }
-};
+  };
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
       <TabsList>

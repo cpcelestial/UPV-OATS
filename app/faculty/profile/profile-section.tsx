@@ -26,11 +26,11 @@ export function ProfileSection({
                 src={
                   profile.avatarUrl && profile.avatarUrl.trim() !== ""
                     ? profile.avatarUrl
-                    : "/placeholder.svg"
+                    : "/blank.jpg"
                 }
                 alt={`${profile.firstName} ${profile.lastName}`}
                 fill
-                className="rounded-full object-cover"
+                className="rounded-lg object-cover"
               />
             </div>
             <Button className="w-full" onClick={onChangePassword}>

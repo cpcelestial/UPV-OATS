@@ -56,8 +56,8 @@ export default function Page() {
           const cancelled: Appointment[] = [];
           const reschedule: Appointment[] = [];
 
-          const today =  new Date();
-          today.setHours(0, 0, 0, 0); // Normalize to start of the day
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
 
           querySnapshot.forEach((doc) => {
             const data = doc.data();
