@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -15,62 +15,42 @@ import {
   onSnapshot,
   Unsubscribe,
   or,
-  and,
   doc,
-  getFirestore,
   updateDoc,
 } from "firebase/firestore";
-import { getAuth, onAuthStateChanged, User } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 
 export default function Page() {
   const router = useRouter();
-  const [currentUser, setCurrentUser] = React.useState<any>(null);
-  const [upcomingAppointments, setUpcomingAppointments] = React.useState<
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [upcomingAppointments, setUpcomingAppointments] = useState<
     Appointment[]
   >([]);
-  const [pendingAppointments, setPendingAppointments] = React.useState<
+  const [pendingAppointments, setPendingAppointments] = useState<Appointment[]>(
+    []
+  );
+  const [cancelledAppointments, setCancelledAppointments] = useState<
     Appointment[]
   >([]);
-  const [cancelledAppointments, setCancelledAppointments] = React.useState<
+  const [rescheduleAppointments, setRescheduleAppointments] = useState<
     Appointment[]
   >([]);
-  const [rescheduleAppointments, setRescheduleAppointments] = React.useState<
-    Appointment[]
-  >([]);
-  const [loading, setLoading] = React.useState(true);
-  const db = getFirestore();
+  const [loading, setLoading] = useState(true);
 
-  const handleDecline = async (appointmentId: string) => {
-    try {
-      const appointmentRef = doc(db, "appointments", appointmentId);
-      await updateDoc(appointmentRef, {
-        status: "cancelled",
-      });
-      console.log(`Appointment ${appointmentId} declined successfully`);
-    } catch (error) {
-      console.error("Error declining appointment:", error);
-    }
-  };
-
-  const handleReschedule = (id: string) => {
-    alert(`Reschedule appointment ${id}`);
-    // In a real app, navigate to reschedule page or open a modal
-  };
-
-  React.useEffect(() => {
+  useEffect(() => {
     let unsubscribeSnapshot: Unsubscribe | null = null;
 
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
       setLoading(true);
 
-      if (user) {
+      if (currentUser) {
         const appointmentsRef = collection(db, "appointments");
         const q = query(
           appointmentsRef,
           or(
-            where("userId", "==", user.uid),
-            where("participants", "array-contains", user.email)
+            where("userId", "==", currentUser.uid),
+            where("participants", "array-contains", currentUser.email)
           ),
           orderBy("date", "asc")
         );
@@ -81,7 +61,7 @@ export default function Page() {
           const cancelled: Appointment[] = [];
           const reschedule: Appointment[] = [];
           const today = new Date();
-          today.setHours(0, 0, 0, 0); // Normalize today's date to midnight
+          today.setHours(0, 0, 0, 0);
 
           querySnapshot.forEach((doc) => {
             const data = doc.data();
@@ -150,7 +130,24 @@ export default function Page() {
         unsubscribeSnapshot();
       }
     };
-  }, []);
+  }, [currentUser]);
+
+  const handleDecline = async (appointmentId: string) => {
+    try {
+      const appointmentRef = doc(db, "appointments", appointmentId);
+      await updateDoc(appointmentRef, {
+        status: "cancelled",
+      });
+      console.log(`Appointment ${appointmentId} declined successfully`);
+    } catch (error) {
+      console.error("Error declining appointment:", error);
+    }
+  };
+
+  const handleReschedule = (id: string) => {
+    alert(`Reschedule appointment ${id}`);
+    // In a real app, navigate to reschedule page or open a modal
+  };
 
   return (
     <div className="p-4">

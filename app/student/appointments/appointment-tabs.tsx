@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppointmentList } from "./appointment-list";
 import type { Appointment } from "../../data";
@@ -24,7 +24,7 @@ export function AppointmentsTabs({
   onReschedule,
   onDecline,
 }: AppointmentsTabsProps) {
-  const [activeTab, setActiveTab] = React.useState("upcoming");
+  const [activeTab, setActiveTab] = useState("upcoming");
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">

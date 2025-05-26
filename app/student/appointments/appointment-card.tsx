@@ -1,29 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { CalendarIcon, MapPinIcon, VideoIcon } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { DialogTitle } from "@/components/ui/dialog";
-import type { Appointment } from "../../data";
+import type { Appointment, Faculty } from "@/app/data";
+import { db } from "@/app/firebase-config";
+import { collection, getDocs, query, where } from "firebase/firestore";
 
 interface AppointmentCardProps {
   appointment: Appointment;
+  onReschedule?: (id: string) => void;
   onDecline?: (id: string) => void;
 }
 
 export function AppointmentCard({
   appointment,
+  onReschedule,
   onDecline,
 }: AppointmentCardProps) {
-  const facultyInitials = appointment.facultyName
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase();
-
   const getNumber = (str: string | null | undefined): string | null => {
     if (!str) return null;
     const parts = str.split("_");
@@ -31,7 +29,7 @@ export function AppointmentCard({
     return last && /^\d+$/.test(last) ? last : null;
   };
 
-  // Reschedule dialog state
+  const [faculty, setFaculty] = useState<Faculty | null>(null);
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [newDate, setNewDate] = useState(
     typeof appointment.date === "string"
@@ -40,6 +38,21 @@ export function AppointmentCard({
   );
   const [newTime, setNewTime] = useState(appointment.timeSlot ?? "");
   const [loading, setLoading] = useState(false);
+
+  const getFacultyInitials = (): string => {
+    if (faculty?.firstName && faculty?.lastName) {
+      return `${faculty.firstName.charAt(0)}${faculty.lastName.charAt(
+        0
+      )}`.toUpperCase();
+    }
+    const nameParts = appointment.facultyName.split(" ");
+    if (nameParts.length >= 2) {
+      return `${nameParts[0].charAt(0)}${nameParts[nameParts.length - 1].charAt(
+        0
+      )}`.toUpperCase();
+    }
+    return appointment.facultyName.substring(0, 2).toUpperCase();
+  };
 
   const handleReschedule = async () => {
     setLoading(true);
@@ -59,17 +72,47 @@ export function AppointmentCard({
       } else {
         alert("Failed to reschedule: " + data.error);
       }
-    } catch (err) {
+    } catch (error) {
       alert("Failed to reschedule.");
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    const fetchFaculty = async () => {
+      try {
+        const q = query(
+          collection(db, "Users"),
+          where("email", "==", appointment.facultyEmail)
+        );
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          const facultyDoc = querySnapshot.docs[0];
+          const facultyData = facultyDoc.data() as Faculty;
+          setFaculty({
+            ...facultyData,
+            id: facultyDoc.id,
+          });
+          console.log("Faculty loaded:", facultyData);
+        } else {
+          console.log("No faculty found with email:", appointment.facultyEmail);
+          setFaculty(null);
+        }
+      } catch (error) {
+        console.error("Error fetching faculty:", error);
+        setFaculty(null);
+      }
+    };
+
+    if (appointment.facultyEmail) {
+      fetchFaculty();
+    }
+  }, [appointment.facultyEmail]);
+
   return (
     <div className="rounded-lg border bg-white p-6">
       <div className="space-y-6">
-        {/* ...existing content... */}
         <div className="flex justify-between items-start">
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -95,17 +138,18 @@ export function AppointmentCard({
           <div className="flex items-center gap-3">
             <Avatar className="h-12 w-12">
               <AvatarImage
-                src={`/placeholder.svg?height=40&width=40`}
+                src={faculty?.avatarUrl}
                 alt={appointment.facultyName}
               />
               <AvatarFallback className="bg-primary/10 text-primary">
-                {facultyInitials}
+                {getFacultyInitials()}
               </AvatarFallback>
             </Avatar>
+
             <div>
               <p className="font-medium">{appointment.facultyName}</p>
               <p className="text-muted-foreground text-sm">
-                {appointment.facultyEmail}
+                {appointment.facultyEmail || `faculty@example.com`}
               </p>
             </div>
           </div>
@@ -142,11 +186,18 @@ export function AppointmentCard({
                 <div key={index} className="flex items-center gap-2">
                   <Avatar className="h-8 w-8">
                     <AvatarImage
-                      src={participant.avatarUrl}
+                      src={participant.avatarUrl || "/placeholder.svg"}
                       alt={participant.name}
                     />
                     <AvatarFallback className="bg-secondary text-secondary-foreground text-xs">
-                      {"US"}
+                      {participant.name
+                        ? participant.name
+                            .split(" ")
+                            .map((n) => n.charAt(0))
+                            .join("")
+                            .toUpperCase()
+                            .substring(0, 2)
+                        : "US"}
                     </AvatarFallback>
                   </Avatar>
                   <div>
