@@ -64,18 +64,19 @@ export default function Background({
       setCurrentUser(user);
       setLoading(true);
 
-      if (currentUser) {
+      if (user) {
+        // <-- use 'user' here, not 'currentUser'
         const appointmentsRef = collection(db, "appointments");
         const q = query(
           appointmentsRef,
           or(
             and(
               where("status", "in", ["approved", "pending", "reschedule"]),
-              where("userId", "==", currentUser.uid)
+              where("userId", "==", user.uid)
             ),
             and(
               where("status", "in", ["approved", "pending", "reschedule"]),
-              where("participants", "array-contains", currentUser.email)
+              where("participants", "array-contains", user.email)
             )
           ),
           orderBy("date", "asc")
@@ -86,14 +87,19 @@ export default function Background({
           const pending: Appointment[] = [];
           const reschedule: Appointment[] = [];
           const today = new Date();
-          today.setHours(0, 0, 0, 0); // Normalize today's date to midnight
+          today.setHours(0, 0, 0, 0);
 
           querySnapshot.forEach((doc) => {
             const data = doc.data();
             const appointment: Appointment = {
               id: doc.id,
               ...data,
-              date: data.date instanceof Date ? data.date : data.date.toDate(),
+              date:
+                data.date && typeof data.date.toDate === "function"
+                  ? data.date.toDate()
+                  : typeof data.date === "string"
+                  ? new Date(data.date)
+                  : data.date,
               purpose: data.purpose,
               class: data.class,
               details: data.details,
@@ -139,8 +145,7 @@ export default function Background({
         unsubscribeSnapshot();
       }
     };
-  }, [currentUser]);
-
+  }, []); // <-- remove currentUser from dependency array
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
     // You can add additional logic here if needed

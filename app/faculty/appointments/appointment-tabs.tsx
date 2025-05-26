@@ -118,7 +118,17 @@ export function AppointmentsTabs({
         }
 
         // Get the date string in YYYY-MM-DD format from the appointmentDate
-        const appointmentDate: Date = appointmentData.date.toDate();
+        let appointmentDate: Date;
+        if (
+          appointmentData.date &&
+          typeof appointmentData.date.toDate === "function"
+        ) {
+          appointmentDate = appointmentData.date.toDate();
+        } else if (typeof appointmentData.date === "string") {
+          appointmentDate = new Date(appointmentData.date);
+        } else {
+          appointmentDate = appointmentData.date; // already a Date object
+        }
         const year = appointmentDate.getFullYear();
         const month = (appointmentDate.getMonth() + 1)
           .toString()
@@ -221,7 +231,6 @@ export function AppointmentsTabs({
           <AppointmentList
             appointments={upcomingAppointments}
             emptyMessage="No upcoming appointments found"
-            onReschedule={onReschedule}
             onDecline={handleDecline}
           />
         )}

@@ -71,7 +71,6 @@ export function AppointmentsTabs({
           <AppointmentList
             appointments={upcomingAppointments}
             emptyMessage="No upcoming appointments found"
-            onReschedule={onReschedule}
             onDecline={onDecline}
           />
         )}

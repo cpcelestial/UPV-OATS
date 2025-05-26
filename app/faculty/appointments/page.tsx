@@ -57,7 +57,7 @@ export default function Page() {
           const reschedule: Appointment[] = [];
 
           const today = new Date();
-          today.setHours(0, 0, 0, 0);
+          today.setHours(0, 0, 0, 0); // Normalize to start of the day
 
           querySnapshot.forEach((doc) => {
             const data = doc.data();
@@ -67,6 +67,8 @@ export default function Page() {
               date:
                 data.date && typeof data.date.toDate === "function"
                   ? data.date.toDate()
+                  : typeof data.date === "string"
+                  ? new Date(data.date)
                   : data.date,
               purpose: data.purpose,
               class: data.class,

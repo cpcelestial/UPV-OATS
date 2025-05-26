@@ -94,10 +94,17 @@ export default function Background({
             const appointment: Appointment = {
               id: doc.id,
               ...data,
-              date:
-                data.date && typeof data.date.toDate === "function"
-                  ? data.date.toDate()
-                  : data.date,
+              date: (() => {
+                try {
+                  if (data.date instanceof Date) return data.date;
+                  if (typeof data.date?.toDate === "function")
+                    return data.date.toDate();
+                  return new Date(data.date); // try parsing string or timestamp
+                } catch (e) {
+                  console.error("Invalid date:", data.date, e); // optional debug
+                  return new Date(); // fallback to current date
+                }
+              })(),
               purpose: data.purpose,
               class: data.class,
               details: data.details,
