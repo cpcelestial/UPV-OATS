@@ -2,27 +2,23 @@
 import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { usePathname } from "next/navigation";
-import { auth, db } from "../firebase-config"; // Firebase auth and Firestore db
-import { onAuthStateChanged } from "firebase/auth"; // Firebase auth state listener
+import { auth, db } from "../firebase-config";
+import { onAuthStateChanged } from "firebase/auth";
 import {
   collection,
   doc,
   getDoc,
-  getDocs,
   onSnapshot,
   query,
   where,
-} from "firebase/firestore"; // Firestore methods to fetch user data // Firestore methods to fetch user data
-// import { saveScheduleForUser } from "@/app/faculty/appointments/sched-avail/autoslots"; // Function to save time slots for user
-import { getDate, isToday } from "date-fns";
-
+} from "firebase/firestore";
 
 const routeTitles: { [key: string]: string } = {
   "/faculty/dashboard": "Dashboard",
   "/faculty/calendar": "Calendar",
   "/faculty/appointments": "Appointments",
   "/faculty/appointments/sched-avail": "Appointments",
-  "/faculty/students": "Student",
+  "/faculty/students": "Students",
   "/faculty/profile": "Profile",
 };
 
@@ -33,31 +29,27 @@ export default function AppNavbar() {
     : "Loading...";
 
   const [userName, setUserName] = useState("User");
-  const userInitials = userName
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase();
+  const [userLast, setUserLast] = useState("");
 
-    useEffect(() => {
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          // Fetch user document from Firestore
+          const userDocRef = doc(db, "Users", user.uid);
+          const userDocSnap = await getDoc(userDocRef);
 
-      const unsubscribe = onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          try {
-            // Fetch user document from Firestore
-            const userDocRef = doc(db, "Users", user.uid);
-            const userDocSnap = await getDoc(userDocRef);
-  
-            if (userDocSnap.exists()) {
-              const facultyDocRef = collection(db, "faculty");
-              const facultyQuery = query(
-                facultyDocRef,
-                where("uid", "==", user.uid)
-              );
+          if (userDocSnap.exists()) {
+            const facultyDocRef = collection(db, "faculty");
+            const facultyQuery = query(
+              facultyDocRef,
+              where("uid", "==", user.uid)
+            );
 
             const unsubscribefaculty = onSnapshot(facultyQuery, (snapshot) => {
               const facultyData = snapshot.docs[0]?.data();
               setUserName(facultyData?.firstName || "User");
+              setUserLast(facultyData?.lastName || "");
             });
           } else {
             // Fallback to email or display name if no Firestore doc
@@ -92,7 +84,8 @@ export default function AppNavbar() {
               className="object-cover"
             />
             <AvatarFallback className="bg-primary/10 text-primary">
-              {userInitials}
+              {userName[0]}
+              {userLast[0]}
             </AvatarFallback>
           </Avatar>
         </div>

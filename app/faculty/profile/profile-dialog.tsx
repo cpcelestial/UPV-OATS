@@ -111,7 +111,7 @@ export function ProfileDialog({
                   className="rounded-full object-cover"
                 />
               ) : (
-                <div className="rounded-full bg-gray-200 w-full h-full flex items-center justify-center text-5xl text-gray-400">
+                <div className="rounded-full w-full h-full flex items-center justify-center text-5xl bg-primary/10 text-primary">
                   <span>
                     {profile.firstName?.[0]}
                     {profile.lastName?.[0]}
@@ -120,7 +120,7 @@ export function ProfileDialog({
               )}
               <label
                 htmlFor="file-input"
-                className="absolute bottom-0 right-0 p-2 rounded-full cursor-pointer flex items-center justify-center bg-white shadow"
+                className="absolute bottom-0 right-0 p-2 rounded-full cursor-pointer flex items-center justify-center bg-primary text-white hover:bg-primary/80"
                 style={{
                   width: "32px",
                   height: "32px",

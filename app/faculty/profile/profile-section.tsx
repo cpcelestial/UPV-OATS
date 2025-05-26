@@ -22,16 +22,21 @@ export function ProfileSection({
         <div className="flex flex-col md:flex-row gap-6">
           <div className="flex flex-col items-center gap-3">
             <div className="relative h-48 w-48">
-              <Image
-                src={
-                  profile.avatarUrl && profile.avatarUrl.trim() !== ""
-                    ? profile.avatarUrl
-                    : "/blank.jpg"
-                }
-                alt={`${profile.firstName} ${profile.lastName}`}
-                fill
-                className="rounded-lg object-cover"
-              />
+              {profile.avatarUrl && profile.avatarUrl.trim() !== "" ? (
+                <Image
+                  src={profile.avatarUrl}
+                  alt={`${profile.firstName} ${profile.lastName}`}
+                  fill
+                  className="rounded-lg object-cover"
+                />
+              ) : (
+                <div className="rounded-lg w-full h-full flex items-center justify-center text-5xl bg-primary/10 text-primary">
+                  <span>
+                    {profile.firstName?.[0]}
+                    {profile.lastName?.[0]}
+                  </span>
+                </div>
+              )}
             </div>
             <Button className="w-full" onClick={onChangePassword}>
               Change password

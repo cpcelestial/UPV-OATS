@@ -38,7 +38,8 @@ export function AvailabilityTable({
     const referenceDate = new Date();
     referenceDate.setHours(0, 0, 0, 0); // Set to start of day for consistent formatting
 
-    for (let hour = 6; hour < 21; hour++) { // From 6 AM to 8:30 PM (last slot starts at 20:30)
+    for (let hour = 6; hour < 21; hour++) {
+      // From 6 AM to 8:30 PM (last slot starts at 20:30)
       for (let min = 0; min < 60; min += 30) {
         let startDateTime = new Date(referenceDate);
         startDateTime.setHours(hour, min);
@@ -81,14 +82,16 @@ export function AvailabilityTable({
 
     // Set default business hours for weekdays (Monday = 1, Sunday = 0)
     // Based on your 7 AM to 5 PM requirement
-    if (dayOfWeek !== 0 && dayOfWeek !== 6) { // If it's a weekday
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+      // If it's a weekday
       slots.forEach((slot) => {
         const [startTimeStr] = slot.time.split(" - ");
         // Parse using 'hh:mm a' to match generated format
         const parsedTime = parse(startTimeStr, "hh:mm a", new Date());
         const startHour24 = parsedTime.getHours();
 
-        if (startHour24 >= 7 && startHour24 < 17) { // 7 AM (hour 7) to 5 PM (hour 17)
+        if (startHour24 >= 7 && startHour24 < 17) {
+          // 7 AM (hour 7) to 5 PM (hour 17)
           slot.available = true;
         }
       });
@@ -117,7 +120,8 @@ export function AvailabilityTable({
         const newBookings: Booking[] = [];
         const datesToSaveToFirebase: { [key: string]: TimeSlot[] } = {}; // Collect dates needing saving
 
-        for (const date of dates) { // Use for...of for async operations
+        for (const date of dates) {
+          // Use for...of for async operations
           let dateSlots = generateTimeSlots(); // Start with a complete set of all possible slots
           let shouldSaveDate = false; // Flag to indicate if this date's slots were defaulted/changed
 
@@ -148,7 +152,9 @@ export function AvailabilityTable({
                   // This specific slot time is missing from Firebase for this date.
                   // Initialize it with default availability and mark for saving.
                   shouldSaveDate = true;
-                  const initializedSlot = initializeScheduleForDate(date).find(s => s.time === defaultSlot.time);
+                  const initializedSlot = initializeScheduleForDate(date).find(
+                    (s) => s.time === defaultSlot.time
+                  );
                   return initializedSlot || defaultSlot; // Fallback to basic default if not found
                 }
               });
@@ -176,12 +182,16 @@ export function AvailabilityTable({
 
         // --- NEW LOGIC: Save initialized/updated schedules to Firebase ---
         if (Object.keys(datesToSaveToFirebase).length > 0) {
-            console.log("Saving newly generated/updated schedules to Firebase:", datesToSaveToFirebase);
-            await setDoc(docRef, datesToSaveToFirebase, { merge: true });
-            console.log("Default and merged schedules saved to Firebase successfully.");
+          console.log(
+            "Saving newly generated/updated schedules to Firebase:",
+            datesToSaveToFirebase
+          );
+          await setDoc(docRef, datesToSaveToFirebase, { merge: true });
+          console.log(
+            "Default and merged schedules saved to Firebase successfully."
+          );
         }
         // --------------------------------------------------------
-
       } catch (err) {
         console.error("Error fetching or initializing data:", err);
         // Fallback to local defaults on error to prevent empty table
@@ -219,19 +229,22 @@ export function AvailabilityTable({
     // If the slot is booked, it cannot be toggled to unavailable.
     // If it's already booked, clicking the checkbox does nothing.
     if (currentSlot?.booked) {
-        console.log("Cannot change availability for a booked slot.");
-        return; 
+      console.log("Cannot change availability for a booked slot.");
+      return;
     }
 
-    const newAvailability = checked === true ? true :
-                             checked === false ? false :
-                             !(currentSlot?.available || false);
+    const newAvailability =
+      checked === true
+        ? true
+        : checked === false
+        ? false
+        : !(currentSlot?.available || false);
 
     // Update local state immediately for responsive UI
     setSchedule((prev) => {
       const updated = { ...prev };
       if (updated[date]) {
-        updated[date] = updated[date].map(slot =>
+        updated[date] = updated[date].map((slot) =>
           slot.time === time
             ? { ...slot, available: newAvailability }
             : { ...slot }
@@ -245,8 +258,9 @@ export function AvailabilityTable({
 
       // Ensure we're working with a complete set of slots for the day
       // If `schedule[date]` is not yet initialized for some reason, generate defaults
-      const currentDateSlots = schedule[date] || initializeScheduleForDate(date);
-      const updatedSlots = currentDateSlots.map(slot =>
+      const currentDateSlots =
+        schedule[date] || initializeScheduleForDate(date);
+      const updatedSlots = currentDateSlots.map((slot) =>
         slot.time === time
           ? { ...slot, available: newAvailability }
           : { ...slot }
@@ -269,7 +283,7 @@ export function AvailabilityTable({
       setSchedule((prev) => {
         const updated = { ...prev };
         if (updated[date]) {
-          updated[date] = updated[date].map(slot =>
+          updated[date] = updated[date].map((slot) =>
             slot.time === time
               ? { ...slot, available: !newAvailability } // Revert to previous state
               : { ...slot }
@@ -284,10 +298,14 @@ export function AvailabilityTable({
   const isSlotInPast = (date: string, time: string) => {
     const [startTimeStr] = time.split(" - ");
     const [year, month, day] = date.split("-").map(Number);
-    
+
     // Parse using 'hh:mm a' to match generated format
-    const slotStartDateTime = parse(startTimeStr, "hh:mm a", new Date(year, month - 1, day));
-    
+    const slotStartDateTime = parse(
+      startTimeStr,
+      "hh:mm a",
+      new Date(year, month - 1, day)
+    );
+
     return isBefore(slotStartDateTime, new Date());
   };
 
@@ -308,11 +326,14 @@ export function AvailabilityTable({
   };
 
   const getSlotColor = (date: string, time: string, available: boolean) => {
-    if (isSlotBooked(date, time)) // Booked status has highest priority for color
+    if (isSlotBooked(date, time))
+      // Booked status has highest priority for color
       return "bg-blue-100 border-blue-200 text-blue-700";
-    if (isSlotInPast(date, time)) // Past status is next, overrides OPEN/UNAVAILABLE if in past
+    if (isSlotInPast(date, time))
+      // Past status is next, overrides OPEN/UNAVAILABLE if in past
       return "bg-red-100 border-red-200 text-red-700";
-    if (available) // Available is green
+    if (available)
+      // Available is green
       return "bg-green-100 border-green-200 text-green-700";
     return ""; // Default for unavailable slots (no specific color, maybe a light grey)
   };
@@ -326,7 +347,7 @@ export function AvailabilityTable({
       <table className="w-full min-w-[800px] border-collapse">
         <thead>
           <tr className="bg-muted">
-            <th className="px-4 py-2 text-center w-24">Local Time</th>
+            <th className="px-4 py-2 text-center w-48">Local Time</th>
             {Object.keys(schedule).map((date) => (
               <th
                 key={date}
@@ -343,8 +364,9 @@ export function AvailabilityTable({
         <tbody>
           {generateTimeSlots().map((timeSlot) => (
             <tr key={timeSlot.time}>
-              <td className="border-t px-2 py-2 text-center bg-muted/50">
-                {timeSlot.time} {/* This will display "hh:mm AM/PM - hh:mm AM/PM" */}
+              <td className="border-t px-2 py-2 text-center text-sm bg-muted/50">
+                {timeSlot.time}{" "}
+                {/* This will display "hh:mm AM/PM - hh:mm AM/PM" */}
               </td>
               {Object.entries(schedule).map(([date, slots]) => {
                 const slot = slots.find((s) => s.time === timeSlot.time);
@@ -372,7 +394,11 @@ export function AvailabilityTable({
                     ) : (
                       // Display status badge in view mode
                       (() => {
-                        const status = getSlotStatus(date, timeSlot.time, slot.available);
+                        const status = getSlotStatus(
+                          date,
+                          timeSlot.time,
+                          slot.available
+                        );
                         if (status) {
                           return (
                             <div className="flex justify-center">
@@ -380,7 +406,11 @@ export function AvailabilityTable({
                                 variant={"outline"}
                                 className={cn(
                                   "px-4 py-1 font-semibold justify-center w-24",
-                                  getSlotColor(date, timeSlot.time, slot.available)
+                                  getSlotColor(
+                                    date,
+                                    timeSlot.time,
+                                    slot.available
+                                  )
                                 )}
                               >
                                 {status}
@@ -391,7 +421,8 @@ export function AvailabilityTable({
                         return (
                           <div className="flex justify-center">
                             <div className="w-24 h-6 flex items-center justify-center text-xs text-gray-400">
-                              - {/* Display a hyphen for intentionally unavailable slots in view mode */}
+                              -{" "}
+                              {/* Display a hyphen for intentionally unavailable slots in view mode */}
                             </div>
                           </div>
                         );
