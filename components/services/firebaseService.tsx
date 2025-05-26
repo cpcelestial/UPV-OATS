@@ -1,6 +1,6 @@
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
-import { app } from "./firebase-config";
-import type { DaySchedule } from "./data";
+import { app } from "../../app/firebase-config";
+import type { DaySchedule } from "../../app/data";
 
 const db = getFirestore(app);
 
