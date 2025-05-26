@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { UsersTable } from "./table";
+import { UsersTable } from "./users-table";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/app/firebase-config";
 
-// Define a type for the user objects
 interface User {
   firstName: string;
   lastName: string;
@@ -18,7 +17,6 @@ interface User {
 }
 
 export default function UsersPage() {
-  // Add the User type to useState
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -52,10 +50,10 @@ export default function UsersPage() {
   }
 
   return (
-    <div>
-      <main className="flex-grow px-4">
+    <main className="flex-grow px-4 py-2">
+      <div className="container mx-auto">
         <UsersTable users={users} />
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }

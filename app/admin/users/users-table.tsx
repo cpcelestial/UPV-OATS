@@ -61,7 +61,6 @@ interface UsersTableProps {
 
 export function UsersTable({ users: propsUsers }: UsersTableProps) {
   const [roleFilter, setRoleFilter] = useState<string | null>(null);
-  const [currentSort, setCurrentSort] = useState<string>("Sort");
   const [sorting, setSorting] = useState<SortingState>([]);
   const [users, setUsers] = useState<User[]>(propsUsers);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -96,9 +95,7 @@ export function UsersTable({ users: propsUsers }: UsersTableProps) {
       header: ({ column }) => (
         <Button
           variant="ghost"
-          onClick={() =>
-            handleSort("name", column.getIsSorted() === "asc", "Name (A - Z)")
-          }
+          onClick={() => handleSort("name", column.getIsSorted() === "asc")}
           className="px-0"
         >
           Name
@@ -142,9 +139,7 @@ export function UsersTable({ users: propsUsers }: UsersTableProps) {
       header: ({ column }) => (
         <Button
           variant="ghost"
-          onClick={() =>
-            handleSort("role", column.getIsSorted() === "asc", "Role")
-          }
+          onClick={() => handleSort("role", column.getIsSorted() === "asc")}
           className="px-0"
         >
           Role
@@ -158,11 +153,7 @@ export function UsersTable({ users: propsUsers }: UsersTableProps) {
         <Button
           variant="ghost"
           onClick={() =>
-            handleSort(
-              "dateAdded",
-              column.getIsSorted() === "asc",
-              "Date (New - Old)"
-            )
+            handleSort("dateAdded", column.getIsSorted() === "asc")
           }
           className="px-0"
         >
@@ -206,14 +197,13 @@ export function UsersTable({ users: propsUsers }: UsersTableProps) {
     state: { sorting },
   });
 
-  function handleSort(columnId: string, desc: boolean, label: string) {
+  function handleSort(columnId: string, desc: boolean) {
     setSorting([{ id: columnId, desc }]);
-    setCurrentSort(label);
   }
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between py-4">
+      <div className="flex items-center justify-between pb-4">
         <div className="flex items-center gap-4 flex-1">
           <Input
             placeholder="Search users..."
@@ -325,10 +315,10 @@ export function UsersTable({ users: propsUsers }: UsersTableProps) {
         </Table>
       </div>
 
-      <div className="flex items-center justify-end space-x-2 py-4">
+      <div className="flex items-center justify-end space-x-2 pt-4">
         <div className="text-muted-foreground flex-1 text-sm">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
+          Page {table.getState().pagination.pageIndex + 1} of{" "}
+          {table.getPageCount()}
         </div>
 
         <div className="space-x-2">

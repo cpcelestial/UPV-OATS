@@ -46,6 +46,9 @@ export default function Page() {
           const cancelled: Appointment[] = [];
           const reschedule: Appointment[] = [];
 
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+
           querySnapshot.forEach((doc) => {
             const data = doc.data();
             const appointment: Appointment = {
@@ -65,7 +68,10 @@ export default function Page() {
 
             switch (appointment.status) {
               case "approved":
-                upcoming.push(appointment);
+                if (appointment.date >= today) {
+                  // Only include upcoming appointments that are today or in the future
+                  upcoming.push(appointment);
+                }
                 break;
               case "pending":
                 pending.push(appointment);
@@ -103,14 +109,16 @@ export default function Page() {
   }, [currentUser]);
 
   return (
-    <div className="p-4">
-      <AppointmentsTabs
-        upcomingAppointments={upcomingAppointments}
-        pendingAppointments={pendingAppointments}
-        cancelledAppointments={cancelledAppointments}
-        rescheduleAppointments={rescheduleAppointments}
-        loading={loading}
-      />
-    </div>
+    <main className="flex-grow pl-4 py-2">
+      <div className="container mx-auto">
+        <AppointmentsTabs
+          upcomingAppointments={upcomingAppointments}
+          pendingAppointments={pendingAppointments}
+          cancelledAppointments={cancelledAppointments}
+          rescheduleAppointments={rescheduleAppointments}
+          loading={loading}
+        />
+      </div>
+    </main>
   );
 }

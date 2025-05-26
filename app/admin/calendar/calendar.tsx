@@ -33,6 +33,7 @@ import {
   query,
   where,
   onSnapshot,
+  and,
   Unsubscribe,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
@@ -61,9 +62,12 @@ export function Calendar() {
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
 
-      if (currentUser) {
+      if (user) {
         const appointmentsRef = collection(db, "appointments");
-        const q = query(appointmentsRef, where("status", "==", "approved"));
+        const q = query(
+          appointmentsRef,
+          and(where("status", "==", "approved"))
+        );
 
         unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
           const fetchedAppointments: Appointment[] = snapshot.docs.map(
@@ -78,6 +82,7 @@ export function Calendar() {
               } as Appointment)
           );
           setAppointments(fetchedAppointments);
+          console.log("Appointments fetched:", fetchedAppointments);
         });
       } else {
         setCurrentUser(null);

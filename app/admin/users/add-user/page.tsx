@@ -74,6 +74,9 @@ export function AddUserForm() {
       lastName: "",
       email: "",
       password: "",
+      studentNumber: "",
+      college: "",
+      degreeProgram: "",
     },
   });
 

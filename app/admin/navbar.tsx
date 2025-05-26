@@ -2,9 +2,9 @@
 import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { usePathname } from "next/navigation";
-import { auth, db } from "../firebase-config"; // Firebase auth and Firestore db
-import { onAuthStateChanged } from "firebase/auth"; // Firebase auth state listener
-import { doc, getDoc } from "firebase/firestore"; // Firestore methods to fetch user data
+import { auth, db } from "../firebase-config";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 
 const routeTitles: { [key: string]: string } = {
   "/admin/dashboard": "Dashboard",
