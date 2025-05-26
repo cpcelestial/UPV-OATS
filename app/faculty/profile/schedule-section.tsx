@@ -5,7 +5,7 @@ import { fetchSchedule } from "@/components/services/firebaseService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, MapPin } from "lucide-react";
-import type { DaySchedule } from "../../data";
+import type { DaySchedule } from "@/app/data";
 
 interface ScheduleSectionProps {
   userId: string;

@@ -150,7 +150,7 @@ export function ScheduleDialog({
       setClasses(existingClasses);
       setInvalidClasses([]);
     }
-  }, [open]);
+  }, [open, schedule]);
 
   const handleDayToggle = (
     classIndex: number,
@@ -237,7 +237,7 @@ export function ScheduleDialog({
       alert("Classes cannot overlap on the same day.");
       return;
     }
-  
+
     // ...save logic (call updateSchedule with userId and newSchedule)...
     // Build new schedule in DaySchedule[] format
     const newSchedule: DaySchedule[] = DAYS.map((day) => ({
