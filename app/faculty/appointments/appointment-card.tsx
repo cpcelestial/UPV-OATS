@@ -5,32 +5,6 @@ import { Button } from "@/components/ui/button";
 import { CalendarIcon, MapPinIcon, VideoIcon } from "lucide-react";
 import { format } from "date-fns";
 import type { Appointment } from "../../data";
-import { getFirestore, doc, updateDoc } from "firebase/firestore";
-import { db } from "@/app/firebase-config";
-
-export const handleDecline = async (appointmentId: string) => {
-  try {
-    const appointmentRef = doc(db, "appointments", appointmentId);
-    await updateDoc(appointmentRef, {
-      status: "cancelled",
-    });
-    console.log(`Appointment ${appointmentId} declined successfully`);
-  } catch (error) {
-    console.error("Error declining appointment:", error);
-  }
-};
-
-export const handleAccept = async (appointmentId: string) => {
-  try {
-    const appointmentRef = doc(db, "appointments", appointmentId);
-    await updateDoc(appointmentRef, {
-      status: "approved",
-    });
-    console.log(`Appointment ${appointmentId} declined successfully`);
-  } catch (error) {
-    console.error("Error declining appointment:", error);
-  }
-};
 
 interface AppointmentCardProps {
   appointment: Appointment;

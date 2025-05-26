@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { format, addDays, isBefore, setHours, setMinutes } from "date-fns";
+import { format, addDays, isBefore } from "date-fns";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -49,115 +49,121 @@ export function AvailabilityTable({
     return slots;
   };
 
-  // Generate initial schedule
-  const generateSchedule = () => {
-    const schedule: { [key: string]: TimeSlot[] } = {};
+  // Generate dates for the schedule
+  const generateDates = () => {
+    const dates = [];
     const days = dailyView ? 1 : 7;
-
     for (let i = 0; i < days; i++) {
       const date = addDays(startDate, i);
-      const dateKey = format(date, "yyyy-MM-dd");
-      schedule[dateKey] = generateTimeSlots();
-
-      // Set some defaults - weekdays 9-5 are available
-      if (date.getDay() !== 0 && date.getDay() !== 6) {
-        // Not weekend
-        schedule[dateKey].forEach((slot) => {
-          const [hour] = slot.time.split(":").map(Number);
-          if (hour >= 9 && hour < 17) {
-            slot.available = true;
-          }
-        });
-      }
+      dates.push(format(date, "yyyy-MM-dd"));
     }
-
-    return schedule;
+    return dates;
   };
 
   const [schedule, setSchedule] = useState<{ [key: string]: TimeSlot[] }>({});
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch data from Firebase with the structure: timeSlots/{userId}/{dateField: Array<TimeSlot>}
+  // Initialize schedule with default business hours for new dates
+  const initializeScheduleForDate = (date: string): TimeSlot[] => {
+    const slots = generateTimeSlots();
+    const dayOfWeek = new Date(date).getDay();
+    
+    // Set default business hours for weekdays (Monday = 1, Sunday = 0)
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+      slots.forEach((slot) => {
+        const [hour] = slot.time.split(":").map(Number);
+        if (hour >= 9 && hour < 17) {
+          slot.available = true;
+        }
+      });
+    }
+    
+    return slots;
+  };
+
+  // Fetch data from Firebase
   useEffect(() => {
     const auth = getAuth();
     const user = auth.currentUser;
-  
-    if (!user) return;
-  
+
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
+
     const fetchData = async () => {
       try {
-        // Generate dates to check
-        const dates = [];
-        const days = dailyView ? 1 : 7;
-        for (let i = 0; i < days; i++) {
-          const date = addDays(startDate, i);
-          dates.push(format(date, "yyyy-MM-dd"));
-        }
-        
-        // Initialize a new schedule with default time slots
-        const newSchedule: { [key: string]: TimeSlot[] } = {};
-        dates.forEach(date => {
-          newSchedule[date] = generateTimeSlots();
-        });
-        
-        // Fetch the user's document
+        setIsLoading(true);
+        const dates = generateDates();
         const docRef = doc(db, "timeSlots", user.uid);
         const docSnap = await getDoc(docRef);
-        
+
+        const newSchedule: { [key: string]: TimeSlot[] } = {};
         const newBookings: Booking[] = [];
-        
-        if (docSnap.exists()) {
-          const userData = docSnap.data();
-          
-          // Process each date that exists in the document
-          dates.forEach(date => {
-            if (userData[date]) {
-              // Replace default slots with the ones from Firebase
-              const dateSlots = userData[date];
+
+        dates.forEach((date) => {
+          // Always start with a complete set of time slots
+          let dateSlots = generateTimeSlots();
+
+          if (docSnap.exists()) {
+            const userData = docSnap.data();
+            
+            if (userData[date] && Array.isArray(userData[date])) {
+              // Merge Firebase data with complete time slot structure
+              const firebaseSlots = userData[date] as TimeSlot[];
               
-              // Convert Firebase array to our time slots format
-              if (Array.isArray(dateSlots)) {
-                // Merge with the default slots to ensure we have all time slots
-                dateSlots.forEach((slot, index) => {
-                  // Find corresponding default slot
-                  const slotIndex = newSchedule[date].findIndex(s => s.time === slot.time);
-                  
-                  if (slotIndex >= 0) {
-                    // Update existing slot
-                    newSchedule[date][slotIndex] = {
-                      time: slot.time,
-                      available: slot.available,
-                      booked: slot.booked
-                    };
-                    
-                    // Track bookings
-                    if (slot.booked) {
-                      newBookings.push({ date, time: slot.time });
-                    }
+              dateSlots = dateSlots.map((defaultSlot) => {
+                const firebaseSlot = firebaseSlots.find(
+                  (s) => s.time === defaultSlot.time
+                );
+                
+                if (firebaseSlot) {
+                  // Preserve Firebase data and track bookings
+                  if (firebaseSlot.booked) {
+                    newBookings.push({ date, time: firebaseSlot.time });
                   }
-                });
-              }
+                  return {
+                    time: firebaseSlot.time,
+                    available: firebaseSlot.available || false,
+                    booked: firebaseSlot.booked || false,
+                  };
+                }
+                
+                // Use default for missing slots
+                return { ...defaultSlot };
+              });
+            } else {
+              // Date doesn't exist in Firebase - apply default business hours
+              dateSlots = initializeScheduleForDate(date);
             }
-          });
-        }
-        
+          } else {
+            // No Firebase document exists - apply default business hours
+            dateSlots = initializeScheduleForDate(date);
+          }
+
+          newSchedule[date] = dateSlots;
+        });
+
+        console.log("Loaded schedule:", newSchedule); // Debug log
+        console.log("Generated dates:", dates); // Debug log
         setSchedule(newSchedule);
         setBookings(newBookings);
       } catch (err) {
         console.error("Error fetching data:", err);
-        // If error, fall back to generated schedule
-        setSchedule(generateSchedule());
+        // Initialize with defaults on error
+        const dates = generateDates();
+        const fallbackSchedule: { [key: string]: TimeSlot[] } = {};
+        dates.forEach((date) => {
+          fallbackSchedule[date] = initializeScheduleForDate(date);
+        });
+        setSchedule(fallbackSchedule);
+      } finally {
+        setIsLoading(false);
       }
     };
-  
-    fetchData();
-  }, [startDate, dailyView]);
 
-  // Initialize with generated schedule if no schedule is set
-  useEffect(() => {
-    if (Object.keys(schedule).length === 0) {
-      setSchedule(generateSchedule());
-    }
+    fetchData();
   }, [startDate, dailyView]);
 
   const handleToggleAvailability = async (
@@ -166,101 +172,92 @@ export function AvailabilityTable({
     checked?: boolean | "indeterminate"
   ) => {
     if (!editMode) return;
-  
+
     const auth = getAuth();
     const user = auth.currentUser;
-    if (!user) return;
-  
-    // Update local state
+
+    if (!user) {
+      console.error("No authenticated user found");
+      return;
+    }
+
+    const currentSlot = schedule[date]?.find((s) => s.time === time);
+    const newAvailability = checked === true ? true : 
+                           checked === false ? false : 
+                           !(currentSlot?.available || false);
+
+    // Update local state immediately for responsive UI
     setSchedule((prev) => {
       const updated = { ...prev };
-      const slot = updated[date]?.find((s) => s.time === time);
-      if (slot) {
-        slot.available = checked === true ? true : checked === false ? false : !slot.available;
+      if (updated[date]) {
+        updated[date] = updated[date].map(slot =>
+          slot.time === time 
+            ? { ...slot, available: newAvailability }
+            : { ...slot }
+        );
       }
       return updated;
     });
-  
+
     try {
       const docRef = doc(db, "timeSlots", user.uid);
-      const docSnap = await getDoc(docRef);
       
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        let existingDateSlots = data[date] || [];
-        
-        // Find if this time slot already exists
-        const existingSlotIndex = existingDateSlots.findIndex(
-          (slot: TimeSlot) => slot.time === time
-        );
-        
-        if (existingSlotIndex >= 0) {
-          // Update the existing time slot's availability
-          existingDateSlots[existingSlotIndex] = {
-            ...existingDateSlots[existingSlotIndex],
-            available: checked === true ? true : checked === false ? false : !existingDateSlots[existingSlotIndex].available
-          };
-        } else {
-          // Add a new time slot
-          existingDateSlots.push({
-            time,
-            available: checked === true ? true : checked === false ? false : true,
-            booked: false
-          });
-        }
-        
-        // Sort the array by time
-        existingDateSlots.sort((a: TimeSlot, b: TimeSlot) => 
-          a.time.localeCompare(b.time)
-        );
-        
-        // Update the document with the modified slots array
-        await updateDoc(docRef, {
-          [date]: existingDateSlots
-        });
-      } else {
-        // Create a new document for this user
-        const newSlot = {
-          time,
-          available: checked === true ? true : checked === false ? false : true,
-          booked: false
-        };
-        
-        await setDoc(docRef, {
-          [date]: [newSlot]
-        });
-      }
+      // Use current local state to build the complete slot array
+      const currentDateSlots = schedule[date] || generateTimeSlots();
+      const updatedSlots = currentDateSlots.map(slot => 
+        slot.time === time 
+          ? { ...slot, available: newAvailability }
+          : { ...slot }
+      );
+
+      console.log("Saving to Firebase:", { [date]: updatedSlots }); // Debug log
+
+      // Save complete slot array to Firebase
+      await setDoc(
+        docRef,
+        { [date]: updatedSlots },
+        { merge: true }
+      );
+      
+      console.log("Successfully saved to Firebase"); // Debug log
     } catch (error) {
       console.error("Failed to update availability:", error);
+      
+      // Revert local state on error
+      setSchedule((prev) => {
+        const updated = { ...prev };
+        if (updated[date]) {
+          updated[date] = updated[date].map(slot =>
+            slot.time === time 
+              ? { ...slot, available: !newAvailability }
+              : { ...slot }
+          );
+        }
+        return updated;
+      });
     }
   };
 
-  // Check if a slot is in the past
   const isSlotInPast = (date: string, time: string) => {
     const [hour, minute] = time.split(":").map(Number);
-    const slotDate = new Date(date);
-    setHours(slotDate, hour);
-    setMinutes(slotDate, minute);
-
+    const [year, month, day] = date.split("-").map(Number);
+    const slotDate = new Date(year, month - 1, day, hour, minute);
     return isBefore(slotDate, new Date());
   };
 
-  // Check if a slot is booked
   const isSlotBooked = (date: string, time: string) => {
     return bookings.some(
       (booking) => booking.date === date && booking.time === time
     );
   };
 
-  // Determine slot status text
   const getSlotStatus = (date: string, time: string, available: boolean) => {
-    if (isSlotInPast(date, time)) return "CLOSED";
     if (isSlotBooked(date, time)) return "BOOKED";
+    if (isSlotInPast(date, time) && available) return "CLOSED";
     if (available) return "OPEN";
     return "";
   };
 
-  // Determine slot color
   const getSlotColor = (date: string, time: string, available: boolean) => {
     if (isSlotInPast(date, time))
       return "bg-red-100 border-red-200 text-red-700";
@@ -269,6 +266,10 @@ export function AvailabilityTable({
     if (available) return "bg-green-100 border-green-200 text-green-700";
     return "";
   };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="border rounded-md overflow-auto">
@@ -295,7 +296,6 @@ export function AvailabilityTable({
               <td className="border-t px-2 py-2 text-center bg-muted/50">
                 {timeSlot.time}
               </td>
-
               {Object.entries(schedule).map(([date, slots]) => {
                 const slot = slots.find((s) => s.time === timeSlot.time);
                 if (!slot) return <td key={date} className="px-2 py-1"></td>;
@@ -311,26 +311,38 @@ export function AvailabilityTable({
                     {editMode ? (
                       <Checkbox
                         checked={slot.available}
-                        disabled={isPast}
+                        disabled={isPast || isBooked}
                         onCheckedChange={(checked) =>
                           handleToggleAvailability(date, timeSlot.time, checked)
                         }
                         className="mx-auto"
                       />
                     ) : (
-                      slot.available  && (
-                        <div className="flex justify-center">
-                          <Badge
-                            variant={"outline"}
-                            className={cn(
-                              "px-4 py-1 font-semibold justify-center w-24",
-                              getSlotColor(date, timeSlot.time, slot.available)
-                            )}
-                          >
-                            {getSlotStatus(date, timeSlot.time, slot.available)}
-                          </Badge>
-                        </div>
-                      )
+                      (() => {
+                        const status = getSlotStatus(date, timeSlot.time, slot.available);
+                        if (status) {
+                          return (
+                            <div className="flex justify-center">
+                              <Badge
+                                variant={"outline"}
+                                className={cn(
+                                  "px-4 py-1 font-semibold justify-center w-24",
+                                  getSlotColor(date, timeSlot.time, slot.available)
+                                )}
+                              >
+                                {status}
+                              </Badge>
+                            </div>
+                          );
+                        }
+                        return (
+                          <div className="flex justify-center">
+                            <div className="w-24 h-6 flex items-center justify-center text-xs text-gray-400">
+                              -
+                            </div>
+                          </div>
+                        );
+                      })()
                     )}
                   </td>
                 );
