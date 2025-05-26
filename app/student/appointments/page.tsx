@@ -40,23 +40,22 @@ export default function Page() {
   const [loading, setLoading] = React.useState(true);
   const db = getFirestore();
 
-    const handleDecline = async (appointmentId: string) => {
-      try {
-        const appointmentRef = doc(db, "appointments", appointmentId);
-        await updateDoc(appointmentRef, {
-          status: "cancelled",
-        });
-        console.log(`Appointment ${appointmentId} declined successfully`);
-      } catch (error) {
-        console.error("Error declining appointment:", error);
-      }
-    };
-  
-    const handleReschedule = (id: string) => {
-      alert(`Reschedule appointment ${id}`);
-      // In a real app, navigate to reschedule page or open a modal
-    };
-  
+  const handleDecline = async (appointmentId: string) => {
+    try {
+      const appointmentRef = doc(db, "appointments", appointmentId);
+      await updateDoc(appointmentRef, {
+        status: "cancelled",
+      });
+      console.log(`Appointment ${appointmentId} declined successfully`);
+    } catch (error) {
+      console.error("Error declining appointment:", error);
+    }
+  };
+
+  const handleReschedule = (id: string) => {
+    alert(`Reschedule appointment ${id}`);
+    // In a real app, navigate to reschedule page or open a modal
+  };
 
   React.useEffect(() => {
     let unsubscribeSnapshot: Unsubscribe | null = null;
@@ -89,7 +88,12 @@ export default function Page() {
             const appointment: Appointment = {
               id: doc.id,
               ...data,
-              date: data.date instanceof Date ? data.date : data.date.toDate(),
+              date:
+                data.date && typeof data.date.toDate === "function"
+                  ? data.date.toDate()
+                  : typeof data.date === "string"
+                  ? new Date(data.date)
+                  : data.date,
               purpose: data.purpose,
               class: data.class,
               details: data.details,
@@ -102,11 +106,17 @@ export default function Page() {
             };
 
             switch (appointment.status) {
-              case "approved":
-                if (appointment.date >= today) {
-                  // Only include upcoming appointments that are today or in the future
-                  upcoming.push(appointment);
+              case "approved": {
+                const apptDate =
+                  appointment.date instanceof Date
+                    ? appointment.date
+                    : new Date(appointment.date);
+
+                if (apptDate >= today) {
+                  upcoming.push({ ...appointment, date: apptDate });
                 }
+                break;
+              }
               case "pending":
                 pending.push(appointment);
                 break;

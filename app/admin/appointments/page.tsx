@@ -54,7 +54,10 @@ export default function Page() {
             const appointment: Appointment = {
               id: doc.id,
               ...data,
-              date: data.date instanceof Date ? data.date : data.date.toDate(),
+              date:
+                data.date && typeof data.date.toDate === "function"
+                  ? data.date.toDate()
+                  : data.date,
               purpose: data.purpose,
               class: data.class,
               details: data.details,

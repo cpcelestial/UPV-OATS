@@ -1,20 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { CalendarIcon, MapPinIcon, VideoIcon } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { format } from "date-fns";
+import { DialogTitle } from "@/components/ui/dialog";
 import type { Appointment } from "../../data";
 
 interface AppointmentCardProps {
   appointment: Appointment;
-  onReschedule?: (id: string) => void;
   onDecline?: (id: string) => void;
 }
 
 export function AppointmentCard({
   appointment,
-  onReschedule,
   onDecline,
 }: AppointmentCardProps) {
   const facultyInitials = appointment.facultyName
@@ -30,9 +31,45 @@ export function AppointmentCard({
     return last && /^\d+$/.test(last) ? last : null;
   };
 
+  // Reschedule dialog state
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
+  const [newDate, setNewDate] = useState(
+    typeof appointment.date === "string"
+      ? appointment.date
+      : format(appointment.date, "yyyy-MM-dd")
+  );
+  const [newTime, setNewTime] = useState(appointment.timeSlot ?? "");
+  const [loading, setLoading] = useState(false);
+
+  const handleReschedule = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `/api/appointments/reschedule/${appointment.id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ date: newDate, time: newTime }),
+        }
+      );
+      const data = await res.json();
+      if (data.success) {
+        setRescheduleOpen(false);
+        // Optionally, trigger a refetch or update parent state here
+      } else {
+        alert("Failed to reschedule: " + data.error);
+      }
+    } catch (err) {
+      alert("Failed to reschedule.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="rounded-lg border bg-white p-6">
       <div className="space-y-6">
+        {/* ...existing content... */}
         <div className="flex justify-between items-start">
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -126,24 +163,52 @@ export function AppointmentCard({
           </div>
         )}
 
-        {(onReschedule || onDecline) && (
-          <div className="flex justify-end gap-3 mt-6 pt-4">
-            {onDecline && (
-              <Button
-                variant="destructive"
-                onClick={() => onDecline(appointment.id)}
-              >
-                Cancel
-              </Button>
-            )}
-            {onReschedule && (
-              <Button onClick={() => onReschedule(appointment.id)}>
-                Reschedule
-              </Button>
-            )}
-          </div>
-        )}
+        <div className="flex justify-end gap-3 mt-6 pt-4">
+          {onDecline && (
+            <Button
+              variant="destructive"
+              onClick={() => onDecline(appointment.id)}
+            >
+              Cancel
+            </Button>
+          )}
+          <Button onClick={() => setRescheduleOpen(true)}>Reschedule</Button>
+        </div>
       </div>
+
+      {/* Reschedule Dialog */}
+      <Dialog open={rescheduleOpen} onOpenChange={setRescheduleOpen}>
+        <DialogContent>
+          <DialogTitle>Reschedule Appointment</DialogTitle>
+          <div className="flex flex-col gap-4">
+            <label>
+              New Date:
+              <input
+                type="date"
+                className="border rounded px-2 py-1 w-full"
+                value={newDate}
+                onChange={(e) => setNewDate(e.target.value)}
+              />
+            </label>
+            <label>
+              New Time:
+              <input
+                type="time"
+                className="border rounded px-2 py-1 w-full"
+                value={newTime}
+                onChange={(e) => setNewTime(e.target.value)}
+              />
+            </label>
+            <Button
+              onClick={handleReschedule}
+              disabled={loading}
+              className="mt-2"
+            >
+              {loading ? "Rescheduling..." : "Confirm"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
