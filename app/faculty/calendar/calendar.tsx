@@ -77,7 +77,7 @@ export function Calendar() {
         const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
           const fetchedAppointments: Appointment[] = snapshot.docs.map(
             (doc) =>
-              ({  
+              ({    
                 id: doc.id,
                 ...doc.data(),
                 date:
