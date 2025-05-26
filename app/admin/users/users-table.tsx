@@ -42,7 +42,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
-// Define the User interface
 interface User {
   id?: string;
   firstName: string;

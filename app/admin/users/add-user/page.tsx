@@ -303,17 +303,17 @@ export function AddUserForm() {
                             <SelectValue placeholder="Select college" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="CAS">
-                              College of Arts and Sciences
+                            <SelectItem value="College of Arts and Sciences">
+                              CAS
                             </SelectItem>
-                            <SelectItem value="CFOS">
-                              College of Fisheries and Ocean Sciences
+                            <SelectItem value="College of Fisheries and Ocean Sciences">
+                              CFOS
                             </SelectItem>
-                            <SelectItem value="CM">
-                              College of Management
+                            <SelectItem value="College of Management">
+                              CM
                             </SelectItem>
-                            <SelectItem value="SOTECH">
-                              School of Technology
+                            <SelectItem value="School of Technology">
+                              SOTECH
                             </SelectItem>
                           </SelectContent>
                         </Select>

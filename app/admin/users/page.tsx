@@ -27,13 +27,11 @@ export default function UsersPage() {
       const facultySnap = await getDocs(collection(db, "faculty"));
 
       const students = studentsSnap.docs.map((doc) => ({
-        id: doc.id,
         ...doc.data(),
         role: "Student",
       }));
 
       const faculty = facultySnap.docs.map((doc) => ({
-        id: doc.id,
         ...doc.data(),
         role: "Faculty",
       }));
