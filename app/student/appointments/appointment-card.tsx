@@ -4,9 +4,7 @@ import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { CalendarIcon, MapPinIcon, VideoIcon } from "lucide-react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { format } from "date-fns";
-import { DialogTitle } from "@/components/ui/dialog";
 import type { Appointment, Faculty } from "@/app/data";
 import { db } from "@/app/firebase-config";
 import { collection, getDocs, query, where } from "firebase/firestore";
@@ -28,16 +26,7 @@ export function AppointmentCard({
     const last = parts.pop();
     return last && /^\d+$/.test(last) ? last : null;
   };
-
   const [faculty, setFaculty] = useState<Faculty | null>(null);
-  const [rescheduleOpen, setRescheduleOpen] = useState(false);
-  const [newDate, setNewDate] = useState(
-    typeof appointment.date === "string"
-      ? appointment.date
-      : format(appointment.date, "yyyy-MM-dd")
-  );
-  const [newTime, setNewTime] = useState(appointment.timeSlot ?? "");
-  const [loading, setLoading] = useState(false);
 
   const getFacultyInitials = (): string => {
     if (faculty?.firstName && faculty?.lastName) {
@@ -52,31 +41,6 @@ export function AppointmentCard({
       )}`.toUpperCase();
     }
     return appointment.facultyName.substring(0, 2).toUpperCase();
-  };
-
-  const handleReschedule = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(
-        `/api/appointments/reschedule/${appointment.id}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ date: newDate, time: newTime }),
-        }
-      );
-      const data = await res.json();
-      if (data.success) {
-        setRescheduleOpen(false);
-        // Optionally, trigger a refetch or update parent state here
-      } else {
-        alert("Failed to reschedule: " + data.error);
-      }
-    } catch (error) {
-      alert("Failed to reschedule.");
-    } finally {
-      setLoading(false);
-    }
   };
 
   useEffect(() => {
@@ -223,43 +187,13 @@ export function AppointmentCard({
               Cancel
             </Button>
           )}
-          <Button onClick={() => setRescheduleOpen(true)}>Reschedule</Button>
+          {onReschedule && (
+            <Button onClick={() => onReschedule(appointment.id)}>
+              Reschedule
+            </Button>
+          )}
         </div>
       </div>
-
-      {/* Reschedule Dialog */}
-      <Dialog open={rescheduleOpen} onOpenChange={setRescheduleOpen}>
-        <DialogContent>
-          <DialogTitle>Reschedule Appointment</DialogTitle>
-          <div className="flex flex-col gap-4">
-            <label>
-              New Date:
-              <input
-                type="date"
-                className="border rounded px-2 py-1 w-full"
-                value={newDate}
-                onChange={(e) => setNewDate(e.target.value)}
-              />
-            </label>
-            <label>
-              New Time:
-              <input
-                type="time"
-                className="border rounded px-2 py-1 w-full"
-                value={newTime}
-                onChange={(e) => setNewTime(e.target.value)}
-              />
-            </label>
-            <Button
-              onClick={handleReschedule}
-              disabled={loading}
-              className="mt-2"
-            >
-              {loading ? "Rescheduling..." : "Confirm"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
