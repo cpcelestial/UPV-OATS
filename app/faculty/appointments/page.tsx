@@ -16,6 +16,8 @@ import {
   Unsubscribe,
   or,
   and,
+  doc,
+  updateDoc,
 } from "firebase/firestore";
 import { getAuth, onAuthStateChanged, User } from "firebase/auth";
 
@@ -119,14 +121,28 @@ export default function Page() {
     // In a real app, navigate to reschedule page or open a modal
   };
 
-  const handleDecline = (id: string) => {
-    alert(`Decline appointment ${id}`);
-    // In a real app, update the appointment status
+  const handleDecline = async (appointmentId: string) => {
+    try {
+      const appointmentRef = doc(db, "appointments", appointmentId);
+      await updateDoc(appointmentRef, {
+        status: "cancelled",
+      });
+      console.log(`Appointment ${appointmentId} declined successfully`);
+    } catch (error) {
+      console.error("Error declining appointment:", error);
+    }
   };
 
-  const handleAccept = (id: string) => {
-    alert(`Accept appointment ${id}`);
-    // In a real app, update the appointment status
+  const handleAccept = async (appointmentId: string) => {
+    try {
+      const appointmentRef = doc(db, "appointments", appointmentId);
+      await updateDoc(appointmentRef, {
+        status: "approved",
+      });
+      console.log(`Appointment ${appointmentId} declined successfully`);
+    } catch (error) {
+      console.error("Error declining appointment:", error);
+    }
   };
 
   return (

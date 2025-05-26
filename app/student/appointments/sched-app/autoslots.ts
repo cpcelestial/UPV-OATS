@@ -1,7 +1,6 @@
 import { collection, doc, setDoc } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
-import { db } from "@/app/firebase-config"; // Adjust the import path as necessary
-import { format, addDays } from "date-fns";
+import { db } from "@/app/firebase-config";
+import { format } from "date-fns";
 
 type TimeSlot = {
   time: string;
@@ -11,12 +10,19 @@ type TimeSlot = {
 
 const generateTimeSlots = (): TimeSlot[] => {
   const slots: TimeSlot[] = [];
-  for (let hour = 9; hour < 21; hour++) {
-    for (let min = 0; min < 60; min += 30) {
+  for (let hour = 7; hour <= 17; hour++) {
+    const hourFormatted = hour % 12 === 0 ? 12 : hour % 12;
+    const period = hour < 12 ? "AM" : "PM";
+    if (hour !== 17) {
       slots.push({
-        time: `${hour.toString().padStart(2, "0")}:${min
-          .toString()
-          .padStart(2, "0")}`,
+        time: `${hourFormatted}:00 ${period} - ${hourFormatted}:30 ${period}`,
+        available: false,
+        booked: false,
+      });
+      const nextHour = (hour + 1) % 12 === 0 ? 12 : (hour + 1) % 12;
+      const nextPeriod = hour + 1 < 12 ? "AM" : "PM";
+      slots.push({
+        time: `${hourFormatted}:30 ${period} - ${nextHour}:00 ${nextPeriod}`,
         available: false,
         booked: false,
       });
@@ -25,51 +31,40 @@ const generateTimeSlots = (): TimeSlot[] => {
   return slots;
 };
 
-const generateSchedule = (
-  startDate: Date,
-  dailyView: boolean
-): { [date: string]: TimeSlot[] } => {
+const generateSchedule = (date: Date): { [date: string]: TimeSlot[] } => {
   const schedule: { [key: string]: TimeSlot[] } = {};
-  const days = dailyView ? 1 : 7;
+  const dateKey = format(date, "yyyy-MM-dd");
+  const slots = generateTimeSlots();
 
-  for (let i = 0; i < days; i++) {
-    const date = addDays(startDate, i);
-    const dateKey = format(date, "yyyy-MM-dd");
-    const slots = generateTimeSlots();
-
-    // Weekday 9-5 = available
-    if (date.getDay() !== 0 && date.getDay() !== 6) {
-      slots.forEach((slot) => {
-        const [hour] = slot.time.split(":").map(Number);
-        if (hour >= 9 && hour < 17) {
-          slot.available = true;
-        }
-      });
-    }
-
-    schedule[dateKey] = slots;
+  // Weekday 7 AM - 5 PM = available
+  if (date.getDay() !== 0 && date.getDay() !== 6) {
+    slots.forEach((slot) => {
+      const [startHour] = slot.time.split(":").map((part) => parseInt(part));
+      const isPM = slot.time.includes("PM");
+      const hour24 = isPM && startHour !== 12 ? startHour + 12 : startHour;
+      if (hour24 >= 7 && hour24 < 17) {
+        slot.available = true;
+      }
+    });
   }
 
+  schedule[dateKey] = slots;
   return schedule;
 };
 
-export const saveScheduleForUser = async (startDate: Date, dailyView: boolean): Promise<void> => {
-    const auth = getAuth();
-    const user = auth.currentUser;
-  
-    if (!user) {
-      console.error("No authenticated user.");
-      return;
-    }
-  
-    const schedule = generateSchedule(startDate, dailyView);
-  
-    try {
-      const userDocRef = doc(collection(db, "timeSlots"), user.uid);
-      await setDoc(userDocRef, schedule, { merge: true });
-      console.log("Schedule saved to Firestore for user:", user.uid);
-    } catch (error) {
-      console.error("Error saving schedule:", error);
-    }
-  };
-  
+export const saveScheduleForUser = async (date: Date, facultyId: string): Promise<void> => {
+  if (!facultyId) {
+    console.error("No faculty ID provided.");
+    return;
+  }
+
+  const schedule = generateSchedule(date);
+
+  try {
+    const userDocRef = doc(collection(db, "timeSlots"), facultyId);
+    await setDoc(userDocRef, schedule, { merge: true });
+    console.log("Schedule saved to Firestore for faculty:", facultyId);
+  } catch (error) {
+    console.error("Error saving schedule:", error);
+  }
+};

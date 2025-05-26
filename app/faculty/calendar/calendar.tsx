@@ -65,7 +65,7 @@ export function Calendar() {
           appointmentsRef,
           or(
             and(
-              where("userId", "==", user.uid),
+              where("facultyId  ", "==", user.uid),
               where("status", "==", "approved")
             ),
             and(
@@ -77,7 +77,7 @@ export function Calendar() {
         const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
           const fetchedAppointments: Appointment[] = snapshot.docs.map(
             (doc) =>
-              ({
+              ({  
                 id: doc.id,
                 ...doc.data(),
                 date:
@@ -92,6 +92,7 @@ export function Calendar() {
         setCurrentUser(null);
         setAppointments([]);
       }
+      console.log(appointments)
     });
 
     return () => unsubscribe();

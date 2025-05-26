@@ -13,7 +13,7 @@ import {
   query,
   where,
 } from "firebase/firestore"; // Firestore methods to fetch user data // Firestore methods to fetch user data
-import { saveScheduleForUser } from "@/app/faculty/appointments/sched-avail/autoslots"; // Function to save time slots for user
+// import { saveScheduleForUser } from "@/app/faculty/appointments/sched-avail/autoslots"; // Function to save time slots for user
 import { getDate, isToday } from "date-fns";
 
 
@@ -39,43 +39,43 @@ export default function AppNavbar() {
     .join("")
     .toUpperCase();
 
-    useEffect(() => {
+  //   useEffect(() => {
 
-      const unsubscribe = onAuthStateChanged(auth, async (user) => {
-        const today = new Date();
-        saveScheduleForUser( today, false); // Call the function to save time slots for user
-        if (user) {
-          try {
-            // Fetch user document from Firestore
-            const userDocRef = doc(db, "Users", user.uid);
-            const userDocSnap = await getDoc(userDocRef);
+  //     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+  //       const today = new Date();
+  //       saveScheduleForUser( today, false); // Call the function to save time slots for user
+  //       if (user) {
+  //         try {
+  //           // Fetch user document from Firestore
+  //           const userDocRef = doc(db, "Users", user.uid);
+  //           const userDocSnap = await getDoc(userDocRef);
   
-            if (userDocSnap.exists()) {
-              const facultyDocRef = collection(db, "faculty");
-              const facultyQuery = query(
-                facultyDocRef,
-                where("uid", "==", user.uid)
-              );
+  //           if (userDocSnap.exists()) {
+  //             const facultyDocRef = collection(db, "faculty");
+  //             const facultyQuery = query(
+  //               facultyDocRef,
+  //               where("uid", "==", user.uid)
+  //             );
 
-            const unsubscribefaculty = onSnapshot(facultyQuery, (snapshot) => {
-              const facultyData = snapshot.docs[0]?.data();
-              setUserName(facultyData?.firstName || "User");
-            });
-          } else {
-            // Fallback to email or display name if no Firestore doc
-            setUserName(
-              user.displayName || user.email?.split("@")[0] || "User"
-            );
-          }
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-          setUserName("User");
-        }
-      }
-    });
-    // Cleanup subscription on unmount
-    return () => unsubscribe();
-  }, []);
+  //           const unsubscribefaculty = onSnapshot(facultyQuery, (snapshot) => {
+  //             const facultyData = snapshot.docs[0]?.data();
+  //             setUserName(facultyData?.firstName || "User");
+  //           });
+  //         } else {
+  //           // Fallback to email or display name if no Firestore doc
+  //           setUserName(
+  //             user.displayName || user.email?.split("@")[0] || "User"
+  //           );
+  //         }
+  //       } catch (error) {
+  //         console.error("Error fetching user data:", error);
+  //         setUserName("User");
+  //       }
+  //     }
+  //   });
+  //   // Cleanup subscription on unmount
+  //   return () => unsubscribe();
+  // }, []);
 
   return (
     <header className="border-b">
