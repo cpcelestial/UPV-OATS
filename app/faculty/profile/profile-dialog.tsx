@@ -144,7 +144,7 @@ export function ProfileDialog({
               <Label htmlFor="firstName">First Name</Label>
               <Input
                 id="firstName"
-                value={editedProfile.firstName}
+                value={editedProfile.firstName ?? ""}
                 onChange={(e) =>
                   setEditedProfile((prev) => ({
                     ...prev,
@@ -157,7 +157,7 @@ export function ProfileDialog({
               <Label htmlFor="lastName">Last Name</Label>
               <Input
                 id="lastName"
-                value={editedProfile.lastName}
+                value={editedProfile.lastName ?? ""}
                 onChange={(e) =>
                   setEditedProfile((prev) => ({
                     ...prev,

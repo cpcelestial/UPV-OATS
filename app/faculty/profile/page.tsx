@@ -60,11 +60,13 @@ export default function Page() {
         const profileSnapshot = await getDoc(profileDocRef);
 
         if (profileSnapshot.exists()) {
-          setProfile(profileSnapshot.data() as Faculty);
+          setProfile({
+            id: profileSnapshot.id,
+            ...profileSnapshot.data(),
+          } as Faculty);
         } else {
+          console.error("Profile document does not exist for user:", userId);
           setProfile(null);
-          setLoading(false);
-          return;
         }
       } catch (error) {
         setProfile(null);

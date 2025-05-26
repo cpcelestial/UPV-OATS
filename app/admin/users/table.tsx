@@ -67,10 +67,14 @@ export function UsersTable({ users: propsUsers }: UsersTableProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
-  const deleteUser = (userId: string) => {
+  const deleteUser = async (userId: string) => {
     try {
-      // Here you would typically call an API to delete the user
-      // For now, we'll just remove it from the local state
+      const res = await fetch(`/api/users/delete/${userId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+
       setUsers(users.filter((user) => user.id !== userId));
       toast.success("User deleted successfully");
       setIsDeleteDialogOpen(false);
@@ -357,14 +361,9 @@ export function UsersTable({ users: propsUsers }: UsersTableProps) {
               Are you sure you want to delete this user?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {userToDelete && (
-                <div>
-                  <p>
-                    You are about to delete {userToDelete.firstName}{" "}
-                    {userToDelete.lastName}. This action cannot be undone.
-                  </p>
-                </div>
-              )}
+              {userToDelete
+                ? `You are about to delete ${userToDelete.firstName} ${userToDelete.lastName}. This action cannot be undone.`
+                : ""}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

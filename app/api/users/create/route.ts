@@ -18,7 +18,29 @@ if (!admin.apps.length) {
 
 const auth = admin.auth();
 const db = admin.firestore();
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const { id } = params;
 
+  try {
+    // Delete from Auth
+    await auth.deleteUser(id).catch(() => {});
+    // Delete from all collections
+    await db.collection("Users").doc(id).delete();
+    await db.collection("students").doc(id).delete();
+    await db.collection("faculty").doc(id).delete();
+    await db.collection("schedules").doc(id).delete();
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: (error as Error).message },
+      { status: 500 }
+    );
+  }
+}
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

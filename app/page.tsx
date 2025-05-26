@@ -32,31 +32,35 @@ const App: React.FC = () => {
         const userDocRef = doc(db, "Users", user.uid);
         const userDoc = await getDoc(userDocRef);
 
-        if (userDoc.exists()) { 
+        if (userDoc.exists()) {
           const userData = userDoc.data();
           const role = userData?.role;
 
           if (role === "admin") {
             router.push("/admin/dashboard");
-          }
-          else if (role === "faculty") {
+          } else if (role === "faculty") {
             router.push("/faculty/dashboard");
-          }
-          else if (role === "student") {
+          } else if (role === "student") {
             router.push("/student/dashboard");
           }
         }
       })
       .catch((error) => {
-        console.error("Error:", error.message);
-        alert(`Error: ${error.message}`);
+        if (
+          error.code === "auth/invalid-credential" ||
+          error.code === "auth/user-not-found" ||
+          error.code === "auth/wrong-password"
+        ) {
+          alert("Invalid email or password. Please try again.");
+        } else {
+          alert(`Error: ${error.message}`);
+        }
       });
   };
 
   if (!isClient) {
     return null; // or a loading spinner
   }
-
 
   return (
     <div className="flex min-h-screen">
