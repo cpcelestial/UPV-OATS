@@ -1,9 +1,9 @@
 "use client";
 
-import * as React from "react";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppointmentList } from "./appointment-list";
-import type { Appointment } from "../../data";
+import { Appointment } from "@/app/data";
 
 interface AppointmentsTabsProps {
   upcomingAppointments: Appointment[];
@@ -11,8 +11,6 @@ interface AppointmentsTabsProps {
   cancelledAppointments?: Appointment[];
   rescheduleAppointments: Appointment[];
   loading: boolean;
-  onReschedule: (id: string) => void;
-  onDecline: (id: string) => void;
 }
 
 export function AppointmentsTabs({
@@ -21,10 +19,8 @@ export function AppointmentsTabs({
   cancelledAppointments,
   rescheduleAppointments,
   loading,
-  onReschedule,
-  onDecline,
 }: AppointmentsTabsProps) {
-  const [activeTab, setActiveTab] = React.useState("upcoming");
+  const [activeTab, setActiveTab] = useState("upcoming");
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
@@ -71,8 +67,6 @@ export function AppointmentsTabs({
           <AppointmentList
             appointments={upcomingAppointments}
             emptyMessage="No upcoming appointments found"
-            onReschedule={onReschedule}
-            onDecline={onDecline}
           />
         )}
       </TabsContent>
@@ -86,8 +80,6 @@ export function AppointmentsTabs({
           <AppointmentList
             appointments={pendingAppointments}
             emptyMessage="No pending appointments found"
-            onReschedule={onReschedule}
-            onDecline={onDecline}
           />
         )}
       </TabsContent>
@@ -117,7 +109,6 @@ export function AppointmentsTabs({
             <AppointmentList
               appointments={rescheduleAppointments}
               emptyMessage="No appointments for reschedule found"
-              onDecline={onDecline}
             />
           )}
         </TabsContent>

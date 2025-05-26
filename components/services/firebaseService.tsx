@@ -1,6 +1,6 @@
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
-import { app } from "./firebase-config";
-import type { DaySchedule } from "./data";
+import { app } from "../../app/firebase-config";
+import type { DaySchedule } from "../../app/data";
 
 const db = getFirestore(app);
 
@@ -20,7 +20,7 @@ export async function fetchSchedule(userId: string): Promise<DaySchedule[]> {
   if (scheduleSnapshot.exists()) {
     schedule = scheduleSnapshot.data().schedule as DaySchedule[];
   }
-  // Ensure all days are present
+
   return DAYS.map(
     (day) => schedule.find((d) => d.day === day) || { day, slots: [] }
   );

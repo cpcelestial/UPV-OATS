@@ -2,20 +2,16 @@
 
 import { useRef, useEffect, useState } from "react";
 import { AppointmentCard } from "./appointment-card";
-import type { Appointment } from "../../data";
+import type { Appointment } from "@/app/data";
 
 interface AppointmentListProps {
   appointments: Appointment[];
   emptyMessage: string;
-  onReschedule?: (id: string) => void;
-  onDecline?: (id: string) => void;
 }
 
 export function AppointmentList({
   appointments,
   emptyMessage,
-  onReschedule,
-  onDecline,
 }: AppointmentListProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hasScrollbar, setHasScrollbar] = useState(false);
@@ -51,12 +47,7 @@ export function AppointmentList({
       }`}
     >
       {appointments.map((appointment) => (
-        <AppointmentCard
-          key={appointment.id}
-          appointment={appointment}
-          onReschedule={onReschedule}
-          onDecline={onDecline}
-        />
+        <AppointmentCard key={appointment.id} appointment={appointment} />
       ))}
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import { useState, useEffect, Fragment } from "react";
 import {
   addDays,
   format,
@@ -33,8 +33,7 @@ import {
   query,
   where,
   onSnapshot,
-  and,
-  or,
+  Unsubscribe,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "../../firebase-config";
@@ -42,12 +41,12 @@ import { db, auth } from "../../firebase-config";
 type ViewType = "month" | "week" | "day";
 
 export function Calendar() {
-  const [currentDate, setCurrentDate] = React.useState<Date>(new Date());
-  const [viewType, setViewType] = React.useState<ViewType>("month");
-  const [selectedDate, setSelectedDate] = React.useState<Date | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
-  const [currentUser, setCurrentUser] = React.useState<any>(null);
-  const [appointments, setAppointments] = React.useState<Appointment[]>([]);
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const [viewType, setViewType] = useState<ViewType>("month");
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
 
   const getNumber = (str: string | null | undefined): string | null => {
     if (!str) return null;
@@ -56,25 +55,17 @@ export function Calendar() {
     return last && /^\d+$/.test(last) ? last : null;
   };
 
-  React.useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setCurrentUser(user);
+  useEffect(() => {
+    let unsubscribeSnapshot: Unsubscribe | null = null;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+      setCurrentUser(user);
+
+      if (currentUser) {
         const appointmentsRef = collection(db, "appointments");
-        const q = query(
-          appointmentsRef,
-          or(
-            and(
-              where("userId", "==", user.uid),
-              where("status", "==", "approved")
-            ),
-            and(
-              where("participants", "array-contains", user.email),
-              where("status", "==", "approved")
-            )
-          )
-        );
-        const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
+        const q = query(appointmentsRef, where("status", "==", "approved"));
+
+        unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
           const fetchedAppointments: Appointment[] = snapshot.docs.map(
             (doc) =>
               ({
@@ -94,8 +85,13 @@ export function Calendar() {
       }
     });
 
-    return () => unsubscribe();
-  }, []);
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeSnapshot) {
+        unsubscribeSnapshot();
+      }
+    };
+  }, [currentUser]);
 
   const handleDayClick = (day: Date) => {
     setSelectedDate(day);
@@ -197,6 +193,7 @@ export function Calendar() {
                     </span>
                   )}
                 </div>
+
                 <div className="mt-1 space-y-1">
                   {dayAppointments.length > 0 && (
                     <Card
@@ -253,6 +250,7 @@ export function Calendar() {
                 <div className="text-sm font-medium mb-2 p-2 border-b">
                   {format(day, "EEE - MMM d")}
                 </div>
+
                 {dayAppointments.map((appointment) => (
                   <Card
                     key={appointment.id}
@@ -276,29 +274,25 @@ export function Calendar() {
     const dayAppointments = appointments.filter((appt) =>
       isSameDay(appt.date, currentDate)
     );
-    const hours = Array.from({ length: 16 }, (_, i) => i + 6); // 6am to 9pm (6 to 21)
+    const hours = Array.from({ length: 16 }, (_, i) => i + 6);
 
     return (
       <div className="border rounded-lg overflow-hidden">
         <div className="grid grid-cols-[100px_1fr]">
           {hours.map((hour, index) => {
             const hourAppointments = dayAppointments.filter((appt) => {
-              const startTime = getStartTimeFromTimeSlot(appt.timeSlot); // e.g., "10:00 AM"
+              const startTime = getStartTimeFromTimeSlot(appt.timeSlot);
               if (!startTime) return false;
-
-              // Parse the startTime (e.g., "10:00 AM") into a Date object
-              // We need a base date for parsing; we'll use the appointment date
               const baseDate = appt.date;
               const parsedStartTime = parse(startTime, "h:mm a", baseDate);
-              const startHour = getHours(parsedStartTime); // Get the hour in 24-hour format
-
+              const startHour = getHours(parsedStartTime);
               return startHour === hour;
             });
 
             const isLast = index === hours.length - 1;
 
             return (
-              <React.Fragment key={hour}>
+              <Fragment key={hour}>
                 <div
                   className={cn(
                     "p-2 text-sm border-r border-b border-border",
@@ -306,8 +300,8 @@ export function Calendar() {
                   )}
                 >
                   {format(new Date().setHours(hour), "ha")}{" "}
-                  {/* Display hour as 12-hour format */}
                 </div>
+
                 <div
                   className={cn(
                     "p-2 min-h-[60px] relative border-b border-border",
@@ -321,7 +315,7 @@ export function Calendar() {
                     />
                   ))}
                 </div>
-              </React.Fragment>
+              </Fragment>
             );
           })}
         </div>
@@ -340,6 +334,7 @@ export function Calendar() {
             )}
           </h2>
         </div>
+
         <div className="flex items-center space-x-4">
           <Select
             value={viewType}

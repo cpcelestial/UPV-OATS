@@ -14,7 +14,7 @@ export interface MonthCalendarProps {
   appointmentDates?: Date[];
 }
 
-export default function MonthCalendar({
+export function MonthCalendar({
   className,
   onDateSelect,
   initialDate,

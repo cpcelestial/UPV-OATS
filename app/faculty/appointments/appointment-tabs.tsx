@@ -3,10 +3,15 @@
 import * as React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppointmentList } from "./appointment-list";
-import type { Appointment } from "../../data";
-import { getFirestore, doc, updateDoc, getDoc, runTransaction } from "firebase/firestore";
+import { Appointment } from "@/app/data";
+import {
+  getFirestore,
+  doc,
+  updateDoc,
+  getDoc,
+  runTransaction,
+} from "firebase/firestore";
 import { getAuth, onAuthStateChanged, User } from "firebase/auth";
-import { toast } from "sonner";
 
 interface AppointmentsTabsProps {
   upcomingAppointments: Appointment[];
@@ -39,27 +44,31 @@ export function AppointmentsTabs({
       });
     });
   };
-const extractTimeFromDate = (timestamp: { toDate: () => Date }): string => {
-  try {
-    const date = timestamp.toDate(); // Convert Firestore Timestamp to JavaScript Date
-    const startHours = date.getHours();
-    const startMinutes = date.getMinutes();
-    const endDate = new Date(date.getTime() + 30 * 60 * 1000); // Assume 30-minute slot
-    const endHours = endDate.getHours();
-    const endMinutes = endDate.getMinutes();
 
-    const formatTime = (hours: number, minutes: number) => {
-      const period = hours >= 12 ? "PM" : "AM";
-      const adjustedHours = hours % 12 || 12;
-      const formattedMinutes = minutes.toString().padStart(2, "0");
-      return `${adjustedHours}:${formattedMinutes} ${period}`;
-    };
+  const extractTimeFromDate = (timestamp: { toDate: () => Date }): string => {
+    try {
+      const date = timestamp.toDate(); // Convert Firestore Timestamp to JavaScript Date
+      const startHours = date.getHours();
+      const startMinutes = date.getMinutes();
+      const endDate = new Date(date.getTime() + 30 * 60 * 1000); // Assume 30-minute slot
+      const endHours = endDate.getHours();
+      const endMinutes = endDate.getMinutes();
 
-    return `${formatTime(startHours, startMinutes)} - ${formatTime(endHours, endMinutes)}`;
-  } catch (error) {
-    throw new Error("Invalid date format in appointment data");
-  }
-};
+      const formatTime = (hours: number, minutes: number) => {
+        const period = hours >= 12 ? "PM" : "AM";
+        const adjustedHours = hours % 12 || 12;
+        const formattedMinutes = minutes.toString().padStart(2, "0");
+        return `${adjustedHours}:${formattedMinutes} ${period}`;
+      };
+
+      return `${formatTime(startHours, startMinutes)} - ${formatTime(
+        endHours,
+        endMinutes
+      )}`;
+    } catch (error) {
+      throw new Error("Invalid date format in appointment data");
+    }
+  };
 
   // Handle declining an appointment
   const handleDecline = async (appointmentId: string) => {
@@ -75,7 +84,9 @@ const extractTimeFromDate = (timestamp: { toDate: () => Date }): string => {
         status: "cancelled",
         updatedBy: userId,
       });
-      console.log(`Appointment ${appointmentId} declined successfully by ${userId}`);
+      console.log(
+        `Appointment ${appointmentId} declined successfully by ${userId}`
+      );
     } catch (error) {
       console.error("Error declining appointment:", error);
     }
@@ -156,22 +167,33 @@ const handleAccept = async (appointmentId: string) => {
       <TabsList>
         <TabsTrigger value="upcoming" className="px-6">
           Upcoming{" "}
-          <span className="ml-2 opacity-50">[ {upcomingAppointments.length} ]</span>
+          <span className="ml-2 opacity-50">
+            [ {upcomingAppointments.length} ]
+          </span>
         </TabsTrigger>
         <TabsTrigger value="pending" className="ml-2 px-6">
           Pending{" "}
-          <span className="ml-2 opacity-50">[ {pendingAppointments.length} ]</span>
+          <span className="ml-2 opacity-50">
+            [ {pendingAppointments.length} ]
+          </span>
         </TabsTrigger>
         {cancelledAppointments != undefined && (
           <TabsTrigger value="declined" className="ml-2 px-6">
             Cancelled{" "}
-            <span className="ml-2 opacity-50">[ {cancelledAppointments.length} ]</span>
+            <span className="ml-2 opacity-50">
+              [ {cancelledAppointments.length} ]
+            </span>
           </TabsTrigger>
         )}
         {rescheduleAppointments.length > 0 && (
-          <TabsTrigger value="reschedule" className="ml-2 px-6 bg-red-100 text-red-500">
+          <TabsTrigger
+            value="reschedule"
+            className="ml-2 px-6 bg-red-100 text-red-500"
+          >
             For Reschedule{" "}
-            <span className="ml-2 opacity-50">[ {rescheduleAppointments.length} ]</span>
+            <span className="ml-2 opacity-50">
+              [ {rescheduleAppointments.length} ]
+            </span>
           </TabsTrigger>
         )}
       </TabsList>

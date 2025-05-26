@@ -1,54 +1,44 @@
 "use client";
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { Appointment } from "../../data";
+import { useState, useEffect } from "react";
+import { Appointment } from "@/app/data";
 import { AppointmentsTabs } from "./appointment-tabs";
 import { auth, db } from "@/app/firebase-config";
 import {
   collection,
   query,
-  where,
   orderBy,
   onSnapshot,
   Unsubscribe,
-  or,
-  and,
 } from "firebase/firestore";
-import { getAuth, onAuthStateChanged, User } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 
 export default function Page() {
-  const router = useRouter();
-  const [currentUser, setCurrentUser] = React.useState<any>(null);
-  const [upcomingAppointments, setUpcomingAppointments] = React.useState<
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [upcomingAppointments, setUpcomingAppointments] = useState<
     Appointment[]
   >([]);
-  const [pendingAppointments, setPendingAppointments] = React.useState<
+  const [pendingAppointments, setPendingAppointments] = useState<Appointment[]>(
+    []
+  );
+  const [cancelledAppointments, setCancelledAppointments] = useState<
     Appointment[]
   >([]);
-  const [cancelledAppointments, setCancelledAppointments] = React.useState<
+  const [rescheduleAppointments, setRescheduleAppointments] = useState<
     Appointment[]
   >([]);
-  const [rescheduleAppointments, setRescheduleAppointments] = React.useState<
-    Appointment[]
-  >([]);
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = useState(true);
 
-  React.useEffect(() => {
+  useEffect(() => {
     let unsubscribeSnapshot: Unsubscribe | null = null;
 
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
       setLoading(true);
 
-      if (user) {
+      if (currentUser) {
         const appointmentsRef = collection(db, "appointments");
-        const q = query(
-          appointmentsRef,
-          orderBy("date", "asc")
-        );
+        const q = query(appointmentsRef, orderBy("date", "asc"));
 
         unsubscribeSnapshot = onSnapshot(q, (querySnapshot) => {
           const upcoming: Appointment[] = [];
@@ -110,35 +100,16 @@ export default function Page() {
         unsubscribeSnapshot();
       }
     };
-  }, []);
-
-  const handleReschedule = (id: string) => {
-    alert(`Reschedule appointment ${id}`);
-    // In a real app, navigate to reschedule page or open a modal
-  };
-
-  const handleDecline = (id: string) => {
-    alert(`Decline appointment ${id}`);
-    // In a real app, update the appointment status
-  };
+  }, [currentUser]);
 
   return (
     <div className="p-4">
-      <Button
-        onClick={() => router.push("appointments/sched-app")}
-        className="float-right bg-[#2F5233] hover:bg-[#2F5233]/90"
-      >
-        <Plus className="h-4 w-4 mr-2" />
-        Add Appointment
-      </Button>
       <AppointmentsTabs
         upcomingAppointments={upcomingAppointments}
         pendingAppointments={pendingAppointments}
         cancelledAppointments={cancelledAppointments}
         rescheduleAppointments={rescheduleAppointments}
         loading={loading}
-        onReschedule={handleReschedule}
-        onDecline={handleDecline}
       />
     </div>
   );

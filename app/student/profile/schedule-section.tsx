@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { fetchSchedule } from "@/app/firebaseService";
+import { fetchSchedule } from "@/components/services/firebaseService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, MapPin, User } from "lucide-react";
