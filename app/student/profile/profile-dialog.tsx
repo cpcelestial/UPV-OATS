@@ -42,7 +42,7 @@ export function ProfileDialog({
     if (open) {
       setEditedProfile(profile);
     }
-  }, [open]);
+  }, [open, profile]);
 
   const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -77,32 +77,14 @@ export function ProfileDialog({
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      if (!profile?.id) {
-        throw new Error("Profile ID is missing.");
-      }
-
-      const mergedProfile = {
-        ...editedProfile,
-        id: profile.id,
-        email: profile.email,
-        studentNumber: profile.studentNumber,
-        college: profile.college,
-        degreeProgram: profile.degreeProgram,
-      };
-
-      const cleanProfile: Record<string, any> = {};
-      Object.entries(mergedProfile).forEach(([key, value]) => {
-        if (value !== undefined) cleanProfile[key] = value;
-      });
-
       const profileDocRef = doc(db, "students", profile.id);
-      await setDoc(profileDocRef, cleanProfile, { merge: true });
+      await setDoc(profileDocRef, editedProfile, { merge: true });
 
-      onUpdateProfile(cleanProfile);
+      onUpdateProfile(editedProfile);
       onOpenChange(false);
-    } catch (error: any) {
-      console.error("Failed to save profile:", error);
-      alert(`Failed to save profile. ${error?.message || ""}`);
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+      alert("Failed to save profile. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -119,29 +101,31 @@ export function ProfileDialog({
         </DialogHeader>
         <div className="space-y-6 max-h-[60vh] overflow-y-auto py-2 pl-2 pr-4">
           <div className="flex justify-center mb-4">
-            <div className="relative">
-              <Image
-                src={editedProfile.avatarUrl || "/placeholder.svg"}
-                alt="Profile"
-                width={96}
-                height={96}
-                className="rounded-full object-cover"
-              />
-
-              <Button
-                variant="secondary"
-                size="icon"
-                className="absolute bottom-0 right-0 rounded-full"
-              >
-                <label
-                  htmlFor="file-input"
-                  className="absolute bottom-0 right-0 p-2 rounded-full cursor-pointer flex items-center justify-center"
-                  style={{
-                    width: "32px", // Adjust the size to match the small icon
-                    height: "32px",
-                    borderRadius: "50%",
-                  }}
+            <div className="relative w-32 h-32">
+              {profile.avatarUrl && profile.avatarUrl.trim() !== "" ? (
+                <Image
+                  src={profile.avatarUrl}
+                  alt={`${profile.firstName} ${profile.lastName}`}
+                  fill
+                  className="rounded-full object-cover"
                 />
+              ) : (
+                <div className="rounded-full w-full h-full flex items-center justify-center text-5xl bg-primary/10 text-primary">
+                  <span>
+                    {profile.firstName?.[0]}
+                    {profile.lastName?.[0]}
+                  </span>
+                </div>
+              )}
+              <label
+                htmlFor="file-input"
+                className="absolute bottom-0 right-0 p-2 rounded-full cursor-pointer flex items-center justify-center bg-primary text-white hover:bg-primary/80"
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "50%",
+                }}
+              >
                 <Camera className="h-4 w-4" />
                 <input
                   id="file-input"
@@ -150,7 +134,7 @@ export function ProfileDialog({
                   className="hidden"
                   onChange={handleImageUpload}
                 />
-              </Button>
+              </label>
             </div>
           </div>
 

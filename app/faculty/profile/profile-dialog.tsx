@@ -35,7 +35,7 @@ export function ProfileDialog({
   onUpdateProfile,
 }: ProfileDialogProps) {
   const [editedProfile, setEditedProfile] = useState(profile);
-  const [isSaving, setIsSaving] = useState(false); // Track saving state
+  const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
@@ -80,8 +80,7 @@ export function ProfileDialog({
       const profileDocRef = doc(db, "faculty", profile.id);
       await setDoc(profileDocRef, editedProfile, { merge: true });
 
-      // Update local state
-      onUpdateProfile(editedProfile); // Pass the updated profile to the parent
+      onUpdateProfile(editedProfile);
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to update profile:", error);

@@ -8,90 +8,119 @@ import { ScheduleDialog } from "./schedule-dialog";
 import { ScheduleSection } from "./schedule-section";
 import { doc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth, db } from "@/app/firebase-config"; // Firestore instance
+import { auth, db } from "@/app/firebase-config";
 import type { Student, DaySchedule } from "../../data";
+
+const DAYS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
 
 export default function Page() {
   const [profile, setProfile] = useState<Student | null>(null); // Start with null
-  const [schedule, setSchedule] = useState<DaySchedule[]>([]);
+  const [schedule, setSchedule] = useState<DaySchedule[]>(
+    DAYS.map((day) => ({ day, slots: [] }))
+  );
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
-  const [docID, setDocID] = useState<string | null>(null);
-  const DAYS = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-  ];
+  const [userId, setUserId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch profile and schedule data from Firestore when user is authenticated
+  // Listen for auth state and set userId
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        const userId = user.uid;
-        console.log("User ID:", userId);
-        setDocID(userId);
-
-        // Fetch profile
-        try {
-          const profileDocRef = doc(db, "students", userId);
-          const profileSnapshot = await getDoc(profileDocRef);
-
-          if (profileSnapshot.exists()) {
-            setProfile({
-              id: profileSnapshot.id,
-              ...profileSnapshot.data(),
-            } as Student);
-          } else {
-            console.error("Profile document does not exist for user:", userId);
-            setProfile(null);
-          }
-        } catch (error) {
-          console.error("Failed to fetch profile:", error);
-          setProfile(null);
-        }
-
-        // Fetch schedule
-        try {
-          const scheduleDocRef = doc(db, "schedules", userId);
-          const scheduleSnapshot = await getDoc(scheduleDocRef);
-          let loadedSchedule: DaySchedule[] = [];
-          if (scheduleSnapshot.exists()) {
-            loadedSchedule = scheduleSnapshot.data().schedule as DaySchedule[];
-          }
-          setSchedule(
-            DAYS.map(
-              (day) =>
-                loadedSchedule.find((d) => d.day === day) || { day, slots: [] }
-            )
-          );
-        } catch {
-          setSchedule(DAYS.map((day) => ({ day, slots: [] })));
-        }
+        setUserId(user.uid);
       } else {
-        setDocID(null);
+        setUserId(null);
         setProfile(null);
         setSchedule(DAYS.map((day) => ({ day, slots: [] })));
       }
     });
-
-    // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, [DAYS]);
+  }, []);
+
+  // Fetch profile and schedule when userId changes
+  useEffect(() => {
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+
+    const fetchProfileAndSchedule = async () => {
+      // Fetch profile
+      try {
+        const profileDocRef = doc(db, "students", userId);
+        const profileSnapshot = await getDoc(profileDocRef);
+
+        if (profileSnapshot.exists()) {
+          setProfile({
+            id: profileSnapshot.id,
+            ...profileSnapshot.data(),
+          } as Student);
+        } else {
+          console.error("Profile document does not exist for user:", userId);
+          setProfile(null);
+        }
+      } catch (error) {
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch schedule
+      try {
+        const scheduleDocRef = doc(db, "schedules", userId);
+        const scheduleSnapshot = await getDoc(scheduleDocRef);
+        let loadedSchedule: DaySchedule[] = [];
+        if (scheduleSnapshot.exists()) {
+          loadedSchedule = scheduleSnapshot.data().schedule as DaySchedule[];
+        }
+        setSchedule(
+          DAYS.map(
+            (day) =>
+              loadedSchedule.find((d) => d.day === day) || { day, slots: [] }
+          )
+        );
+      } catch {
+        setSchedule(DAYS.map((day) => ({ day, slots: [] })));
+      }
+      setLoading(false);
+    };
+
+    fetchProfileAndSchedule();
+  }, [userId]);
+
+  // Update profile in state after editing
   const handleUpdateProfile = (updatedProfile: Partial<Student>) => {
     setProfile((prev) => (prev ? { ...prev, ...updatedProfile } : null));
-    console.log("Updated Profile:", updatedProfile);
   };
 
+  // Update schedule in state after editing
   const handleUpdateSchedule = (newSchedule: DaySchedule[]) => {
-    setSchedule(newSchedule);
+    setSchedule(
+      DAYS.map(
+        (day) => newSchedule.find((d) => d.day === day) || { day, slots: [] }
+      )
+    );
   };
+
+  if (loading) {
+    return <div className="h-full py-[25%] text-center">Loading...</div>;
+  }
 
   if (!profile) {
-    return <div className="h-full py-[25%] text-center">Loading...</div>; // Show a loading state while fetching the profile
+    return (
+      <div className="h-full py-[25%] text-center">
+        Student profile not found. Please contact admin.
+      </div>
+    );
   }
 
   return (
@@ -105,8 +134,7 @@ export default function Page() {
         <ScheduleSection
           schedule={schedule}
           onEditSchedule={() => setIsScheduleDialogOpen(true)}
-          onUpdateSchedule={setSchedule}
-          userId={docID}
+          userId={userId ?? ""}
         />
       </div>
 
@@ -122,7 +150,7 @@ export default function Page() {
         schedule={schedule}
         onUpdateSchedule={handleUpdateSchedule}
         onOpenChange={setIsScheduleDialogOpen}
-        userId={docID ?? ""}
+        userId={userId ?? ""}
       />
 
       <PasswordDialog

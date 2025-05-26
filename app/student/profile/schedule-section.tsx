@@ -5,22 +5,25 @@ import { fetchSchedule } from "@/components/services/firebaseService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, MapPin, User } from "lucide-react";
-import type { DaySchedule } from "../../data";
+import type { DaySchedule } from "@/app/data";
+
+interface ScheduleSectionProps {
+  userId: string;
+  schedule: DaySchedule[];
+  onEditSchedule: () => void;
+}
 
 export function ScheduleSection({
   schedule: initialSchedule,
   onEditSchedule,
   userId,
-}: {
-  schedule: DaySchedule[];
-  onEditSchedule: (updatedSchedule: DaySchedule[]) => void;
-}) {
+}: ScheduleSectionProps) {
   const [schedule, setSchedule] = useState<DaySchedule[]>(initialSchedule);
 
   useEffect(() => {
     if (!userId) return;
     const loadSchedule = async () => {
-      const data = await fetchSchedule(userId); // Fetch from Firestore
+      const data = await fetchSchedule(userId);
       if (data) setSchedule(data);
     };
     loadSchedule();
@@ -72,7 +75,7 @@ export function ScheduleSection({
                   ))
                 ) : (
                   <div className="h-20 flex items-center justify-center text-sm text-gray-500">
-                    No classes
+                    None
                   </div>
                 )}
               </div>
