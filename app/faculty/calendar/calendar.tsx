@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import { useState, useEffect, Fragment } from "react";
 import {
   addDays,
   format,
@@ -34,7 +34,7 @@ import {
   where,
   onSnapshot,
   and,
-  or,
+  Unsubscribe,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "../../firebase-config";
@@ -42,12 +42,12 @@ import { db, auth } from "../../firebase-config";
 type ViewType = "month" | "week" | "day";
 
 export function Calendar() {
-  const [currentDate, setCurrentDate] = React.useState<Date>(new Date());
-  const [viewType, setViewType] = React.useState<ViewType>("month");
-  const [selectedDate, setSelectedDate] = React.useState<Date | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
-  const [currentUser, setCurrentUser] = React.useState<any>(null);
-  const [appointments, setAppointments] = React.useState<Appointment[]>([]);
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const [viewType, setViewType] = useState<ViewType>("month");
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
 
   const getNumber = (str: string | null | undefined): string | null => {
     if (!str) return null;
@@ -56,28 +56,26 @@ export function Calendar() {
     return last && /^\d+$/.test(last) ? last : null;
   };
 
-  React.useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setCurrentUser(user);
+  useEffect(() => {
+    let unsubscribeSnapshot: Unsubscribe | null = null;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+      setCurrentUser(user);
+
+      if (currentUser) {
         const appointmentsRef = collection(db, "appointments");
         const q = query(
           appointmentsRef,
-          or(
-            and(
-              where("facultyId  ", "==", user.uid),
-              where("status", "==", "approved")
-            ),
-            and(
-              where("participants", "array-contains", user.email),
-              where("status", "==", "approved")
-            )
+          and(
+            where("facultyId  ", "==", currentUser.uid),
+            where("status", "==", "approved")
           )
         );
-        const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
+
+        unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
           const fetchedAppointments: Appointment[] = snapshot.docs.map(
             (doc) =>
-              ({    
+              ({
                 id: doc.id,
                 ...doc.data(),
                 date:
@@ -92,11 +90,15 @@ export function Calendar() {
         setCurrentUser(null);
         setAppointments([]);
       }
-      console.log(appointments)
     });
 
-    return () => unsubscribe();
-  }, []);
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeSnapshot) {
+        unsubscribeSnapshot();
+      }
+    };
+  }, [currentUser]);
 
   const handleDayClick = (day: Date) => {
     setSelectedDate(day);
@@ -299,7 +301,7 @@ export function Calendar() {
             const isLast = index === hours.length - 1;
 
             return (
-              <React.Fragment key={hour}>
+              <Fragment key={hour}>
                 <div
                   className={cn(
                     "p-2 text-sm border-r border-b border-border",
@@ -322,7 +324,7 @@ export function Calendar() {
                     />
                   ))}
                 </div>
-              </React.Fragment>
+              </Fragment>
             );
           })}
         </div>

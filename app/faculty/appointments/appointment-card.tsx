@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { CalendarIcon, MapPinIcon, VideoIcon } from "lucide-react";
 import { format } from "date-fns";
-import type { Appointment } from "../../data";
+import { Appointment } from "@/app/data";
 
 interface AppointmentCardProps {
   appointment: Appointment;
@@ -46,6 +46,7 @@ export function AppointmentCard({
                 {appointment.purpose}
               </h1>
             </div>
+
             <div className="flex items-center gap-2 text-muted-foreground">
               <CalendarIcon className="h-4 w-4" />
               <p className="text-lg font-medium">
@@ -67,6 +68,7 @@ export function AppointmentCard({
                 {facultyInitials}
               </AvatarFallback>
             </Avatar>
+
             <div>
               <p className="font-medium">{appointment.facultyName}</p>
               <p className="text-muted-foreground text-sm">
@@ -81,6 +83,7 @@ export function AppointmentCard({
             ) : (
               <VideoIcon className="h-5 w-5 text-muted-foreground" />
             )}
+
             <div>
               <p className="font-medium">Type of Appointment</p>
               <p className="text-muted-foreground text-sm">
@@ -114,6 +117,7 @@ export function AppointmentCard({
                       {"US"}
                     </AvatarFallback>
                   </Avatar>
+
                   <div>
                     <p className="text-sm font-medium">{participant.name}</p>
                     {participant.email && (
@@ -138,11 +142,13 @@ export function AppointmentCard({
                 Cancel
               </Button>
             )}
+
             {onReschedule && (
               <Button onClick={() => onReschedule(appointment.id)}>
                 Reschedule
               </Button>
             )}
+
             {onAccept && (
               <Button
                 onClick={() => onAccept(appointment.id)}

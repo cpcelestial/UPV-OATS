@@ -2,9 +2,9 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
-import { Appointment } from "../data";
+import { Appointment } from "@/app/data";
 import { AppointmentsTabs } from "../appointments/appointment-tabs";
-import MonthCalendar from "./month-calendar";
+import { MonthCalendar } from "./month-calendar";
 import { auth, db } from "@/app/firebase-config";
 import { onAuthStateChanged } from "firebase/auth";
 import {
@@ -15,10 +15,7 @@ import {
   orderBy,
   onSnapshot,
   doc,
-  getFirestore,
   updateDoc,
-  and,
-  or,
 } from "firebase/firestore";
 
 export default function Background({
@@ -41,8 +38,6 @@ export default function Background({
     new Date()
   );
 
-  const db = getFirestore();
-
   const handleDecline = async (appointmentId: string) => {
     try {
       const appointmentRef = doc(db, "appointments", appointmentId);
@@ -54,6 +49,7 @@ export default function Background({
       console.error("Error declining appointment:", error);
     }
   };
+
   const handleAccept = async (appointmentId: string) => {
     try {
       const appointmentRef = doc(db, "appointments", appointmentId);
@@ -78,18 +74,17 @@ export default function Background({
       setCurrentUser(user);
       setLoading(true);
 
-      if (user) {
+      if (currentUser) {
         const appointmentsRef = collection(db, "appointments");
         const q = query(
           appointmentsRef,
-          where("facultyEmail", "==", user.email),
+          where("facultyEmail", "==", currentUser.email),
           orderBy("date", "asc")
         );
 
         unsubscribeSnapshot = onSnapshot(q, (querySnapshot) => {
           const upcoming: Appointment[] = [];
           const pending: Appointment[] = [];
-          const cancelled: Appointment[] = [];
           const reschedule: Appointment[] = [];
 
           querySnapshot.forEach((doc) => {
@@ -141,7 +136,7 @@ export default function Background({
         unsubscribeSnapshot();
       }
     };
-  }, []);
+  }, [currentUser]);
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
@@ -163,9 +158,9 @@ export default function Background({
           pendingAppointments={pendingAppointments}
           rescheduleAppointments={rescheduleAppointments}
           loading={loading}
-          onReschedule={handleReschedule}
           onDecline={handleDecline}
           onAccept={handleAccept}
+          onReschedule={handleReschedule}
         />
       </div>
 

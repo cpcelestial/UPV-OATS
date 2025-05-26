@@ -1,9 +1,8 @@
 "use client";
 
-import * as React from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { Appointment } from "@/app/data";
 import { AppointmentsTabs } from "./appointment-tabs";
 import { auth, db } from "@/app/firebase-config";
@@ -14,42 +13,40 @@ import {
   orderBy,
   onSnapshot,
   Unsubscribe,
-  or,
-  and,
   doc,
   updateDoc,
 } from "firebase/firestore";
-import { getAuth, onAuthStateChanged, User } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 
 export default function Page() {
   const router = useRouter();
-  const [currentUser, setCurrentUser] = React.useState<any>(null);
-  const [upcomingAppointments, setUpcomingAppointments] = React.useState<
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [upcomingAppointments, setUpcomingAppointments] = useState<
     Appointment[]
   >([]);
-  const [pendingAppointments, setPendingAppointments] = React.useState<
+  const [pendingAppointments, setPendingAppointments] = useState<Appointment[]>(
+    []
+  );
+  const [cancelledAppointments, setCancelledAppointments] = useState<
     Appointment[]
   >([]);
-  const [cancelledAppointments, setCancelledAppointments] = React.useState<
+  const [rescheduleAppointments, setRescheduleAppointments] = useState<
     Appointment[]
   >([]);
-  const [rescheduleAppointments, setRescheduleAppointments] = React.useState<
-    Appointment[]
-  >([]);
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = useState(true);
 
-  React.useEffect(() => {
+  useEffect(() => {
     let unsubscribeSnapshot: Unsubscribe | null = null;
 
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
       setLoading(true);
 
-      if (user) {
+      if (currentUser) {
         const appointmentsRef = collection(db, "appointments");
         const q = query(
           appointmentsRef,
-          where("facultyEmail", "==", user.email),
+          where("facultyEmail", "==", currentUser.email),
           orderBy("date", "asc")
         );
 
@@ -113,7 +110,7 @@ export default function Page() {
         unsubscribeSnapshot();
       }
     };
-  }, []);
+  }, [currentUser]);
 
   const handleReschedule = (id: string) => {
     alert(`Reschedule appointment ${id}`);
