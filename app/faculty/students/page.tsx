@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
+
 import { db } from "@/app/firebase-config";
 import { StudentsTable } from "./students-table";
 import type { Student } from "@/app/data";
 import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/app/firebase-config";
 
 export default function UsersPage() {
   const [students, setStudents] = useState<Student[]>([]);
