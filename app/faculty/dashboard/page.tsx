@@ -18,11 +18,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 
-export default function Background({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function Page() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [upcomingAppointments, setUpcomingAppointments] = useState<
     Appointment[]
@@ -164,7 +160,6 @@ export default function Background({
 
   return (
     <div className="flex flex-col md:flex-row">
-      {children}
       {/* Appointments Section */}
       <div className="flex-grow p-4">
         <AppointmentsTabs
