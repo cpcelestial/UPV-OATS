@@ -146,24 +146,27 @@ export function AppointmentCard({
           </div>
         )}
 
-        {appointment.participants && appointment.participants.length > 0 && (
-          <div className="">
+        {appointment.participants && appointment.participants.length > 0 ? (
+          <div>
             <p className="font-medium mb-2">Participants</p>
             <div className="flex flex-wrap gap-4 bg-[#F7F7F7] p-4 rounded-md">
               {appointment.participants.map((participant, index) => (
                 <div key={index} className="flex items-center gap-2">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage
-                      src={participant.avatarUrl}
-                      alt={participant.name}
-                    />
                     <AvatarFallback className="bg-secondary text-secondary-foreground text-xs">
-                      {"US"}
+                      {participant.name
+                        ? participant.name
+                            .split(" ")
+                            .map((n: string) => n[0])
+                            .join("")
+                            .toUpperCase()
+                        : "US"}
                     </AvatarFallback>
                   </Avatar>
-
                   <div>
-                    <p className="text-sm font-medium">{participant.name}</p>
+                    <p className="text-sm font-medium">
+                      {participant.name || participant.email}
+                    </p>
                     {participant.email && (
                       <p className="text-xs text-muted-foreground">
                         {participant.email}
@@ -172,6 +175,25 @@ export function AppointmentCard({
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        ) : (
+          // Fallback: show student who created the appointment
+          <div>
+            <p className="font-medium mb-2">Requested by</p>
+            <div className="flex items-center gap-2 bg-[#F7F7F7] p-4 rounded-md">
+              <Avatar className="h-8 w-8">
+                <AvatarFallback className="bg-secondary text-secondary-foreground text-xs">
+                  {appointment.userEmail
+                    ? appointment.userEmail[0].toUpperCase()
+                    : "US"}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-sm font-medium">
+                  {appointment.userEmail || "Unknown"}
+                </p>
+              </div>
             </div>
           </div>
         )}
